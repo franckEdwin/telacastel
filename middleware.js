@@ -38,7 +38,7 @@ export default function middleware(request) {
   return new Response('Accès réservé.', {
     status: 401,
     headers: {
-      'WWW-Authenticate': 'Basic realm="Tela Castle — gestion", charset="UTF-8"',
+      'WWW-Authenticate': 'Basic realm="Tela Castle gestion", charset="UTF-8"',
       'content-type': 'text/plain; charset=utf-8',
       'cache-control': 'no-store'
     }
