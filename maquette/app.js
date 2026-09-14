@@ -1529,6 +1529,10 @@ function rendreAccueil(){
 
   /* en-tête jaune */
   var tete = el('section','ac-tete');
+  /* le logo de la maison, sur le jaune de la maison */
+  var marque = el('div','ac-marque');
+  marque.innerHTML = '<img src="img/logo.png" alt="Tela Castle">';
+  tete.appendChild(marque);
   var haut = el('div','ac-haut');
   var liv = el('button','ac-livrer');
   liv.innerHTML = '<span class="l">LIVRER À</span><span class="z">' + T.zone(S.zone).nom + ' ▾</span>';
