@@ -446,6 +446,7 @@ body{background:var(--surface-2)}
 <input type="file" id="fichierImage" accept="image/*" hidden>
 
 <script src="data.js"></script>
+<script src="recu.js"></script>
 <script>
 (function(){
 "use strict";
@@ -905,18 +906,35 @@ function ouvrirCommande(ref){
     '<div style="font-size:12.5px;color:var(--doux);margin-top:8px">Paiement : ' + T.paiement(x.paiement).nom + '</div>'));
 
   dd2.appendChild(el('div','lab','Reçu client'));
-  var zi = ticket(x); zi.id = 'zoneImpression';
-  dd2.appendChild(zi);
+  var boite = el('div');
+  dd2.appendChild(boite);
+  if (T.apercuRecu) T.apercuRecu(x, boite);
+
   var actions = el('div'); actions.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap';
+  var env = el('button','btn petit'); env.textContent = 'Envoyer le reçu';
+  env.onclick = function(){
+    env.disabled = true;
+    T.partagerRecu(x, function(etat){
+      env.disabled = false;
+      if (etat === 'telecharge') toast('Reçu enregistré', 'Joignez l\u2019image à votre message', 'succes');
+      else if (etat === 'partage') toast('Reçu partagé', null, 'succes');
+      else if (etat === 'erreur') toast('Reçu impossible à créer', null, 'erreur');
+    });
+  };
   var imp = el('button','btn creux petit'); imp.textContent = 'Imprimer'; imp.onclick = function(){ window.print(); };
-  var cop = el('button','btn creux petit'); cop.textContent = 'Copier le message';
+  var cop = el('button','btn creux petit'); cop.textContent = 'Copier le texte';
   cop.onclick = function(){
     if (navigator.clipboard) navigator.clipboard.writeText(T.messageWhatsApp(x));
     toast('Message copié', 'Prêt à coller dans WhatsApp', 'info');
   };
   var wa = el('a','btn vert petit'); wa.href = T.lienWhatsApp(x); wa.target = '_blank'; wa.rel = 'noopener'; wa.textContent = 'WhatsApp';
-  actions.appendChild(imp); actions.appendChild(cop); actions.appendChild(wa);
+  actions.appendChild(env); actions.appendChild(imp); actions.appendChild(cop); actions.appendChild(wa);
   dd2.appendChild(actions);
+
+  /* version imprimable conservée hors écran */
+  var zi = ticket(x); zi.id = 'zoneImpression';
+  zi.style.cssText = 'position:absolute;left:-9999px;top:0';
+  dd2.appendChild(zi);
 
   dd2.appendChild(el('div','lab','Journal'));
   var j = el('div','journal');

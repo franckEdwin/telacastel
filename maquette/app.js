@@ -571,11 +571,29 @@ function vueConfirme(dd, pied){
   });
   dd.appendChild(suivi);
 
-  dd.appendChild(ticket(cmd));
+  /* aperçu du reçu en image — c'est lui qu'on envoie sur WhatsApp */
+  dd.appendChild(el('div','lab','Votre reçu'));
+  var boite = el('div');
+  dd.appendChild(boite);
+  if (T.apercuRecu) T.apercuRecu(cmd, boite);
+  else dd.appendChild(ticket(cmd));
+
+  var partage = el('button','btn plein');
+  partage.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg> Envoyer le reçu';
+  partage.onclick = function(){
+    partage.disabled = true;
+    T.partagerRecu(cmd, function(etat){
+      partage.disabled = false;
+      if (etat === 'telecharge') avis('Reçu enregistré — joignez-le à votre message');
+      else if (etat === 'partage') avis('Reçu partagé');
+      else if (etat === 'erreur') avis('Le reçu n\u2019a pas pu être créé');
+    });
+  };
+  pied.appendChild(partage);
 
   var wa = el('a','btn vert plein');
   wa.href = T.lienWhatsApp(cmd); wa.target = '_blank'; wa.rel = 'noopener';
-  wa.innerHTML = 'Ouvrir le message WhatsApp';
+  wa.innerHTML = 'Ouvrir WhatsApp';
   pied.appendChild(wa);
   var nb = el('button','btn creux plein'); nb.textContent = 'Nouvelle commande';
   nb.onclick = function(){ S.ref = null; T.ecrire('refEnCours', null); S.etape = 'panier'; rendrePanier(); ecran('accueil'); };
