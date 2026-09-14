@@ -1712,7 +1712,9 @@ function fermer(silencieux){
   if (mobile()) $('#panneau-panier').classList.remove('on');
   $('#voile').classList.remove('on');
   document.body.style.overflow = '';
-  if (!silencieux){ S.ecran = 'accueil'; majNav(); }
+  /* on revient à l'écran de fond d'où l'on vient, pas systématiquement
+     à l'accueil : fermer le panier depuis la carte doit rendre la carte */
+  if (!silencieux){ S.ecran = S.base || 'accueil'; majNav(); }
 }
 function ecran(nom){
   /* sur bureau il n'y a qu'une page : l'accueil EST la carte */
@@ -1727,17 +1729,32 @@ function ecran(nom){
   else if (nom === 'plateaux'){ rendrePlateaux(); ouvrir('#panneau-plateaux'); }
   majNav();
 }
-/* Sur mobile, Accueil et Carte sont deux écrans ; sur bureau, un seul. */
+/* Sur mobile, Accueil et Carte sont deux écrans ; sur bureau, un seul.
+   La page de fond garde son identité quand un panneau s'ouvre par-dessus :
+   sans cela, fermer le panneau ramenait la mise en page du bureau. */
+var baseAppliquee = null;
 function majEcranBase(){
   var z = $('#ecranAccueil'); if (!z) return;
-  var surAccueil = mobile() && S.ecran === 'accueil';
+  if (S.ecran === 'accueil' || S.ecran === 'carte') S.base = S.ecran;
+  if (!S.base) S.base = 'accueil';
+
+  var surAccueil = mobile() && S.base === 'accueil';
+  var surCarte   = mobile() && S.base === 'carte';
   z.hidden = !surAccueil;
   document.body.classList.toggle('ec-accueil', surAccueil);
-  document.body.classList.toggle('ec-carte', mobile() && S.ecran === 'carte');
-  if (surAccueil){ rendreAccueil(); window.scrollTo(0,0); }
+  document.body.classList.toggle('ec-carte', surCarte);
+
+  var etat = mobile() ? S.base : 'bureau';
+  if (etat !== baseAppliquee){
+    baseAppliquee = etat;
+    if (surAccueil){ rendreAccueil(); window.scrollTo(0,0); }
+  } else if (surAccueil && !z.children.length){
+    rendreAccueil();
+  }
 }
 
 function majNav(){
+  majEcranBase();
   majBarreTotal();
   majBandeau();
   Array.prototype.forEach.call(document.querySelectorAll('.nav-flot button'), function(b){
@@ -2007,7 +2024,7 @@ if (S.ref && commandeCourante()) S.etape = 'confirme';
 rendreRail(); rendreTout(); chrono(); spy();
 S.ecran = mobile() ? 'accueil' : 'accueil';
 majEcranBase(); majNav();
-window.addEventListener('resize', majEcranBase);
+window.addEventListener('resize', function(){ majEcranBase(); placerAcces(); });
 setInterval(chrono, 1000);
 window.addEventListener('load', animations);
 })();
