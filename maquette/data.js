@@ -16,7 +16,7 @@ var T = window.TELA = {};
 var clone = function(o){ return JSON.parse(JSON.stringify(o)); };
 
 /* ---------------------------------------------------------- boutique */
-T.version = '15/09 08h50';
+T.version = '15/09 10h30';
 
 T.boutique = {
   nom: 'Tela Castle',
@@ -382,12 +382,65 @@ T.reapprovisionner = function(id, n){ T.majStock(id, (T.produits[id].stock || 0)
 T.statuts = {
   recue:       {nom:'Reçue',          couleur:'bleu',  etape:0, client:'Commande reçue par la boutique'},
   validee:     {nom:'Validée',        couleur:'vert',  etape:1, client:'Validée par Tela Castle'},
-  preparation: {nom:'En préparation', couleur:'or',    etape:2, client:'En préparation'},
-  route:       {nom:'En route',       couleur:'or',    etape:3, client:'Le livreur est en route'},
-  livree:      {nom:'Livrée',         couleur:'vert',  etape:4, client:'Livrée'},
-  refusee:     {nom:'Refusée',        couleur:'rouge', etape:-1, client:'Commande annulée'}
+  preparation: {nom:'En préparation', couleur:'or',    etape:2, client:'La cuisine s’en occupe'},
+  prete:       {nom:'Prête',          couleur:'or',    etape:3, client:'Prête, en attente du livreur'},
+  route:       {nom:'En route',       couleur:'or',    etape:4, client:'Le livreur est en route'},
+  livree:      {nom:'Livrée',         couleur:'vert',  etape:5, client:'Livrée. Bon appétit !'},
+  refusee:     {nom:'Refusée',        couleur:'rouge', etape:-1, client:'Commande refusée par la boutique'},
+  annulee:     {nom:'Annulée',        couleur:'rouge', etape:-1, client:'Commande annulée'}
 };
-T.ordreStatuts = ['recue','validee','preparation','route','livree'];
+T.ordreStatuts = ['recue','validee','preparation','prete','route','livree'];
+/* Ce qu'un statut autorise ensuite : le passage d'une étape à l'autre ne
+   se fait pas au hasard, et chaque métier n'a la main que sur la sienne. */
+T.transitions = {
+  recue:       [{vers:'validee', libelle:'Valider', role:'commandes'},
+                {vers:'refusee', libelle:'Refuser', role:'commandes', sombre:true}],
+  validee:     [{vers:'preparation', libelle:'Lancer la préparation', role:'cuisine'},
+                {vers:'annulee', libelle:'Annuler', role:'commandes', sombre:true}],
+  preparation: [{vers:'prete', libelle:'Commande prête', role:'cuisine'}],
+  prete:       [{vers:'route', libelle:'Partir en livraison', role:'livraison'}],
+  route:       [{vers:'livree', libelle:'Livrée', role:'livraison'}],
+  livree:      [],
+  refusee:     [],
+  annulee:     []
+};
+T.suivants = function(statut, droits){
+  return (T.transitions[statut] || []).filter(function(t){
+    return !droits || droits.indexOf('tout') > -1 || droits.indexOf(t.role) > -1;
+  });
+};
+
+/* ---------------------------------------------------------- équipe et rôles
+   Chaque métier ne voit que ce qui le concerne et n'agit que sur ses
+   étapes. Le propriétaire a tout. */
+T.roles = {
+  proprietaire: {nom:'Propriétaire', droits:['tout'],
+                 vues:['tableau','commandes','preparation','tournee','caisse','produits','stock','categories','semaine','devis','equipe','clients','reglages']},
+  gerant:       {nom:'Gérant',       droits:['commandes','cuisine','livraison','catalogue'],
+                 vues:['tableau','commandes','preparation','tournee','caisse','produits','stock','categories','semaine','devis','clients']},
+  cuisine:      {nom:'Cuisine',      droits:['cuisine','stock'],
+                 vues:['preparation','stock','produits']},
+  livreur:      {nom:'Livreur',      droits:['livraison'],
+                 vues:['tournee']},
+  caisse:       {nom:'Caisse',       droits:['commandes','encaissement'],
+                 vues:['commandes','caisse','clients']}
+};
+T.equipeDefaut = [
+  {id:'u1', nom:'Audrey Boua',   role:'proprietaire', tel:'+225 05 06 45 70 70', code:'1234', actif:true},
+  {id:'u2', nom:'Koffi Assamoi', role:'cuisine',      tel:'+225 07 11 22 33 44', code:'2222', actif:true},
+  {id:'u3', nom:'Ibrahim Sanogo',role:'livreur',      tel:'+225 01 55 66 77 88', code:'3333', actif:true},
+  {id:'u4', nom:'Mariam Touré',  role:'caisse',       tel:'+225 05 99 88 77 66', code:'4444', actif:true}
+];
+T.equipe = function(){ return T.lire('equipe', null) || clone(T.equipeDefaut); };
+T.sauverEquipe = function(l){ T.ecrire('equipe', l); };
+T.membre = function(id){ return T.equipe().filter(function(u){ return u.id === id; })[0] || null; };
+T.role = function(cle){ return T.roles[cle] || T.roles.proprietaire; };
+T.peut = function(membre, droit){
+  if (!membre) return false;
+  var d = T.role(membre.role).droits;
+  return d.indexOf('tout') > -1 || d.indexOf(droit) > -1;
+};
+T.livreurs = function(){ return T.equipe().filter(function(u){ return u.role === 'livreur' && u.actif !== false; }); };
 
 /* ---------------------------------------------------------- clients de démo */
 T.clientsDemo = [
@@ -444,6 +497,54 @@ T.enregistrerCommande = function(cmd){
   T.ecrire('commandes', liste);
   return cmd;
 };
+/* Demandes de devis pour les plateaux : elles entrent dans le même flux
+   que les commandes, avec leur propre cycle. */
+T.devis = function(){ return T.lire('devis', []); };
+T.enregistrerDevis = function(dv){
+  var l = T.devis();
+  dv.ref = 'DV-' + String(Date.now()).slice(-6);
+  dv.creele = new Date().toISOString();
+  dv.majLe = dv.creele;
+  dv.statut = 'nouveau';
+  l.unshift(dv);
+  T.ecrire('devis', l);
+  return dv;
+};
+T.majDevis = function(ref, champs){
+  var l = T.devis();
+  for (var i = 0; i < l.length; i++){
+    if (l[i].ref === ref){ Object.assign(l[i], champs); l[i].majLe = new Date().toISOString(); break; }
+  }
+  T.ecrire('devis', l);
+};
+T.statutsDevis = {
+  nouveau:  {nom:'Nouveau',  couleur:'bleu'},
+  envoye:   {nom:'Devis envoyé', couleur:'or'},
+  accepte:  {nom:'Accepté',  couleur:'vert'},
+  refuse:   {nom:'Refusé',   couleur:'rouge'}
+};
+
+/* Affectation d'une commande à un livreur, et suivi de la préparation
+   ligne par ligne en cuisine. */
+T.affecter = function(ref, livreurId){
+  T.majCommande(ref, {livreur: livreurId || null});
+};
+T.marquerLigne = function(ref, cle, fait){
+  var liste = T.commandes();
+  for (var i = 0; i < liste.length; i++){
+    if (liste[i].ref !== ref) continue;
+    liste[i].lignesFaites = liste[i].lignesFaites || {};
+    if (fait) liste[i].lignesFaites[cle] = true; else delete liste[i].lignesFaites[cle];
+    liste[i].majLe = new Date().toISOString();
+    break;
+  }
+  T.ecrire('commandes', liste);
+};
+T.toutPret = function(cmd){
+  var f = cmd.lignesFaites || {};
+  return cmd.lignes.every(function(l, i){ return f[i + '|' + l.id]; });
+};
+
 T.majCommande = function(ref, champs){
   var liste = T.commandes();
   for (var i = 0; i < liste.length; i++){

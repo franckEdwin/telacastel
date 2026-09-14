@@ -10,7 +10,7 @@
 import { put, get } from '@vercel/blob';
 
 const CHEMIN = 'tela/etat.json';
-const VIDE = { commandes: [], produits: null, categories: null, maj: 0 };
+const VIDE = { commandes: [], produits: null, categories: null, devis: [], equipe: null, maj: 0 };
 
 async function lire(){
   try {
@@ -53,10 +53,21 @@ function fusionner(ancien, nouveau){
     if (!dejaLa || quand(c) >= quand(dejaLa)) par.set(c.ref, c);
   }
   const commandes = [...par.values()].sort((a, b) => quand(b) - quand(a));
+
+  const parDevis = new Map();
+  for (const x of ancien.devis || []) if (x && x.ref) parDevis.set(x.ref, x);
+  for (const x of nouveau.devis || []){
+    if (!x || !x.ref) continue;
+    const dejaLa = parDevis.get(x.ref);
+    if (!dejaLa || quand(x) >= quand(dejaLa)) parDevis.set(x.ref, x);
+  }
+
   return {
     commandes,
+    devis:      [...parDevis.values()].sort((a, b) => quand(b) - quand(a)),
     produits:   nouveau.produits   ?? ancien.produits,
     categories: nouveau.categories ?? ancien.categories,
+    equipe:     nouveau.equipe     ?? ancien.equipe,
     maj: Date.now()
   };
 }

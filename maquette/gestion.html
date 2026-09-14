@@ -15,6 +15,15 @@ body{background:var(--surface-2)}
 
 /* ---------------------------------------------------------- connexion */
 .portail{min-height:100vh;display:grid;place-items:center;padding:24px}
+.qui{display:grid;gap:7px}
+.qui button{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:14px;
+  border:var(--ep-bord) solid var(--bord);background:var(--surface);text-align:left;transition:var(--t)}
+.qui button .av{width:34px;height:34px;border-radius:50%;background:var(--or-doux);color:var(--or-fonce);
+  display:grid;place-items:center;font-family:var(--titre);font-weight:700;font-size:14px;flex:none}
+.qui button .tx{flex:1;min-width:0}
+.qui button .tx b{display:block;font-size:13.5px}
+.qui button .tx span{display:block;font-size:11.5px;color:var(--doux)}
+.qui button[aria-pressed="true"]{border-color:var(--or);background:var(--or-doux)}
 .portail .carte{width:min(400px,100%);background:var(--surface);border:var(--ep-bord) solid var(--bord);border-radius:var(--r-g);padding:28px}
 .portail img{width:96px;margin-bottom:18px}
 .portail h1{font-size:22px}
@@ -207,6 +216,16 @@ body{background:var(--surface-2)}
   .cmd .act{order:5;flex-basis:100%}
   .cmd .act .btn{width:100%}
 }
+
+.av-r{width:34px;height:34px;border-radius:50%;background:var(--or-doux);color:var(--or-fonce);flex:none;
+  display:grid;place-items:center;font-family:var(--titre);font-weight:700;font-size:14px}
+select.mini{padding:7px 10px;border-radius:9px;border:var(--ep-bord) solid var(--bord);
+  background:var(--surface);font-size:12.5px;color:var(--encre);max-width:150px}
+.dd-plat{flex:none}
+.tiroir .dedans .champ{margin-bottom:12px}
+.tiroir .dedans .champ input{width:100%;padding:11px 13px;border-radius:10px;
+  border:var(--ep-bord) solid var(--bord);background:var(--surface);font-size:13.5px}
+.tiroir .dedans h3{font-size:17px;margin-bottom:14px}
 
 /* tiroir */
 .voile{position:fixed;inset:0;z-index:90;background:rgba(20,14,9,.45);opacity:0;pointer-events:none;transition:opacity var(--t)}
@@ -406,10 +425,10 @@ body{background:var(--surface-2)}
     <h1>Espace gestion</h1>
     <p>Commandes, catalogue, stock et clients.</p>
     <form id="formConnexion">
-      <div class="champ"><label class="lab" for="ident">Identifiant</label><input id="ident" type="text" autocomplete="username" placeholder="votre identifiant"></div>
-      <div class="champ"><label class="lab" for="mdp">Mot de passe</label><input id="mdp" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+      <div class="champ"><label class="lab">Qui êtes-vous ?</label><div class="qui" id="listeQui"></div></div>
+      <div class="champ"><label class="lab" for="mdp">Votre code</label><input id="mdp" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="••••"></div>
       <button class="btn plein grand" type="submit">Entrer</button>
-      <p class="aide">Accès réservé à l'équipe Tela Castle.<br>L'accès est déjà filtré avant cette page.</p>
+      <p class="aide">Chacun voit son poste : la cuisine ses préparations, le livreur sa tournée, la caisse les encaissements.</p>
     </form>
   </div>
 </div>
@@ -431,6 +450,8 @@ body{background:var(--surface-2)}
       <button data-vue="categories" data-lib="Catégories"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><path d="M17.5 14v7M14 17.5h7"/></svg><span class="lib">Catégories</span></button>
       <button data-vue="semaine" data-lib="Menu de la semaine"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span class="lib">Menu de la semaine</span></button>
       <div class="grp">Relation client</div>
+      <button data-vue="devis" data-lib="Devis"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg><span class="lib">Devis</span><span class="n" id="badgeDevis" hidden>0</span></button>
+      <button data-vue="equipe" data-lib="Équipe"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><path d="M16 11a3 3 0 1 0 0-6M17.5 19a6 6 0 0 0-2-4.4"/></svg><span class="lib">Équipe</span></button>
       <button data-vue="clients" data-lib="Clients"><svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.4"/><path d="M2.8 19a6.4 6.4 0 0 1 12.4 0"/><path d="M16 5.5a3.4 3.4 0 0 1 0 6.6M17.5 19a6.5 6.5 0 0 0-1.6-4.2"/></svg><span class="lib">Clients</span></button>
       <button data-vue="reglages" data-lib="Réglages"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M4 12h2M18 12h2M12 4v2M12 18v2M6.3 6.3l1.4 1.4M16.3 16.3l1.4 1.4M17.7 6.3l-1.4 1.4M7.7 16.3l-1.4 1.4"/></svg><span class="lib">Réglages</span></button>
     </nav>
@@ -603,18 +624,82 @@ document.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ ferme
     };
   });
 })();
-function connecte(){ return T.lire('admin', false); }
+/* Chacun entre avec son nom et son code : c'est le rôle qui décide de ce
+   qu'il voit et de ce qu'il peut faire. */
+var quiChoisi = null;
+function connecte(){
+  var a = T.lire('admin', false);
+  if (!a || !a.id) return false;
+  var m = T.membre(a.id);
+  return m && m.actif !== false ? m : false;
+}
+function moi(){ return connecte() || null; }
+function monRole(){ var m = moi(); return m ? T.role(m.role) : T.roles.proprietaire; }
+function jePeux(droit){ return T.peut(moi(), droit); }
+function mesDroits(){ return monRole().droits; }
+
+function rendrePortail(){
+  var z = $('#listeQui'); if (!z) return;
+  z.innerHTML = '';
+  T.equipe().filter(function(u){ return u.actif !== false; }).forEach(function(u){
+    var b = el('button'); b.type = 'button';
+    b.innerHTML = '<span class="av">' + u.nom.charAt(0) + '</span>' +
+      '<span class="tx"><b>' + u.nom + '</b><span>' + T.role(u.role).nom + '</span></span>';
+    b.setAttribute('aria-pressed', quiChoisi === u.id);
+    b.onclick = function(){
+      quiChoisi = u.id;
+      rendrePortail();
+      $('#mdp').focus();
+    };
+    z.appendChild(b);
+  });
+}
 function majPortail(){
-  $('#portail').style.display = connecte() ? 'none' : 'grid';
-  $('#admin').classList.toggle('on', !!connecte());
+  var c = connecte();
+  $('#portail').style.display = c ? 'none' : 'grid';
+  $('#admin').classList.toggle('on', !!c);
+  if (!c) rendrePortail(); else majIdentite();
+}
+function majIdentite(){
+  var m = moi(); if (!m) return;
+  Array.prototype.forEach.call(document.querySelectorAll('.profil'), function(p){
+    p.innerHTML = '<span class="av">' + m.nom.charAt(0) + '</span><div><b>' + m.nom +
+      '</b><span>' + T.role(m.role).nom + '</span></div>';
+  });
+  var e = $('#moiNom'); if (e) e.textContent = m.nom;
 }
 $('#formConnexion').onsubmit = function(e){
   e.preventDefault();
-  T.ecrire('admin', {nom:'Audrey B.', role:'proprietaire'});
-  majPortail(); rendre();
-  toast('Bienvenue Audrey', 'Vous êtes dans l’espace gestion', 'succes');
+  if (!quiChoisi){ toast('Qui êtes-vous ?', 'Choisissez votre nom dans la liste', 'alerte'); return; }
+  var m = T.membre(quiChoisi);
+  if (!m || String($('#mdp').value).trim() !== String(m.code)){
+    toast('Code incorrect', 'Réessayez', 'erreur'); $('#mdp').value = ''; $('#mdp').focus(); return;
+  }
+  T.ecrire('admin', {id:m.id});
+  $('#mdp').value = '';
+  majPortail();
+  vue = monRole().vues[0];
+  majMenuRole();
+  rendre();
+  toast('Bienvenue ' + m.nom.split(' ')[0], T.role(m.role).nom + ' · vous voyez votre poste', 'succes');
 };
-$('#quitter').onclick = function(){ T.ecrire('admin', false); majPortail(); };
+$('#quitter').onclick = function(){ T.ecrire('admin', false); quiChoisi = null; majPortail(); };
+
+/* Le menu ne montre que les vues du rôle. */
+function majMenuRole(){
+  var vues = monRole().vues;
+  Array.prototype.forEach.call(document.querySelectorAll('[data-vue]'), function(b){
+    b.hidden = vues.indexOf(b.dataset.vue) < 0;
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.flanc .grp'), function(g){
+    var suivant = g.nextElementSibling, visible = false;
+    while (suivant && suivant.dataset && suivant.dataset.vue){
+      if (!suivant.hidden) visible = true;
+      suivant = suivant.nextElementSibling;
+    }
+    g.hidden = !visible;
+  });
+}
 $('#burger').onclick = function(e){
   e.stopPropagation();
   var ouvert = $('#flanc').classList.toggle('on');
@@ -782,15 +867,18 @@ function choisirFichier(cb){
 var titres = {tableau:'Tableau de bord', commandes:'Commandes', preparation:'Préparation du jour',
               tournee:'Tournée de livraison', caisse:'Caisse du jour', produits:'Produits',
               stock:'Stock du jour', categories:'Catégories', semaine:'Menu de la semaine',
-              clients:'Clients', reglages:'Réglages'};
+              devis:'Demandes de devis', equipe:'Équipe', clients:'Clients', reglages:'Réglages'};
 function rendre(){
   if (!connecte()) return;
   T.recharger(); badges();
   $('#titreVue').textContent = titres[vue];
   var c = $('#contenu'); c.innerHTML = '';
+  /* un poste ne peut pas atterrir sur une vue qui ne le concerne pas */
+  if (monRole().vues.indexOf(vue) < 0) vue = monRole().vues[0];
   ({tableau:vueTableau, commandes:vueCommandes, preparation:vuePreparation, tournee:vueTournee,
     caisse:vueCaisseJour, produits:vueProduits, stock:vueStock, categories:vueCategories,
-    semaine:vueSemaine, clients:vueClients, reglages:vueReglages})[vue](c);
+    semaine:vueSemaine, devis:vueDevis, equipe:vueEquipe, clients:vueClients,
+    reglages:vueReglages})[vue](c);
 }
 
 /* ---------------------------------------------------------- tableau de bord */
@@ -1054,6 +1142,18 @@ function ticket(x){
   t.appendChild(el('div','pied','Merci et à demain matin.<br>' + T.boutique.slogan));
   return t;
 }
+/* Formulaire court dans le tiroir : sert à l'édition d'un membre. */
+function feuille(construire){
+  var ti = $('#tiroir'); ti.innerHTML = '';
+  var tete = el('div','tete');
+  tete.appendChild(el('div', null, '<h3>Édition</h3>'));
+  var f = el('button','fermer','✕'); f.onclick = fermerTiroir; tete.appendChild(f);
+  ti.appendChild(tete);
+  var dd2 = el('div','dedans');
+  construire(dd2);
+  ti.appendChild(dd2);
+  ouvrirTiroir();
+}
 function ouvrirTiroir(){ $('#tiroir').classList.add('on'); $('#voile').classList.add('on'); }
 function fermerTiroir(){ $('#tiroir').classList.remove('on'); $('#voile').classList.remove('on'); }
 $('#voile').onclick = function(){
@@ -1063,80 +1163,181 @@ $('#voile').onclick = function(){
   $('#voile').classList.remove('on');
 };
 
+/* ---------------------------------------------------------- actions sur une commande
+   Les boutons ne sont plus écrits en dur : ils viennent du cycle de vie et
+   du rôle de la personne connectée. */
+function actionsCommande(cmd, surClic){
+  var z = el('div','actions');
+  T.suivants(cmd.statut, mesDroits()).forEach(function(t){
+    var b = el('button','btn petit' + (t.sombre ? ' creux' : ''));
+    b.textContent = t.libelle;
+    b.onclick = function(e){
+      e.stopPropagation();
+      if (t.vers === 'prete' && !T.toutPret(cmd) &&
+          !confirm('Toutes les lignes ne sont pas cochées. Marquer la commande prête quand même ?')) return;
+      if (t.vers === 'route' && !cmd.livreur){
+        toast('Aucun livreur', 'Affectez d’abord un livreur à cette commande', 'alerte'); return;
+      }
+      changerStatut(cmd.ref, t.vers);
+      if (surClic) surClic();
+    };
+    z.appendChild(b);
+  });
+  return z;
+}
+function choixLivreur(cmd, apres){
+  var liste = T.livreurs();
+  var z = el('div','dd-plat');
+  if (!liste.length) return el('span','aide','Aucun livreur dans l’équipe');
+  var sel = el('select','mini');
+  var vide = el('option'); vide.value = ''; vide.textContent = 'Aucun livreur';
+  sel.appendChild(vide);
+  liste.forEach(function(u){
+    var o = el('option'); o.value = u.id; o.textContent = u.nom;
+    if (cmd.livreur === u.id) o.selected = true;
+    sel.appendChild(o);
+  });
+  sel.onchange = function(e){
+    e.stopPropagation();
+    T.affecter(cmd.ref, sel.value);
+    toast('Livreur', sel.value ? T.membre(sel.value).nom + ' est affecté' : 'Affectation retirée', 'info');
+    if (apres) apres(); else rendre();
+  };
+  sel.onclick = function(e){ e.stopPropagation(); };
+  z.appendChild(sel);
+  return z;
+}
+
 /* ---------------------------------------------------------- préparation du jour
    Ce que la cuisine doit sortir demain matin, tous clients confondus.     */
 function commandesAPreparer(){
   return cmds().filter(function(x){
-    return ['validee','preparation','route'].indexOf(x.statut) > -1 &&
+    return ['validee','preparation','prete'].indexOf(x.statut) > -1 &&
            new Date(x.jourLivraison).toDateString() === D.livraison.toDateString();
+  });
+}
+function commandesALivrer(){
+  var m = moi();
+  return cmds().filter(function(x){
+    if (['prete','route','livree'].indexOf(x.statut) < 0) return false;
+    if (new Date(x.jourLivraison).toDateString() !== D.livraison.toDateString()) return false;
+    /* un livreur ne voit que sa tournée ; les autres postes voient tout */
+    if (m && m.role === 'livreur') return x.livreur === m.id;
+    return true;
   });
 }
 function vuePreparation(c){
   var liste = commandesAPreparer();
-  var agrege = {};
-  liste.forEach(function(x){
-    x.lignes.forEach(function(l){
-      var cle = l.id + '|' + l.fmt;
-      if (!agrege[cle]) agrege[cle] = {id:l.id, nom:l.nom, img:l.img, fmt:l.fmt, qte:0, notes:[]};
-      agrege[cle].qte += l.qte;
-      if (l.note) agrege[cle].notes.push(l.qte + '× ' + l.note);
-      if (l.sup) agrege[cle].notes.push(l.qte + '× ' + l.sup);
-    });
-  });
-  var cles = Object.keys(agrege).sort(function(a,b){ return agrege[b].qte - agrege[a].qte; });
-  var portions = cles.reduce(function(a,k){ return a + agrege[k].qte; }, 0);
-  var faits = T.lire('prepFaites', {});
+  var portions = liste.reduce(function(a,x){ return a + x.lignes.reduce(function(b,l){ return b + l.qte; }, 0); }, 0);
+  var pretes = liste.filter(function(x){ return x.statut === 'prete'; }).length;
 
   var k = el('div','kpis');
   k.appendChild(kpi('Commandes à préparer', liste.length, 'pour ' + D.court));
-  k.appendChild(kpi('Portions au total', portions, cles.length + ' préparations différentes'));
-  k.appendChild(kpi('Déjà prêtes', Object.keys(faits).filter(function(x){ return faits[x]; }).length, 'cochées par la cuisine'));
+  k.appendChild(kpi('Portions au total', portions, 'toutes commandes confondues'));
+  k.appendChild(kpi('Prêtes', pretes, liste.length - pretes + ' en cours'));
   var premier = liste.filter(function(x){ return T.creneau(x.creneau).type === 'matin'; }).length;
   k.appendChild(kpi('Pour le matin', premier, liste.length - premier + ' pour le goûter'));
   c.appendChild(k);
 
-  var p = el('div','panneau-b');
-  var t = el('div','tete');
-  t.appendChild(el('h2', null, 'À préparer pour ' + D.long));
-  var f = el('div','fin');
-  var imp = el('button','btn creux petit'); imp.textContent = 'Imprimer la liste';
+  /* Vue d'ensemble : ce qu'il faut sortir, tous clients confondus. */
+  var agrege = {};
+  liste.forEach(function(x){
+    x.lignes.forEach(function(l){
+      var cle = l.id + '|' + l.fmt;
+      if (!agrege[cle]) agrege[cle] = {nom:l.nom, img:l.img, fmt:l.fmt, qte:0};
+      agrege[cle].qte += l.qte;
+    });
+  });
+  var cles = Object.keys(agrege).sort(function(a,b){ return agrege[b].qte - agrege[a].qte; });
+  var pt = el('div','panneau-b');
+  var tt = el('div','tete');
+  tt.appendChild(el('h2', null, 'Total à sortir pour ' + D.long));
+  var ff = el('div','fin');
+  var imp = el('button','btn creux petit'); imp.textContent = 'Imprimer';
   imp.onclick = function(){ window.print(); };
-  var raz = el('button','btn creux petit'); raz.textContent = 'Tout décocher';
-  raz.onclick = function(){ T.ecrire('prepFaites', {}); rendre(); };
-  f.appendChild(imp); f.appendChild(raz); t.appendChild(f); p.appendChild(t);
-
-  var corps = el('div','corps serre'); corps.id = 'zoneImpression';
-  if (!cles.length) corps.appendChild(el('p','vide','Aucune commande validée pour ' + D.court + '.<br>Validez les commandes reçues pour alimenter cette liste.'));
+  ff.appendChild(imp); tt.appendChild(ff); pt.appendChild(tt);
+  var ct = el('div','corps serre'); ct.id = 'zoneImpression';
+  if (!cles.length) ct.appendChild(el('p','vide','Rien à préparer pour ' + D.court + '.'));
   cles.forEach(function(cle){
     var a = agrege[cle];
-    var fait = !!faits[cle];
-    var r = el('div','prep' + (fait ? ' fait' : ''));
-    var coche = el('button','coche' + (fait ? ' on' : ''));
-    coche.innerHTML = fait ? '✓' : '';
-    coche.onclick = function(){
-      var m = T.lire('prepFaites', {});
-      m[cle] = !m[cle];
-      T.ecrire('prepFaites', m);
-      toast(a.nom, m[cle] ? 'Préparé' : 'À refaire', m[cle] ? 'succes' : 'info');
-      rendre();
-    };
-    r.appendChild(coche);
+    var r = el('div','prep');
     r.appendChild(el('span','q', a.qte));
     var im = el('img'); im.src = T.img(a.img); im.alt = '';
     r.appendChild(im);
-    r.appendChild(el('div','n', a.nom + '<span>' + a.fmt + (a.notes.length ? ' · ' + a.notes.join(' · ') : '') + '</span>'));
-    corps.appendChild(r);
+    r.appendChild(el('div','n', a.nom + '<span>' + a.fmt + '</span>'));
+    ct.appendChild(r);
   });
-  p.appendChild(corps);
-  c.appendChild(p);
+  pt.appendChild(ct);
+  c.appendChild(pt);
+
+  /* Commande par commande : c'est ainsi qu'on cuisine et qu'on emballe. */
+  liste.forEach(function(x){
+    var faites = x.lignesFaites || {};
+    var total = x.lignes.length;
+    var faits = x.lignes.filter(function(l, i){ return faites[i + '|' + l.id]; }).length;
+    var p = el('div','panneau-b');
+    var t = el('div','tete');
+    t.appendChild(el('h2', null, x.ref + ' · ' + x.client.nom));
+    var f = el('div','fin');
+    f.appendChild(el('span','etq', T.creneau(x.creneau).nom));
+    f.appendChild(el('span','etq ' + T.statuts[x.statut].couleur, T.statuts[x.statut].nom));
+    f.appendChild(el('span','etq' + (faits === total ? ' vert' : ''), faits + '/' + total));
+    t.appendChild(f); p.appendChild(t);
+
+    var corps = el('div','corps serre');
+    x.lignes.forEach(function(l, i){
+      var cle = i + '|' + l.id;
+      var fait = !!faites[cle];
+      var r = el('div','prep' + (fait ? ' fait' : ''));
+      var coche = el('button','coche' + (fait ? ' on' : ''));
+      coche.innerHTML = fait ? '✓' : '';
+      coche.onclick = function(){
+        T.marquerLigne(x.ref, cle, !fait);
+        if (x.statut === 'validee') T.majCommande(x.ref, {statut:'preparation'});
+        rendre();
+      };
+      r.appendChild(coche);
+      r.appendChild(el('span','q', l.qte));
+      var im = el('img'); im.src = T.img(l.img); im.alt = '';
+      r.appendChild(im);
+      r.appendChild(el('div','n', l.nom + '<span>' + l.fmt +
+        (l.sup ? ' · ' + l.sup : '') + (l.note ? ' · « ' + l.note + ' »' : '') + '</span>'));
+      corps.appendChild(r);
+    });
+    var pied = el('div','corps');
+    pied.appendChild(actionsCommande(x));
+    corps.appendChild(pied);
+    p.appendChild(corps);
+    c.appendChild(p);
+  });
+  if (!liste.length) c.appendChild(el('p','vide','Aucune commande validée pour ' + D.court + '.'));
 }
 
 /* ---------------------------------------------------------- tournée de livraison */
 function vueTournee(c){
-  var liste = commandesAPreparer();
-  c.appendChild(el('div','panneau-b','<div class="corps"><div style="font-size:13px;color:var(--doux)">' +
-    'Les livraisons de <b style="color:var(--encre)">' + D.long + '</b>, regroupées par créneau puis par quartier. ' +
-    'Cochez au fur et à mesure : le client voit son suivi avancer.</div></div>'));
+  var m = moi();
+  var liste = commandesALivrer();
+  var aLivrer = liste.filter(function(x){ return x.statut !== 'livree'; });
+  var encaisser = aLivrer.filter(function(x){ return x.paiement === 'especes'; })
+                         .reduce(function(a,x){ return a + x.total; }, 0);
+
+  var k = el('div','kpis');
+  k.appendChild(kpi(m && m.role === 'livreur' ? 'Ma tournée' : 'Livraisons du jour', liste.length, D.court));
+  k.appendChild(kpi('Restant à livrer', aLivrer.length, liste.length - aLivrer.length + ' déjà livrées'));
+  k.appendChild(kpi('À encaisser', F(encaisser), 'en espèces, sur la tournée'));
+  var sans = cmds().filter(function(x){
+    return x.statut === 'prete' && !x.livreur &&
+           new Date(x.jourLivraison).toDateString() === D.livraison.toDateString();
+  }).length;
+  k.appendChild(kpi('Sans livreur', sans, sans ? 'à affecter' : 'tout est affecté'));
+  c.appendChild(k);
+
+  if (!liste.length){
+    c.appendChild(el('p','vide', m && m.role === 'livreur'
+      ? 'Aucune commande ne vous est affectée pour ' + D.court + '.'
+      : 'Aucune commande prête à livrer pour ' + D.court + '.'));
+    return;
+  }
 
   T.creneaux.forEach(function(cr){
     var duCreneau = liste.filter(function(x){ return x.creneau === cr.id; });
@@ -1146,9 +1347,9 @@ function vueTournee(c){
     t.appendChild(el('h2', null, cr.nom));
     var f = el('div','fin');
     f.appendChild(el('span','etq', duCreneau.length + ' arrêt' + (duCreneau.length > 1 ? 's' : '')));
-    var esp = duCreneau.filter(function(x){ return x.paiement === 'especes'; })
+    var esp = duCreneau.filter(function(x){ return x.paiement === 'especes' && x.statut !== 'livree'; })
                        .reduce(function(a,x){ return a + x.total; }, 0);
-    if (esp) f.appendChild(el('span','etq or', T.F(esp) + ' à encaisser'));
+    if (esp) f.appendChild(el('span','etq or', F(esp) + ' à encaisser'));
     t.appendChild(f); p.appendChild(t);
 
     var corps = el('div','corps serre');
@@ -1158,20 +1359,26 @@ function vueTournee(c){
       corps.appendChild(el('div','lab', T.zone(z).nom + ' · ' + T.zone(z).delai));
       parZone[z].forEach(function(x){
         var r = el('div','arret');
-        r.appendChild(el('span','pas-num', x.statut === 'livree' ? '✓' : '•'));
-        r.appendChild(el('div','n', x.client.nom + '<span>' + x.adresse + '</span>'));
-        r.appendChild(el('div','m', T.F(x.total) + '<span>' + T.paiement(x.paiement).nom.replace(' à la livraison','') +
-          (x.especes && x.especes.montant && !x.especes.appoint
-            ? ' · rendre ' + T.F(x.especes.montant - x.total) : '') + '</span>'));
+        r.appendChild(el('span','pas-num', x.statut === 'livree' ? '✓' : (x.statut === 'route' ? '→' : '•')));
+        var rendu = x.especes && x.especes.montant && !x.especes.appoint
+          ? ' · rendre ' + F(x.especes.montant - x.total) : '';
+        r.appendChild(el('div','n', x.client.nom + '<span>' + x.adresse + '</span>' +
+          '<span>' + x.ref + ' · ' + T.paiement(x.paiement).nom.replace(' à la livraison','') + rendu + '</span>'));
+        r.appendChild(el('div','m', F(x.total) + '<span>' + T.statuts[x.statut].nom + '</span>'));
+
         var act = el('div','actions');
-        var tel = el('a','icone'); tel.href = 'tel:' + x.client.tel.replace(/[^0-9+]/g,'');
+        var tel = el('a','icone'); tel.href = 'tel:' + String(x.client.tel).replace(/[^0-9+]/g,'');
         tel.title = 'Appeler'; tel.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z"/></svg>';
         act.appendChild(tel);
-        if (x.statut !== 'livree'){
-          var ok = el('button','btn petit'); ok.textContent = x.statut === 'route' ? 'Livrée' : 'En route';
-          ok.onclick = function(){ changerStatut(x.ref, x.statut === 'route' ? 'livree' : 'route'); };
-          act.appendChild(ok);
-        } else act.appendChild(el('span','etq vert','Livrée'));
+        var carte = el('a','icone');
+        carte.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(x.adresse + ', Abidjan');
+        carte.target = '_blank'; carte.title = 'Itinéraire';
+        carte.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>';
+        act.appendChild(carte);
+        if (jePeux('commandes') || jePeux('tout')) act.appendChild(choixLivreur(x));
+        var suite = actionsCommande(x);
+        Array.prototype.forEach.call(suite.children, function(b){ act.appendChild(b); });
+        if (x.statut === 'livree') act.appendChild(el('span','etq vert','Livrée'));
         r.appendChild(act);
         r.onclick = function(e){ if (e.target.closest('.actions')) return; ouvrirCommande(x.ref); };
         corps.appendChild(r);
@@ -1180,7 +1387,29 @@ function vueTournee(c){
     p.appendChild(corps);
     c.appendChild(p);
   });
-  if (!liste.length) c.appendChild(el('p','vide','Aucune livraison prévue pour ' + D.court + '.'));
+
+  /* Les commandes prêtes que personne n'a prises en charge. */
+  var orphelines = cmds().filter(function(x){
+    return x.statut === 'prete' && !x.livreur &&
+           new Date(x.jourLivraison).toDateString() === D.livraison.toDateString();
+  });
+  if (orphelines.length && (jePeux('commandes') || jePeux('tout'))){
+    var po = el('div','panneau-b');
+    po.appendChild(el('div','tete','<h2>Prêtes, sans livreur</h2>'));
+    var co = el('div','corps serre');
+    orphelines.forEach(function(x){
+      var r = el('div','arret');
+      r.appendChild(el('span','pas-num','!'));
+      r.appendChild(el('div','n', x.client.nom + '<span>' + T.zone(x.zone).nom + ' · ' + x.ref + '</span>'));
+      r.appendChild(el('div','m', F(x.total)));
+      var act = el('div','actions');
+      act.appendChild(choixLivreur(x));
+      r.appendChild(act);
+      co.appendChild(r);
+    });
+    po.appendChild(co);
+    c.appendChild(po);
+  }
 }
 
 /* ---------------------------------------------------------- caisse du jour */
@@ -1242,6 +1471,147 @@ function vueCaisseJour(c){
     toast('Journée clôturée', T.F(encaisse) + ' encaissés', 'succes');
   };
   c.appendChild(cl);
+}
+
+/* ---------------------------------------------------------- devis plateaux */
+function vueDevis(c){
+  var liste = T.devis();
+  var k = el('div','kpis');
+  var nouveaux = liste.filter(function(x){ return x.statut === 'nouveau'; });
+  var acceptes = liste.filter(function(x){ return x.statut === 'accepte'; });
+  k.appendChild(kpi('Demandes', liste.length, nouveaux.length + ' à traiter'));
+  k.appendChild(kpi('Acceptés', acceptes.length, F(acceptes.reduce(function(a,x){ return a + (x.total||0); }, 0))));
+  k.appendChild(kpi('Personnes servies', acceptes.reduce(function(a,x){ return a + (x.personnes||0); }, 0), 'sur les devis acceptés'));
+  c.appendChild(k);
+
+  var p = el('div','panneau-b');
+  p.appendChild(el('div','tete','<h2>Demandes reçues</h2>'));
+  var corps = el('div','corps serre');
+  if (!liste.length) corps.appendChild(el('p','vide','Aucune demande de devis pour l’instant.<br>Les clients les envoient depuis « Plateaux &amp; événements ».'));
+  liste.forEach(function(x){
+    var st = T.statutsDevis[x.statut] || T.statutsDevis.nouveau;
+    var r = el('div','rang');
+    r.appendChild(el('div','tx','<b>' + x.ref + ' · ' + (x.client || 'Client') + '</b>' +
+      '<span>' + x.formule + ' · ' + x.personnes + ' personnes · ' +
+      T.dateCourte(x.creele) + (x.jour ? ' · pour le ' + x.jour : '') + '</span>' +
+      (x.mot ? '<span style="color:var(--encre);margin-top:3px;display:block">« ' + x.mot + ' »</span>' : '')));
+    r.appendChild(el('span','etq ' + st.couleur, st.nom));
+    r.appendChild(el('span', null, '<b style="font-family:var(--titre);font-size:15px">' + F(x.total) + '</b>'));
+    var act = el('div','actions');
+    if (x.tel){
+      var wa = el('a','btn petit creux');
+      wa.href = 'https://wa.me/' + String(x.tel).replace(/[^0-9]/g,'') ; wa.target = '_blank';
+      wa.textContent = 'WhatsApp'; act.appendChild(wa);
+    }
+    [['envoye','Devis envoyé'],['accepte','Accepté'],['refuse','Refusé']].forEach(function(o){
+      if (x.statut === o[0]) return;
+      var b = el('button','btn petit' + (o[0] === 'refuse' ? ' creux' : ''));
+      b.textContent = o[1];
+      b.onclick = function(){ T.majDevis(x.ref, {statut:o[0]}); toast(x.ref, o[1], 'succes'); rendre(); };
+      act.appendChild(b);
+    });
+    r.appendChild(act);
+    corps.appendChild(r);
+  });
+  p.appendChild(corps);
+  c.appendChild(p);
+}
+
+/* ---------------------------------------------------------- équipe */
+function vueEquipe(c){
+  var liste = T.equipe();
+  var p = el('div','panneau-b');
+  var t = el('div','tete');
+  t.appendChild(el('h2', null, 'Membres de l’équipe'));
+  var f = el('div','fin');
+  var plus = el('button','btn petit'); plus.textContent = 'Ajouter un membre';
+  plus.onclick = function(){ editerMembre(null); };
+  f.appendChild(plus); t.appendChild(f); p.appendChild(t);
+
+  var corps = el('div','corps serre');
+  liste.forEach(function(u){
+    var r = el('div','rang');
+    r.appendChild(el('span','av-r', u.nom.charAt(0)));
+    r.appendChild(el('div','tx','<b>' + u.nom + '</b><span>' + T.role(u.role).nom + ' · ' + (u.tel || 'sans téléphone') + '</span>'));
+    r.appendChild(el('span','etq ' + (u.actif === false ? 'rouge' : 'vert'), u.actif === false ? 'Inactif' : 'Actif'));
+    var act = el('div','actions');
+    var mod = el('button','btn petit creux'); mod.textContent = 'Modifier';
+    mod.onclick = function(){ editerMembre(u); };
+    act.appendChild(mod);
+    if (u.id !== (moi() || {}).id){
+      var bas = el('button','btn petit creux'); bas.textContent = u.actif === false ? 'Réactiver' : 'Désactiver';
+      bas.onclick = function(){
+        var l = T.equipe();
+        l.forEach(function(x){ if (x.id === u.id) x.actif = (x.actif === false); });
+        T.sauverEquipe(l); toast(u.nom, u.actif === false ? 'Réactivé' : 'Désactivé', 'info'); rendre();
+      };
+      act.appendChild(bas);
+    }
+    r.appendChild(act);
+    corps.appendChild(r);
+  });
+  p.appendChild(corps);
+  c.appendChild(p);
+
+  var aide = el('div','panneau-b');
+  aide.appendChild(el('div','tete','<h2>Ce que chaque rôle peut faire</h2>'));
+  var ca = el('div','corps serre');
+  Object.keys(T.roles).forEach(function(cle){
+    var r2 = T.roles[cle];
+    ca.appendChild(el('div','rang','<div class="tx"><b>' + r2.nom + '</b><span>' +
+      r2.vues.map(function(v){ return titres[v] || v; }).join(' · ') + '</span></div>'));
+  });
+  aide.appendChild(ca);
+  c.appendChild(aide);
+}
+
+function editerMembre(u){
+  var nouveau = !u;
+  u = u ? JSON.parse(JSON.stringify(u)) : {id:'u' + Date.now(), nom:'', role:'cuisine', tel:'', code:'', actif:true};
+  feuille(function(z){
+    z.appendChild(el('h3', null, nouveau ? 'Nouveau membre' : 'Modifier ' + u.nom));
+    var f1 = champTexte('Nom complet', u.nom, function(v){ u.nom = v; });
+    var f2 = champTexte('Téléphone', u.tel, function(v){ u.tel = v; });
+    var f3 = champTexte('Code d’accès (4 à 6 chiffres)', u.code, function(v){ u.code = v; });
+    z.appendChild(f1); z.appendChild(f2); z.appendChild(f3);
+    z.appendChild(el('span','lab','Rôle'));
+    var ch = el('div','choix');
+    Object.keys(T.roles).forEach(function(cle){
+      var b = el('button', null, T.roles[cle].nom);
+      b.setAttribute('aria-pressed', u.role === cle);
+      b.onclick = function(){
+        u.role = cle;
+        Array.prototype.forEach.call(ch.children, function(x,i){
+          x.setAttribute('aria-pressed', Object.keys(T.roles)[i] === cle);
+        });
+      };
+      ch.appendChild(b);
+    });
+    z.appendChild(ch);
+    var ok = el('button','btn plein grand');
+    ok.textContent = nouveau ? 'Créer le membre' : 'Enregistrer';
+    ok.onclick = function(){
+      if (!u.nom.trim()){ toast('Nom manquant', null, 'alerte'); return; }
+      if (!/^[0-9]{4,6}$/.test(String(u.code))){ toast('Code invalide', '4 à 6 chiffres', 'alerte'); return; }
+      var l = T.equipe();
+      var i = -1;
+      l.forEach(function(x, k){ if (x.id === u.id) i = k; });
+      if (i > -1) l[i] = u; else l.push(u);
+      T.sauverEquipe(l);
+      fermerTiroir();
+      toast(u.nom, nouveau ? 'Membre ajouté' : 'Modifié', 'succes');
+      rendre();
+    };
+    z.appendChild(ok);
+  });
+}
+function champTexte(libelle, valeur, surSaisie){
+  var w = el('div','champ');
+  w.appendChild(el('label','lab', libelle));
+  var i = el('input'); i.type = 'text'; i.value = valeur || '';
+  i.oninput = function(){ surSaisie(i.value); };
+  w.appendChild(i);
+  return w;
 }
 
 /* ---------------------------------------------------------- produits */

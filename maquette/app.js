@@ -1555,23 +1555,50 @@ function rendrePlateaux(){
   dd.appendChild(dv);
   majDevis();
 
+  /* Le montant est ce qui décide : il reste dans le pied, toujours visible,
+     au lieu d'attendre tout en bas de la page. */
+  var total = el('div','pl-total');
+  total.innerHTML = '<span>Estimation</span><b id="plTotal">' + F(calculPlateaux().total) + '</b>';
+  pied.appendChild(total);
+
   var env = el('button','btn plein');
-  env.textContent = 'Demander le devis sur WhatsApp';
+  env.textContent = 'Envoyer ma demande';
   env.onclick = function(){
     if (!PL.jour){ avis('Choisissez d\u2019abord un jour'); return; }
     var c = calculPlateaux();
     var f = FORMULES_PL.filter(function(x){ return x.id === PL.formule; })[0];
+    var jourLisible = new Date(PL.jour).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+
+    /* La demande entre dans l'espace de gestion, elle ne part pas dans le
+       vide : la boutique la voit et y répond. */
+    T.enregistrerDevis({
+      client: (compte && compte.nom) || S.nom || 'Client',
+      tel: (compte && compte.tel) || S.tel || '',
+      formule: f.nom, personnes: PL.personnes, boissons: PL.boissons,
+      jour: jourLisible, heure: PL.quand || '07h30',
+      mot: PL.mot, total: c.total, remise: c.remise
+    });
+    if (T.pousser) T.pousser();
+
     var txt = 'Bonjour Tela Castle, je souhaite un devis pour un plateau.%0A%0A' +
       '*' + f.nom + '*%0A' + PL.personnes + ' personnes%0A' +
       (PL.boissons ? 'Avec boissons à volonté%0A' : '') +
-      'Date : ' + new Date(PL.jour).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}) +
-      ' à ' + (PL.quand || '07h30') + '%0A' +
+      'Date : ' + jourLisible + ' à ' + (PL.quand || '07h30') + '%0A' +
       'Estimation : ' + F(c.total) + '%0A' +
       (PL.mot ? '%0APrécisions : ' + encodeURIComponent(PL.mot) : '');
     window.open('https://wa.me/' + T.boutique.telBrut + '?text=' + txt, '_blank');
-    avis('Demande envoyée, réponse sous 24 h');
+    avis('Demande envoyée à Tela Castle');
+    PL.envoye = true;
+    rendrePlateaux();
   };
   pied.appendChild(env);
+
+  if (PL.envoye){
+    dd.insertBefore(el('div','bloc','<div style="padding:14px 16px;background:var(--vert-doux);border-radius:18px">' +
+      '<b style="font-family:var(--titre);font-size:14.5px;color:var(--vert)">Demande envoyée</b>' +
+      '<div style="font-size:12.5px;color:var(--doux);margin-top:4px">Tela Castle la voit dans son espace de gestion ' +
+      'et vous répond sur WhatsApp sous 24 h.</div></div>'), dd.firstChild);
+  }
 }
 function calculPlateaux(){
   var f = FORMULES_PL.filter(function(x){ return x.id === PL.formule; })[0];
@@ -1581,8 +1608,10 @@ function calculPlateaux(){
   return {f:f, base:base, bois:bois, remise:remise, total:base + bois - remise};
 }
 function majDevis(){
-  var dv = $('#devisPl'); if (!dv) return;
+  var dv = $('#devisPl');
   var c = calculPlateaux();
+  var t = $('#plTotal'); if (t) t.textContent = F(c.total);
+  if (!dv) return;
   dv.innerHTML =
     '<div class="l"><span>' + c.f.nom + ' × ' + PL.personnes + '</span><span>' + F(c.base) + '</span></div>' +
     (c.bois ? '<div class="l"><span>Boissons × ' + PL.personnes + '</span><span>' + F(c.bois) + '</span></div>' : '') +
