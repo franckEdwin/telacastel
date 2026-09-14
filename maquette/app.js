@@ -110,9 +110,26 @@ function rendreRail(){
 function categoriesActives(){ return T.categories.filter(function(c){ return c.actif !== false; }); }
 function produitsDe(c){ return T.produitsDe(c, S.jour); }
 function allerSection(id){
-  if (mobile()) ecran('accueil');
-  var e = document.getElementById(id);
-  if (e) e.scrollIntoView({behavior:'smooth', block:'start'});
+  /* Écrit quand l'accueil était la carte : depuis qu'ils sont séparés,
+     cliquer un rayon renvoyait à la page d'accueil. C'est la carte qu'il
+     faut atteindre, et lui laisser le temps de s'afficher avant de
+     défiler si l'on vient d'un autre écran. */
+  var bascule = mobile() && S.base !== 'carte';
+  if (mobile()) ecran('carte');
+  setTimeout(function(){
+    var e = document.getElementById(id);
+    if (!e) return;
+    var depart = window.scrollY;
+    e.scrollIntoView({behavior:'smooth', block:'start'});
+    /* Filet : si le défilement animé ne démarre pas — certains navigateurs
+       l'ignorent — on y va d'un coup plutôt que de ne rien faire. */
+    setTimeout(function(){
+      if (Math.abs(window.scrollY - depart) < 4){
+        var cible = window.scrollY + e.getBoundingClientRect().top - (hautBarre() + 70);
+        if (Math.abs(cible - depart) > 4) window.scrollTo(0, Math.max(0, cible));
+      }
+    }, 450);
+  }, bascule ? 90 : 0);
 }
 
 /* ---------------------------------------------------------- menu */
@@ -1668,7 +1685,7 @@ function rendreAccueil(){
     var b = el('button');
     b.innerHTML = '<span class="ph"><img src="' + T.img(c.vignette) + '" alt="" loading="lazy"></span>' +
       '<span class="n">' + c.nom + '</span><span class="q">' + produitsDe(c).length + ' produits</span>';
-    b.onclick = function(){ ecran('carte'); setTimeout(function(){ allerSection('sec-' + c.id); }, 240); };
+    b.onclick = function(){ allerSection('sec-' + c.id); };
     ray.appendChild(b);
   });
   sec.appendChild(ray);
