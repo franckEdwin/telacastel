@@ -804,19 +804,26 @@ function vueConfirme(dd, pied){
   wa.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm5.6 14.1c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.7-.1-.4-.1-.9-.3-1.6-.6-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.4-1.1-2.7s.7-1.9 1-2.2c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5s.8 1.9.8 2 .1.3 0 .5c-.1.2-.2.3-.3.5l-.4.5c-.2.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1s.7-.8.9-1.1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg> Prévenir la boutique sur WhatsApp';
   pied.appendChild(wa);
 
+  var capacite = T.capaciteRecu ? T.capaciteRecu() : 'telecharge';
+  var libelles = {partage:'Partager le reçu', copie:'Copier le reçu', telecharge:'Enregistrer le reçu'};
   var partage = el('button','btn creux plein');
-  partage.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg> Partager le reçu';
+  partage.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg> ' + libelles[capacite];
   partage.onclick = function(){
     partage.disabled = true;
     T.partagerRecu(cmd, function(etat){
       partage.disabled = false;
-      if (etat === 'copie') avis('Reçu copié — collez-le avec Ctrl+V');
+      if (etat === 'copie') avis('Reçu copié — ouvrez WhatsApp et collez avec Ctrl+V');
       else if (etat === 'telecharge') avis('Reçu enregistré — joignez-le à votre message');
       else if (etat === 'partage') avis('Reçu partagé');
       else if (etat === 'erreur') avis('Le reçu n\u2019a pas pu être créé');
     });
   };
   pied.appendChild(partage);
+  if (capacite !== 'partage'){
+    pied.appendChild(el('span','aide', capacite === 'copie'
+      ? 'Ce navigateur ne sait pas envoyer une image directement. Le reçu est copié, il ne reste qu\u2019à le coller dans la conversation.'
+      : 'Ce navigateur ne sait pas envoyer une image directement. Le reçu est enregistré dans vos téléchargements.'));
+  }
 
   var nb = el('button','btn creux plein'); nb.textContent = 'Nouvelle commande';
   nb.onclick = function(){ S.ref = null; T.ecrire('refEnCours', null); S.etape = 'panier'; rendrePanier(); ecran('accueil'); };

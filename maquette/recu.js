@@ -278,6 +278,15 @@ function telecharger(fichier){
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
 }
+/* Ce que l'appareil sait vraiment faire du reçu. Le bouton doit le dire
+   avant le clic : promettre « partager » puis copier dans le presse-papier
+   sans prévenir, c'est ce qui donne l'impression que rien ne marche. */
+T.capaciteRecu = function(){
+  var sonde = new File([new Blob([''],{type:'image/png'})], 'x.png', {type:'image/png'});
+  try { if (navigator.canShare && navigator.canShare({files:[sonde]})) return 'partage'; } catch(e){}
+  if (navigator.clipboard && window.ClipboardItem && window.isSecureContext) return 'copie';
+  return 'telecharge';
+};
 T.partagerRecu = function(cmd, retour){
   retour = retour || function(){};
   T.recuFichier(cmd).then(function(fichier){

@@ -453,27 +453,30 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
 }
 @media (min-width:1100px){ .rappel .ct{display:none} }
 /* ============================================================
-   Dessin « épuré » — le parti pris par défaut
-   Les boîtes bordées autour de chaque plat donnaient une grille de
-   cartes : générique, et lourde dès qu'il y a quarante produits.
-   Ici la carte redevient une carte de restaurant : des lignes, un
-   filet entre elles, une photo ronde et un prix qui se lit de loin.
+   Dessin de la carte
+   Les plats ne sont plus des boîtes bordées posées sur du blanc : le
+   fond de page devient un beige chaud, et les plats se regroupent dans
+   un bloc blanc aux angles largement adoucis. Aucune bordure, aucune
+   ombre : c'est le fond qui sépare, comme dans les applications de
+   livraison. Sur grand écran le même bloc se scinde en cartes, parce
+   qu'une liste unique sur 1400 px ne se lit pas.
    ============================================================ */
-[data-dessin="epure"] .plats{gap:0;grid-template-columns:1fr}
+[data-dessin="epure"] .plats{gap:0;grid-template-columns:1fr;background:var(--surface);
+  border-radius:var(--r-g);padding:0 15px}
 [data-dessin="epure"] .plat{
-  border:0;border-radius:0;background:transparent;padding:15px 0;gap:15px;align-items:flex-start;
+  border:0;border-radius:0;background:transparent;padding:14px 0;gap:14px;align-items:center;
   border-bottom:var(--ep-bord) solid var(--bord)}
-[data-dessin="epure"] .plat:last-child{border-bottom:0}
-[data-dessin="epure"] .plat:hover{transform:none;background:transparent}
-[data-dessin="epure"] .plat:hover h3{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
-[data-dessin="epure"] .plat .vis{width:84px;height:84px;flex:none;border-radius:26px;overflow:hidden;position:relative}
+[data-dessin="epure"] .plats .plat:last-child{border-bottom:0}
+[data-dessin="epure"] .plat:hover{transform:none}
+[data-dessin="epure"] .plat:active{background:var(--surface-2)}
+[data-dessin="epure"] .plat .vis{width:78px;height:78px;flex:none;border-radius:20px;overflow:hidden;position:relative}
 [data-dessin="epure"] .plat .vis img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
-[data-dessin="epure"] .plat .tx{gap:3px;padding-right:44px}
-[data-dessin="epure"] .plat h3{font-size:15.5px;line-height:1.25}
+[data-dessin="epure"] .plat .tx{gap:3px;padding-right:46px;align-self:center}
+[data-dessin="epure"] .plat h3{font-size:15px;line-height:1.25}
 [data-dessin="epure"] .plat .d{font-size:12.5px;-webkit-line-clamp:2}
-[data-dessin="epure"] .plat .meta{padding-top:7px;gap:10px}
+[data-dessin="epure"] .plat .meta{padding-top:6px;gap:10px;margin-top:0}
 [data-dessin="epure"] .plat .prix{font-family:var(--titre);font-weight:700;font-size:15px;color:var(--encre)}
-/* la note et le nombre d'avis encombrent la ligne : elles restent sur la fiche */
+/* la note et le nombre d'avis encombrent la ligne : ils restent sur la fiche */
 [data-dessin="epure"] .plat .etoile{display:none}
 [data-dessin="epure"] .plat .restant{color:var(--rouge);font-size:11.5px}
 /* l'étiquette devient un mot, pas une pastille de couleur */
@@ -481,22 +484,68 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
   font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;font-weight:600}
 [data-dessin="epure"] .plat .tx > .etq.vert{color:var(--vert)}
 [data-dessin="epure"] .plat .tx > .etq.rouge{color:var(--rouge)}
-/* le bouton d'ajout : plein, aux couleurs de la maison, posé et non flottant */
-[data-dessin="epure"] .plat .plus{right:0;bottom:auto;top:26px;width:34px;height:34px;border-radius:12px;
-  background:var(--or);border:0;box-shadow:none;color:#241A12;font-size:21px;font-weight:600}
+/* le bouton d'ajout : rond, plein, aux couleurs de la maison, sans ombre */
+[data-dessin="epure"] .plat .plus{right:0;top:50%;bottom:auto;transform:translateY(-50%);
+  width:36px;height:36px;border-radius:50%;background:var(--or);border:0;box-shadow:none;
+  color:#241A12;font-size:22px;font-weight:600}
 [data-dessin="epure"] .plat .plus:hover{background:var(--or-fonce);color:#fff}
-[data-dessin="epure"] .plat .cpt{right:0;bottom:auto;top:20px;box-shadow:none;border-color:var(--bord-fort)}
+[data-dessin="epure"] .plat .cpt{right:0;top:50%;bottom:auto;transform:translateY(-50%);box-shadow:none;border:0;background:var(--surface-2)}
 [data-dessin="epure"] .plat.epuise .vis{filter:grayscale(1);opacity:.55}
 
-/* les titres de section portent la structure, puisque les boîtes ne le font plus */
-[data-dessin="epure"] .sec-titre{padding:22px 0 8px;border-top:var(--ep-bord) solid var(--bord);margin-top:4px}
-[data-dessin="epure"] .sec:first-child .sec-titre{border-top:0;margin-top:0;padding-top:14px}
-[data-dessin="epure"] .t-haut h2{font-size:23px;letter-spacing:-.01em}
+[data-dessin="epure"] .sec-titre{padding:20px 0 10px}
+[data-dessin="epure"] .t-haut h2{font-size:22px;letter-spacing:-.01em}
 [data-dessin="epure"] .t-haut span{font-size:12px}
 
-@media (min-width:760px){
-  /* en large, deux colonnes de lignes, avec un filet entre elles */
-  [data-dessin="epure"] .plats{grid-template-columns:1fr 1fr;column-gap:30px}
+@media (min-width:1100px){
+  /* grand écran : le bloc se scinde en cartes, deux colonnes */
+  [data-dessin="epure"] .plats{background:transparent;padding:0;grid-template-columns:1fr 1fr;gap:12px}
+  [data-dessin="epure"] .plat{background:var(--surface);border-radius:18px;padding:13px;border-bottom:0}
+  [data-dessin="epure"] .plat:hover{background:var(--surface-2)}
+  [data-dessin="epure"] .plat .plus{right:12px}
+  [data-dessin="epure"] .plat .cpt{right:12px}
+}
+
+/* ============================================================
+   Mobile : une application, pas le site rétréci
+   Fond beige, blocs blancs, onglets de catégorie en pastilles
+   collantes avec la vignette du rayon, en-tête réduit à l'adresse
+   et à la recherche. Rien ne flotte, rien ne porte d'ombre.
+   ============================================================ */
+@media (max-width:1099px){
+  [data-dessin="epure"]{--fond:#F5F1EA}
+  [data-theme="sombre"][data-dessin="epure"]{--fond:#100D0B}
+  [data-theme="cacao"][data-dessin="epure"]{--fond:#F3E9DB}
+
+  [data-dessin="epure"] .enveloppe{padding:0 12px}
+  [data-dessin="epure"] .plats{margin:0;padding:0 14px;border-radius:22px}
+  [data-dessin="epure"] .plat .vis{width:72px;height:72px;border-radius:18px}
+  [data-dessin="epure"] .plat h3{font-size:14.5px}
+  [data-dessin="epure"] .sec-titre{padding:18px 2px 9px;background:var(--fond)}
+  [data-dessin="epure"] .t-haut h2{font-size:19px}
+
+  /* la bannière et le rappel deviennent des blocs blancs posés sur le beige */
+  [data-dessin="epure"] .rappel{background:var(--surface);border:0;border-radius:18px}
+  [data-dessin="epure"] .infos-b{padding:10px 4px 2px}
+
+  /* onglets de catégorie : pastilles collantes, vignette + nom */
+  [data-dessin="epure"] .rail{gap:8px;padding:10px 12px;margin:0 -12px;border-bottom:0;
+    background:var(--fond);top:var(--h-bar)}
+  [data-dessin="epure"] .rail button{width:auto;flex-direction:row;align-items:center;gap:8px;
+    padding:6px 14px 6px 6px;border-radius:999px;background:var(--surface);color:var(--doux);
+    font-size:13px;font-weight:500;white-space:nowrap}
+  [data-dessin="epure"] .rail button::after{display:none}
+  [data-dessin="epure"] .rail .rond{display:block;width:28px;height:28px;border-radius:50%;
+    border:0;overflow:hidden;flex:none}
+  [data-dessin="epure"] .rail button:hover .rond{transform:none}
+  [data-dessin="epure"] .rail button[aria-pressed="true"]{background:var(--encre);color:var(--fond)}
+
+  /* accès directs et panneaux suivent le même langage */
+  [data-dessin="epure"] .acces button{border:0;border-radius:18px}
+  [data-dessin="epure"] .panneau{background:var(--fond)}
+  [data-dessin="epure"] .panneau .bloc,
+  [data-dessin="epure"] .hcmd,
+  [data-dessin="epure"] .compteur,
+  [data-dessin="epure"] .form-pl label{border:0;border-radius:18px}
 }
 </style>
 </head>
