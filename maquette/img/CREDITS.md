@@ -18,3 +18,6 @@
 - **sandwich-viande.jpg** — Princess Sandwich.jpg · licence CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:Princess_Sandwich.jpg
 - **sandwich-saucisson.jpg** — Italian Sausage Sandwich.jpg · licence CC BY-SA 3.0 · https://commons.wikimedia.org/wiki/File:Italian_Sausage_Sandwich.jpg
 - **beignet.jpg** — Puff Puff Making series 6.jpg · licence CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:Puff_Puff_Making_series_6.jpg
+- **cafe-lait.jpg** — Coffee in a cup.jpg · licence CC BY-SA 3.0 · https://commons.wikimedia.org/wiki/File:Coffee_in_a_cup.jpg
+- **milo.jpg** — Australian milo.jpg · licence CC BY-SA 3.0 · https://commons.wikimedia.org/wiki/File:Australian_milo.jpg
+- **the-lait.jpg** — Milk tea and a glass of water.jpg · licence CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:Milk_tea_and_a_glass_of_water.jpg

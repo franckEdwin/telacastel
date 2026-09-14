@@ -52,7 +52,8 @@ T.paiements = [
 T.visuels = ['jaune-jaune','bouillie','yaourt','yassa','placali','wintchin','crudites','fruits','alloco',
              'arachide','gombo','garba','bissap','gingembre','baobab','pastels','galette','macedoine',
              'salade-pates','salade-pdt','yaourt-boire','attieke',
-             'sandwich-oeuf','sandwich-omelette','sandwich-viande','sandwich-saucisson','beignet'];
+             'sandwich-oeuf','sandwich-omelette','sandwich-viande','sandwich-saucisson','beignet',
+             'cafe-lait','milo','the-lait'];
 
 /* ---------------------------------------------------------- suppléments */
 var SUP_DOUX = [ {nom:'Lait concentré', prix:200}, {nom:'Sucre à part', prix:0}, {nom:'Glaçons', prix:0} ];
@@ -85,6 +86,26 @@ T.produitsDefaut = {
   'f-eco':        {nom:'Formule Éco', desc:'Sandwich œuf simple + une bouillie', img:'sandwich-oeuf',
                    formats:[['La formule',800]], note:4.7, avis:61, tag:'Petit budget',
                    stock:25, seuil:6, actif:true, sup:[{nom:'Lait concentré', prix:200}]},
+
+  /* --- sandwichs à l'unité --- */
+  's-oeuf':          {nom:'Sandwich œuf', desc:'Pain frais, œuf, crudités', img:'sandwich-oeuf',
+                      formats:[['L\u2019unité',500]], note:4.7, avis:88, sup:[{nom:'Piment fort', prix:0}, {nom:'Sans oignon', prix:0}], stock:30, seuil:6, actif:true},
+  's-omelette':      {nom:'Sandwich omelette', desc:'Omelette chaude, oignon, tomate', img:'sandwich-omelette',
+                      formats:[['L\u2019unité',700]], note:4.8, avis:74, sup:[{nom:'Piment fort', prix:0}, {nom:'Sans oignon', prix:0}], stock:25, seuil:6, actif:true},
+  's-omelette-from': {nom:'Sandwich omelette fromage', desc:'Omelette et fromage fondant', img:'sandwich-omelette',
+                      formats:[['L\u2019unité',800]], note:4.9, avis:96, tag:'Le plus commandé', sup:[{nom:'Piment fort', prix:0}, {nom:'Sans oignon', prix:0}], stock:22, seuil:5, actif:true},
+  's-viande':        {nom:'Sandwich viande hachée', desc:'Viande hachée assaisonnée, crudités', img:'sandwich-viande',
+                      formats:[['L\u2019unité',500]], note:4.7, avis:65, sup:[{nom:'Piment fort', prix:0}, {nom:'Sans oignon', prix:0}], stock:24, seuil:6, actif:true},
+  's-saucisson':     {nom:'Sandwich saucisson', desc:'Saucisson poêlé, oignon', img:'sandwich-saucisson',
+                      formats:[['L\u2019unité',500]], note:4.6, avis:52, sup:[{nom:'Piment fort', prix:0}, {nom:'Sans oignon', prix:0}], stock:20, seuil:5, actif:true},
+
+  /* --- boissons chaudes --- */
+  'cafe-milo':       {nom:'Café au lait Milo', desc:'Lait chaud et Milo', img:'milo',
+                      formats:[['Le gobelet',500]], note:4.8, avis:103, sup:[{nom:'Sucre à part', prix:0}, {nom:'Plus de lait', prix:0}], stock:40, seuil:8, actif:true},
+  'cafe-nescafe':    {nom:'Café au lait Nescafé', desc:'Lait chaud et Nescafé', img:'cafe-lait',
+                      formats:[['Le gobelet',500]], note:4.7, avis:91, sup:[{nom:'Sucre à part', prix:0}, {nom:'Plus de lait', prix:0}], stock:40, seuil:8, actif:true},
+  'the-lait':        {nom:'Thé au lait', desc:'Thé infusé, lait chaud', img:'the-lait',
+                      formats:[['Le gobelet',500]], note:4.6, avis:47, sup:[{nom:'Sucre à part', prix:0}, {nom:'Plus de lait', prix:0}], stock:35, seuil:8, actif:true},
 
   'jj-viande':     {nom:'Jaune Jaune viande hachée', desc:'Galette de mil dorée, vermicelle, sauce tomate maison', img:'jaune-jaune', formats:[['La part',2500]], note:4.9, avis:184, tag:'Le plus commandé', sup:clone(SUP_SALE), stock:24, seuil:5, actif:true},
   'jj-poisson':    {nom:'Jaune Jaune poisson', desc:'Le même, au poisson braisé du matin', img:'jaune-jaune', formats:[['La part',2000]], note:4.8, avis:96, sup:clone(SUP_SALE), stock:18, seuil:5, actif:true},
@@ -128,7 +149,8 @@ T.categoriesDefaut = [
     produits:['f-tela','f-eleve','f-eco','f-galette','f-sandwich-1','f-sandwich-2','f-sandwich-3','f-sandwich-4'] },
 
   { id:'petitdej', nom:"P'tit déj'", vignette:'jaune-jaune', actif:true,
-    produits:['jj-viande','jj-poisson','galette','pastels','bouillie-mil','bouillie-mais'] },
+    produits:['jj-viande','jj-poisson','s-oeuf','s-omelette','s-omelette-from','s-viande','s-saucisson',
+              'cafe-milo','cafe-nescafe','the-lait','galette','pastels','bouillie-mil','bouillie-mais'] },
 
   { id:'gouter', nom:'Goûter', vignette:'galette', actif:true,
     produits:['galette','pastels','degue','yaourt','fruits','yaourt-b'] },
@@ -171,7 +193,7 @@ T.categoriesDefaut = [
   }},
 
   { id:'boissons', nom:'Boissons', vignette:'bissap', actif:true,
-    produits:['bissap','gingembre','baobab','yaourt-b'] }
+    produits:['cafe-milo','cafe-nescafe','the-lait','bissap','gingembre','baobab','yaourt-b'] }
 ];
 
 /* ---------------------------------------------------------- stockage */
