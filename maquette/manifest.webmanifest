@@ -1,0 +1,23 @@
+{
+  "name": "Tela Castle — commander",
+  "short_name": "Tela Castle",
+  "description": "Petits déjeuners africains, dêguê et yaourt maison. Commandé la veille, livré le lendemain matin.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFFFF",
+  "theme_color": "#F5B21F",
+  "categories": ["food", "shopping"],
+  "icons": [
+    { "src": "img/icones/icone-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "img/icones/icone-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "img/icones/icone-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "La carte", "url": "/#sec-formules" },
+    { "name": "Mes commandes", "url": "/" }
+  ]
+}

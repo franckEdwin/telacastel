@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Tela Castle — commander</title>
 <meta name="theme-color" content="#F5B21F">
+<meta name="description" content="Petits déjeuners africains, dêguê et yaourt maison à Abidjan. Commandé la veille, livré le lendemain matin.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="img/icones/icone-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="img/icones/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tela Castle">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Lexend:wght@300;400;500;600&display=swap">
@@ -39,11 +46,13 @@ body{overflow-x:hidden}
   border:var(--ep-bord) solid transparent;transition:var(--t)}
 .ic-btn:hover{border-color:var(--bord)}
 .ic-btn svg{width:18px;height:18px;stroke:var(--encre);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.btn-panier{position:relative;display:flex;align-items:center;gap:8px;height:38px;padding:0 15px;border-radius:999px;
-  background:var(--encre);color:var(--fond);font-size:13px;font-weight:400;transition:var(--t)}
-.btn-panier svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.btn-panier .n{min-width:19px;height:19px;padding:0 5px;border-radius:999px;background:var(--or);color:#241A12;
-  font-size:11px;font-weight:600;display:grid;place-items:center}
+.btn-panier{position:relative;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;
+  background:var(--encre);color:var(--fond);transition:var(--t);flex:none}
+.btn-panier svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.btn-panier .n{position:absolute;top:-3px;right:-3px;min-width:19px;height:19px;padding:0 5px;border-radius:999px;
+  background:var(--or);color:#241A12;font-size:11px;font-weight:600;display:grid;place-items:center;
+  border:2px solid var(--fond)}
+.btn-panier .n[hidden]{display:none}
 .btn-panier.saute{animation:saute .45s cubic-bezier(.2,1.4,.4,1)}
 @keyframes saute{40%{transform:scale(1.08)}}
 
@@ -260,6 +269,14 @@ body{overflow-x:hidden}
   .pied-site{padding:36px 24px 26px}
 }
 @media (min-width:1100px){
+  /* la connexion est une tâche courte : au centre, pas sur le côté */
+  #panneau-compte{top:50%;right:50%;bottom:auto;width:min(420px,calc(100vw - 48px));max-height:min(660px,88vh);
+    border:var(--ep-bord) solid var(--bord);border-radius:var(--r-g);overflow:hidden;
+    transform:translate(50%,-50%) scale(.97);opacity:0;transition:opacity .22s var(--t),transform .22s var(--t)}
+  #panneau-compte.on{transform:translate(50%,-50%) scale(1);opacity:1}
+  #panneau-compte .tete .retour{display:none}
+  #panneau-compte .tete::after{content:"";flex:1}
+
   .corps{grid-template-columns:200px minmax(0,1fr) 350px;gap:26px}
   .col-nav{display:block;position:sticky;align-self:start;top:calc(var(--h-bar) + 16px);
     max-height:calc(100vh - var(--h-bar) - 32px);overflow-y:auto;scrollbar-width:thin}
@@ -321,9 +338,9 @@ body{overflow-x:hidden}
       <button class="ic-btn" id="btnCompte" aria-label="Mon compte">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 20a7.5 7.5 0 0 1 14.4 0"/></svg>
       </button>
-      <button class="btn-panier" id="btnPanier">
+      <button class="btn-panier" id="btnPanier" title="Panier" aria-label="Panier">
         <svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7zM9 8V6a3 3 0 0 1 6 0v2"/></svg>
-        <span id="btnPanierTx">Panier</span><span class="n" id="btnPanierN">0</span>
+        <span class="n" id="btnPanierN" hidden>0</span>
       </button>
     </div>
   </div>

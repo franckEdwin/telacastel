@@ -1037,6 +1037,14 @@ function rendreInfos(){
   });
   dd.appendChild(th);
 
+  dd.appendChild(el('div','lab','Application'));
+  var inst = el('button','btn creux plein');
+  inst.id = 'btnInstaller';
+  inst.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M8 11l4 4 4-4"/><path d="M5 19h14"/></svg> Installer sur l\u2019écran d\u2019accueil';
+  inst.onclick = installer;
+  dd.appendChild(inst);
+  dd.appendChild(el('span','aide','La carte reste consultable même sans connexion.'));
+
   dd.appendChild(el('p','aide','<a href="gestion.html" style="text-decoration:underline">Espace gestion</a> — maquette de la partie boutique.'));
   pan.appendChild(dd);
 }
@@ -1110,8 +1118,9 @@ function chrono(){
 }
 function rendreTout(){
   var n = totalArticles();
-  $('#btnPanierN').textContent = n;
-  $('#btnPanierTx').textContent = n ? F(total()) : 'Panier';
+  var bn = $('#btnPanierN');
+  bn.hidden = !n; bn.textContent = n;
+  $('#btnPanier').title = n ? n + ' article' + (n > 1 ? 's' : '') + ' · ' + F(total()) : 'Panier vide';
   var nn = $('#navN'); nn.hidden = !n; nn.textContent = n;
   $('#zoneNom').textContent = T.zone(S.zone).nom;
   rendreMenu(); rendrePanier();
@@ -1176,6 +1185,32 @@ window.addEventListener('storage', function(e){
   if (e.key === 'tela.produits' || e.key === 'tela.categories'){ rendreRail(); rendreMenu(); }
 });
 window.addEventListener('tela:maj', function(){ /* même onglet : déjà géré par sauver() */ });
+
+/* ---------------------------------------------------------- installation */
+var invitationInstall = null;
+if ('serviceWorker' in navigator && location.protocol !== 'file:'){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  invitationInstall = e;
+  var b = $('#btnInstaller');
+  if (b) b.hidden = false;
+});
+window.addEventListener('appinstalled', function(){
+  invitationInstall = null;
+  avis('Application installée');
+});
+function installer(){
+  if (!invitationInstall){
+    avis('Menu du navigateur → « Installer l\u2019application »');
+    return;
+  }
+  invitationInstall.prompt();
+  invitationInstall.userChoice.then(function(){ invitationInstall = null; });
+}
 
 /* ---------------------------------------------------------- démarrage */
 $('#infoJour').textContent = D.court;
