@@ -1892,11 +1892,40 @@ window.addEventListener('beforeinstallprompt', function(e){
   invitationInstall = e;
   var b = $('#btnInstaller');
   if (b) b.hidden = false;
+  proposerInstallation();
 });
 window.addEventListener('appinstalled', function(){
   invitationInstall = null;
+  T.ecrire('installee', true);
+  cacherInvite();
   avis('Application installée');
 });
+
+/* L'invitation ne se montre qu'une fois : si le client refuse, on ne la
+   repose pas à chaque visite. Elle attend aussi qu'il ait vu l'accueil. */
+function cacherInvite(){
+  var z = $('#invitePwa'); if (!z) return;
+  z.classList.remove('on');
+  setTimeout(function(){ z.hidden = true; }, 360);
+}
+function proposerInstallation(){
+  var z = $('#invitePwa'); if (!z) return;
+  if (!mobile() || !invitationInstall) return;
+  if (T.lire('installee', false) || T.lire('installRefusee', false)) return;
+  if (window.matchMedia('(display-mode: standalone)').matches) return;
+
+  z.innerHTML = '<span class="ic"><img src="img/logo.png" alt=""></span>' +
+    '<span class="tx"><b>Installer Tela Castle</b>' +
+    '<span>Sur votre écran d\u2019accueil, comme une application. La carte reste consultable même sans connexion.</span>' +
+    '<span class="act"><button class="non">Plus tard</button><button class="oui">Installer</button></span></span>';
+  z.querySelector('.non').onclick = function(){ T.ecrire('installRefusee', true); cacherInvite(); };
+  z.querySelector('.oui').onclick = function(){
+    cacherInvite();
+    installer();
+  };
+  z.hidden = false;
+  setTimeout(function(){ z.classList.add('on'); }, 1400);
+}
 function installer(){
   if (!invitationInstall){
     avis('Menu du navigateur → « Installer l\u2019application »');

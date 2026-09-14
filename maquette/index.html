@@ -321,6 +321,26 @@ body{overflow-x:hidden}
 .rv{opacity:0;transform:translateY(16px)}
 .rv.vu{opacity:1;transform:none;transition:opacity .6s cubic-bezier(.4,0,.2,1),transform .6s cubic-bezier(.4,0,.2,1)}
 
+/* ---------------------------------------------------------- invitation à installer
+   Proposée une seule fois, en bas, et seulement quand le navigateur dit
+   que l'installation est possible. */
+.invite-pwa{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:101;
+  background:var(--surface);border:var(--ep-bord) solid var(--bord);border-radius:22px;padding:16px;
+  display:flex;gap:13px;align-items:flex-start;
+  transform:translateY(calc(100% + 24px));transition:transform .34s cubic-bezier(.22,1,.36,1)}
+.invite-pwa.on{transform:none}
+.invite-pwa .ic{width:46px;height:46px;border-radius:14px;background:var(--or);flex:none;display:grid;place-items:center;
+  overflow:hidden}
+.invite-pwa .ic img{width:32px;height:auto;filter:brightness(0) invert(1)}
+.invite-pwa .tx{flex:1;min-width:0}
+.invite-pwa .tx b{display:block;font-family:var(--titre);font-size:15px}
+.invite-pwa .tx span{display:block;font-size:12.5px;color:var(--doux);margin-top:3px;line-height:1.45}
+.invite-pwa .act{display:flex;gap:8px;margin-top:12px}
+.invite-pwa .act button{flex:1;height:40px;border-radius:999px;font-size:13px;font-weight:500}
+.invite-pwa .act .oui{background:var(--or);color:#241A12}
+.invite-pwa .act .non{background:transparent;color:var(--doux);border:var(--ep-bord) solid var(--bord-fort)}
+@media (min-width:1100px){ .invite-pwa{display:none} }
+
 /* ---------------------------------------------------------- accès directs */
 .acces{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 4px}
 .acces button{display:flex;align-items:center;gap:11px;padding:12px 14px;text-align:left;
@@ -646,8 +666,11 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
   /* --- en-tête jaune --- */
   .ac-tete{background:var(--or);padding:calc(18px + env(safe-area-inset-top)) 20px 22px;
     border-radius:0 0 30px 30px;color:var(--or-encre)}
+  /* Le logo est entièrement jaune : posé sur l'en-tête jaune il
+     disparaissait. On le passe en blanc plein, qui tient sur le jaune. */
   .ac-marque{margin-bottom:18px}
-  .ac-marque img{height:40px;width:auto;display:block}
+  .ac-marque img{height:40px;width:auto;display:block;filter:brightness(0) invert(1)}
+  [data-theme="sombre"] .ac-marque img{filter:brightness(0) invert(1)}
   .ac-haut{display:flex;align-items:center;justify-content:space-between;gap:12px}
   .ac-livrer{display:flex;flex-direction:column;min-width:0}
   .ac-livrer .l{font-size:10.5px;font-weight:700;letter-spacing:.11em;color:rgba(42,29,10,.6)}
@@ -855,6 +878,8 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
 <aside class="panneau" id="panneau-infos" aria-label="Boutique"></aside>
 <aside class="panneau" id="panneau-histo" aria-label="Mes commandes"></aside>
 <aside class="panneau" id="panneau-plateaux" aria-label="Plateaux et événements"></aside>
+
+<div class="invite-pwa" id="invitePwa" role="dialog" aria-label="Installer l'application" hidden></div>
 
 <button class="bandeau-suivi" id="bandeauSuivi" hidden></button>
 

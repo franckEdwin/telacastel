@@ -319,7 +319,13 @@ body{background:var(--surface-2)}
 .rang .tx{flex:1;min-width:0}
 .rang .tx b{display:block;font-size:13.5px;font-weight:500}
 .rang .tx span{font-size:11.5px;color:var(--doux)}
-.rang input{width:120px;padding:8px 10px;border-radius:9px;border:var(--ep-bord) solid var(--bord);background:var(--surface);font-size:13px;text-align:right}
+/* 120 px fixes tronquaient le numéro de téléphone. Les champs de texte
+   respirent, les champs numériques restent compacts. */
+.rang input{flex:0 0 110px;padding:8px 11px;border-radius:9px;border:var(--ep-bord) solid var(--bord);
+  background:var(--surface);font-size:13px;text-align:right;min-width:0}
+.rang input[type="text"]{flex:0 1 240px;text-align:left}
+.rang input:focus{outline:none;border-color:var(--or)}
+@media (max-width:520px){ .rang input[type="text"]{flex:1 1 140px} }
 
 @media print{
   body *{visibility:hidden}

@@ -16,13 +16,13 @@ var T = window.TELA = {};
 var clone = function(o){ return JSON.parse(JSON.stringify(o)); };
 
 /* ---------------------------------------------------------- boutique */
-T.version = '15/09 05h15';
+T.version = '15/09 06h00';
 
 T.boutique = {
   nom: 'Tela Castle',
   slogan: 'Bien manger, un plaisir à partager',
-  tel: '+225 05 76 06 62 63',
-  telBrut: '2250576066263',
+  tel: '+225 05 06 45 70 70',
+  telBrut: '2250506457070',
   ville: 'Abidjan, Côte d’Ivoire',
   adresse: 'Angré 8e tranche, Cocody',
   position: [5.3975, -3.9868],
@@ -47,7 +47,8 @@ T.creneaux = [
 T.paiements = [
   { id:'especes', nom:'Espèces à la livraison', logo:'img/pay/especes.svg',      aide:'Vous payez au livreur' },
   { id:'wave',    nom:'Wave',                   logo:'img/pay/wave.svg',         aide:'Lien de paiement envoyé sur WhatsApp' },
-  { id:'om',      nom:'Orange Money',           logo:'img/pay/orange-money.svg', aide:'Code marchand communiqué à la validation' }
+  { id:'om',      nom:'Orange Money',           logo:'img/pay/orange-money.svg', aide:'Code marchand communiqué à la validation' },
+  { id:'mtn',     nom:'MTN MoMo',               logo:'img/pay/mtn.svg',          aide:'Code marchand communiqué à la validation' }
 ];
 
 /* ---------------------------------------------------------- visuels disponibles */

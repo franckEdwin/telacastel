@@ -1,0 +1,7 @@
+<svg viewBox="0 0 170 72" xmlns="http://www.w3.org/2000/svg">
+  <rect x="1" y="1" width="168" height="70" rx="35" fill="#FFCB05" stroke="#E0AE00" stroke-width="1.5"/>
+  <text x="85" y="34" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-weight="700"
+        font-size="27" fill="#231F20" letter-spacing="1">MTN</text>
+  <text x="85" y="54" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-weight="600"
+        font-size="14" fill="#231F20">MoMo</text>
+</svg>
