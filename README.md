@@ -33,3 +33,21 @@ remplace automatiquement Baloo 2.
 ## Développement
 
 Aucune dépendance, aucun build : ouvrir `maquette/index.html` dans un navigateur.
+
+## Aperçu des écrans
+
+`apercu/planche-client.png` et `apercu/planche-admin.png` présentent la maquette
+mobile complète, écran par écran. Les captures individuelles sont dans
+`apercu/ecrans/`. Ce dossier n'est pas déployé.
+
+## Accès à l'espace de gestion
+
+`/gestion` est protégé par `middleware.js`, qui s'exécute sur le réseau de Vercel
+avant que la page ne soit servie. Les identifiants sont dans les variables
+d'environnement du projet (`GESTION_USER`, `GESTION_PASS`) — jamais dans le dépôt.
+
+Pour les changer :
+
+    vercel env rm GESTION_PASS production
+    printf "nouveau-mot-de-passe" | vercel env add GESTION_PASS production
+    vercel --prod
