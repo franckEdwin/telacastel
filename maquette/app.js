@@ -407,8 +407,9 @@ function vueLivraison(dd, pied){
     invite.innerHTML = '<span style="width:34px;height:34px;border-radius:50%;background:var(--or-doux);display:grid;' +
       'place-items:center;flex:none"><svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:var(--or-fonce);' +
       'fill:none;stroke-width:1.8"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 20a7.5 7.5 0 0 1 14.4 0"/></svg></span>' +
-      '<span style="flex:1;min-width:0;font-size:12.5px;line-height:1.4">Connectez-vous pour retrouver votre adresse ' +
-      'et suivre vos commandes.</span>';
+      '<span style="flex:1;min-width:0;font-size:12.5px;line-height:1.4">' +
+      '<b style="font-weight:500">Pas besoin de compte pour commander.</b><br>' +
+      'Connectez-vous seulement si vous voulez retrouver vos adresses et vos commandes.</span>';
     var bc = el('button','btn creux petit');
     bc.textContent = 'Se connecter';
     bc.onclick = function(){ ecran('compte'); };
@@ -522,8 +523,8 @@ function vuePaiement(dd, pied){
 
   dd.appendChild(el('p','vide','Aucun paiement n’est débité ici : la boutique confirme d’abord la commande sur WhatsApp.'));
 
-  var b = el('button','btn vert plein grand');
-  b.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm5.6 14.1c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.7-.1-.4-.1-.9-.3-1.6-.6-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.4-1.1-2.7s.7-1.9 1-2.2c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5s.8 1.9.8 2 .1.3 0 .5c-.1.2-.2.3-.3.5l-.4.5c-.2.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1s.7-.8.9-1.1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg> Envoyer la commande · ' + F(total());
+  var b = el('button','btn plein grand');
+  b.textContent = 'Envoyer ma commande · ' + F(total());
   b.onclick = envoyer;
   pied.appendChild(b);
   var r2 = el('button','btn creux plein'); r2.textContent = 'Retour';
@@ -587,20 +588,58 @@ function vueConfirme(dd, pied){
   });
   dd.appendChild(suivi);
 
-  /* aperçu du reçu en image — c'est lui qu'on envoie sur WhatsApp */
+  /* qui reçoit quoi : la question mérite une réponse à l'écran */
+  var suite = el('div','bloc');
+  suite.style.padding = '15px 16px';
+  suite.innerHTML =
+    '<b style="font-family:var(--titre);font-size:15px">Et maintenant ?</b>' +
+    '<div style="font-size:12.8px;color:var(--doux);line-height:1.6;margin-top:8px">' +
+    '<b style="color:var(--encre);font-weight:500">1.</b> Votre commande est arrivée chez Tela Castle, ' +
+    'qui la voit dans son espace de gestion et vous confirme sous 15 minutes.<br>' +
+    '<b style="color:var(--encre);font-weight:500">2.</b> Vous pouvez aussi la lui envoyer sur WhatsApp au ' +
+    '<b style="color:var(--encre);font-weight:500">' + T.boutique.tel + '</b>, pour préciser un détail.<br>' +
+    '<b style="color:var(--encre);font-weight:500">3.</b> Le reçu ci-dessous est <b style="color:var(--encre);' +
+    'font-weight:500">pour vous</b> : gardez-le, ou envoyez-le à la personne qui paie.</div>';
+  dd.appendChild(suite);
+
   dd.appendChild(el('div','lab','Votre reçu'));
   var boite = el('div');
   dd.appendChild(boite);
   if (T.apercuRecu) T.apercuRecu(cmd, boite);
   else dd.appendChild(ticket(cmd));
 
-  var partage = el('button','btn plein');
-  partage.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg> Envoyer le reçu';
+  var enr = el('button');
+  enr.style.cssText = 'font-size:12.5px;color:var(--doux);text-decoration:underline;margin:0 auto';
+  enr.textContent = 'Enregistrer l\u2019image du reçu';
+  enr.onclick = function(){ T.telechargerRecu(cmd, function(){ avis('Reçu enregistré'); }); };
+  dd.appendChild(enr);
+
+  /* proposition de compte, seulement si le client n'en a pas */
+  if (!compte){
+    var prop = el('div','bloc');
+    prop.style.cssText = 'padding:14px 16px;display:flex;align-items:center;gap:12px';
+    prop.innerHTML = '<span style="flex:1;min-width:0;font-size:12.5px;line-height:1.45">' +
+      '<b style="font-weight:500">Commande passée sans compte.</b><br>Créez-en un avec ' +
+      T.telJoli(cmd.client.tel) + ' pour retrouver vos commandes.</span>';
+    var bc2 = el('button','btn creux petit');
+    bc2.textContent = 'Créer';
+    bc2.onclick = function(){ ecran('compte'); };
+    prop.appendChild(bc2);
+    dd.appendChild(prop);
+  }
+
+  var wa = el('a','btn vert plein');
+  wa.href = T.lienWhatsApp(cmd); wa.target = '_blank'; wa.rel = 'noopener';
+  wa.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm5.6 14.1c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.7-.1-.4-.1-.9-.3-1.6-.6-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.4-1.1-2.7s.7-1.9 1-2.2c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5s.8 1.9.8 2 .1.3 0 .5c-.1.2-.2.3-.3.5l-.4.5c-.2.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1s.7-.8.9-1.1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg> Prévenir la boutique sur WhatsApp';
+  pied.appendChild(wa);
+
+  var partage = el('button','btn creux plein');
+  partage.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg> Partager le reçu';
   partage.onclick = function(){
     partage.disabled = true;
     T.partagerRecu(cmd, function(etat){
       partage.disabled = false;
-      if (etat === 'copie') avis('Reçu copié — collez-le dans WhatsApp avec Ctrl+V');
+      if (etat === 'copie') avis('Reçu copié — collez-le avec Ctrl+V');
       else if (etat === 'telecharge') avis('Reçu enregistré — joignez-le à votre message');
       else if (etat === 'partage') avis('Reçu partagé');
       else if (etat === 'erreur') avis('Le reçu n\u2019a pas pu être créé');
@@ -608,10 +647,6 @@ function vueConfirme(dd, pied){
   };
   pied.appendChild(partage);
 
-  var tel = el('button','btn creux plein');
-  tel.textContent = 'Enregistrer le reçu';
-  tel.onclick = function(){ T.telechargerRecu(cmd, function(){ avis('Reçu enregistré'); }); };
-  pied.appendChild(tel);
   var nb = el('button','btn creux plein'); nb.textContent = 'Nouvelle commande';
   nb.onclick = function(){ S.ref = null; T.ecrire('refEnCours', null); S.etape = 'panier'; rendrePanier(); ecran('accueil'); };
   pied.appendChild(nb);
