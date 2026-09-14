@@ -7,7 +7,7 @@
    le cache n'expire pas. Seules les images et les polices sont servies
    depuis le cache en priorité, puisqu'elles ne changent pas.
    ============================================================ */
-var VERSION = 'tela-v13';
+var VERSION = 'tela-v14';
 var COQUILLE = [
   '/', '/index.html', '/app.js', '/data.js', '/recu.js', '/tela.css',
   '/manifest.webmanifest',

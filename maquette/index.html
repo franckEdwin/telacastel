@@ -694,22 +694,9 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
     font-size:24px;display:grid;place-items:center;flex:none;align-self:center}
   .ac-pied{height:26px}
 
-  /* --- barre d'onglets flottante --- */
-  .nav-flot{left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));
-    transform:none;width:auto;border-radius:24px;
-    background:var(--surface);border:var(--ep-bord) solid var(--bord);box-shadow:none;
-    display:flex;padding:9px 4px;gap:0}
-  .nav-flot button{flex:1;flex-direction:column;align-items:center;gap:3px;padding:6px 0 4px;
-    background:transparent;color:var(--doux);font-size:9.5px;font-weight:500;
-    letter-spacing:.02em;text-transform:uppercase;border-radius:18px;position:relative}
-  .nav-flot button.on{background:var(--creme)}
-  .nav-flot button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;
-    stroke-linecap:round;stroke-linejoin:round}
-  .nav-flot button.on{background:transparent;color:var(--encre);font-weight:700}
-  .nav-flot button.on svg{stroke-width:2.1}
-  .nav-flot .n{position:absolute;top:-3px;right:calc(50% - 20px);min-width:18px;height:18px;
-    border-radius:9px;background:var(--rouge);color:#fff;font-size:10.5px;font-weight:700;
-    display:grid;place-items:center;padding:0 4px}
+  /* --- barre flottante : la pilule d'origine, à cinq onglets --- */
+  .nav-flot{display:flex;gap:1px;padding:6px}
+  .nav-flot button{width:64px;height:50px;font-size:9.5px;white-space:nowrap}
   /* Hauteur réservée sous la barre flottante : aucun contenu ne passe
      dessous, sur aucun écran. C'est l'oubli de cette marge sur l'accueil
      qui donnait l'impression que la barre avalait la dernière carte. */
@@ -733,8 +720,8 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
   /* Le bandeau de suivi flottant ne figure pas dans la planche : une
      commande en cours s'annonce par la pastille de l'onglet Commandes. */
   .bandeau-suivi{display:none}
-  .nav-flot .pt-cmd{position:absolute;top:1px;right:calc(50% - 16px);width:8px;height:8px;
-    border-radius:50%;background:var(--rouge);border:1.5px solid var(--surface)}
+  .nav-flot .pt-cmd{position:absolute;top:7px;right:16px;width:8px;height:8px;
+    border-radius:50%;background:var(--rouge)}
 }
 </style>
 </head>
