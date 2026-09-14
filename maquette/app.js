@@ -1620,15 +1620,15 @@ function rendreAccueil(){
   var cta = el('button','ac-cta', 'Commander maintenant →');
   cta.onclick = function(){ ecran('carte'); };
   tete.appendChild(cta);
-  z.appendChild(tete);
 
-  /* recherche à cheval */
+  /* la recherche fait partie de l'en-tête */
   var rech = el('div','ac-rech');
   var br = el('button');
   br.innerHTML = IC_ACC.loupe + '<span>Rechercher un plat, une boisson…</span>';
   br.onclick = function(){ ecran('carte'); setTimeout(function(){ var c = $('#recherche'); if (c) c.focus(); }, 260); };
   rech.appendChild(br);
-  z.appendChild(rech);
+  tete.appendChild(rech);
+  z.appendChild(tete);
 
   /* service du jour */
   var ouvert = D.resteMs() > 0;
@@ -1740,6 +1740,9 @@ function majEcranBase(){
 function majNav(){
   majBarreTotal();
   majBandeau();
+  Array.prototype.forEach.call(document.querySelectorAll('.nav-flot button'), function(b){
+    if (!b.title) b.title = (b.textContent || '').replace(/[0-9]/g, '').trim();
+  });
   Array.prototype.forEach.call(document.querySelectorAll('.nav-flot button'), function(b){
     b.classList.toggle('on', b.dataset.ecran === S.ecran);
   });

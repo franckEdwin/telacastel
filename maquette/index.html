@@ -706,8 +706,10 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
   .ac-cta{margin-top:16px;width:100%;height:52px;border-radius:17px;background:var(--or-encre);
     color:#FFF4DC;font-weight:600;font-size:15.5px;display:flex;align-items:center;justify-content:center;gap:9px}
 
-  /* --- recherche à cheval sur l'en-tête --- */
-  .ac-rech{padding:0 20px;margin-top:-14px;position:relative;z-index:2}
+  /* --- recherche, à l'intérieur de l'en-tête ---
+     À cheval sur le bord, elle laissait dépasser les deux coins arrondis
+     du jaune de part et d'autre : la découpe paraissait cassée. */
+  .ac-rech{padding:14px 20px 0;position:relative;z-index:2}
   .ac-rech button{width:100%;height:50px;border-radius:16px;background:var(--surface);
     border:var(--ep-bord) solid var(--filet);display:flex;align-items:center;gap:10px;
     padding:0 16px;color:var(--doux);font-size:14.5px}
@@ -767,9 +769,14 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
     font-size:24px;display:grid;place-items:center;flex:none;align-self:center}
   .ac-pied{height:26px}
 
-  /* --- barre flottante : la pilule d'origine, à cinq onglets --- */
-  .nav-flot{display:flex;gap:1px;padding:6px}
-  .nav-flot button{width:64px;height:50px;font-size:9.5px;white-space:nowrap}
+  /* --- barre flottante : icônes seules ---
+     À cinq onglets, « Commandes » débordait de la pastille active. Le
+     libellé passe en infobulle, l'icône suffit. */
+  .nav-flot{display:flex;gap:4px;padding:7px}
+  .nav-flot button{width:52px;height:48px;font-size:0;border-radius:999px}
+  .nav-flot button svg{width:22px;height:22px}
+  .nav-flot .n{top:4px;right:7px}
+  .nav-flot .pt-cmd{top:8px;right:12px}
   /* Hauteur réservée sous la barre flottante : aucun contenu ne passe
      dessous, sur aucun écran. C'est l'oubli de cette marge sur l'accueil
      qui donnait l'impression que la barre avalait la dernière carte. */
