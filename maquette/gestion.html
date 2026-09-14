@@ -489,6 +489,7 @@ body{background:var(--surface-2)}
 <input type="file" id="fichierImage" accept="image/*" hidden>
 
 <script src="data.js"></script>
+<script src="sync.js"></script>
 <script src="recu.js"></script>
 <script>
 (function(){
@@ -1952,6 +1953,8 @@ function veille(){
 window.addEventListener('storage', function(e){
   if (e.key && e.key.indexOf('tela.') === 0){ T.recharger(); veille(); rendre(); }
 });
+/* une commande passée sur un autre appareil arrive par là */
+window.addEventListener('tela:distant', function(){ T.recharger(); veille(); rendre(); });
 setInterval(veille, 3000);
 
 majPortail();

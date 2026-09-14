@@ -7,7 +7,7 @@
    le cache n'expire pas. Seules les images et les polices sont servies
    depuis le cache en priorité, puisqu'elles ne changent pas.
    ============================================================ */
-var VERSION = 'tela-v21';
+var VERSION = 'tela-v22';
 var COQUILLE = [
   '/', '/index.html', '/app.js', '/data.js', '/recu.js', '/tela.css',
   '/manifest.webmanifest',
@@ -52,6 +52,9 @@ self.addEventListener('fetch', function(e){
   if (req.method !== 'GET') return;
   var url = new URL(req.url);
   var memeOrigine = url.origin === location.origin;
+
+  /* l'état partagé ne se met jamais en cache : il doit toujours être frais */
+  if (memeOrigine && url.pathname.indexOf('/api/') === 0) return;
 
   /* navigation et code : le réseau fait foi */
   if (req.mode === 'navigate' || (memeOrigine && CODE.test(url.pathname))){

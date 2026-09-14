@@ -16,7 +16,7 @@ var T = window.TELA = {};
 var clone = function(o){ return JSON.parse(JSON.stringify(o)); };
 
 /* ---------------------------------------------------------- boutique */
-T.version = '15/09 06h00';
+T.version = '15/09 06h40';
 
 T.boutique = {
   nom: 'Tela Castle',
@@ -439,6 +439,7 @@ T.commandes = function(){
 };
 T.enregistrerCommande = function(cmd){
   var liste = T.commandes();
+  cmd.majLe = new Date().toISOString();   /* sert d'arbitre à la fusion */
   liste.unshift(cmd);
   T.ecrire('commandes', liste);
   return cmd;
@@ -448,6 +449,7 @@ T.majCommande = function(ref, champs){
   for (var i = 0; i < liste.length; i++){
     if (liste[i].ref === ref){
       Object.assign(liste[i], champs);
+      liste[i].majLe = new Date().toISOString();
       liste[i].journal = (liste[i].journal || []).concat([{quand:new Date().toISOString(), quoi: champs.statut || 'modifiée'}]);
       break;
     }

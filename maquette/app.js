@@ -1869,6 +1869,14 @@ window.addEventListener('storage', function(e){
   }
   if (e.key === 'tela.produits' || e.key === 'tela.categories'){ rendreRail(); rendreMenu(); }
 });
+/* le statut change quand la boutique valide, depuis un autre appareil */
+window.addEventListener('tela:distant', function(){
+  T.recharger();
+  majBandeau();
+  if (S.etape === 'confirme') rendrePanier();
+  if ($('#panneau-histo').classList.contains('on')) rendreHisto();
+  rendreMenu();
+});
 window.addEventListener('tela:maj', function(){ /* même onglet : déjà géré par sauver() */ });
 
 /* ---------------------------------------------------------- installation */
