@@ -1,16 +1,20 @@
 /* ============================================================
    Tela Castle — service worker
-   La carte reste consultable hors connexion : la coquille de
-   l'application est mise en cache à l'installation, les images et
-   polices sont gardées au fil de la navigation.
+
+   Règle du jeu, corrigée :
+   le code (page, scripts, styles) part TOUJOURS chercher le réseau
+   d'abord, sinon une nouvelle mise en ligne reste invisible tant que
+   le cache n'expire pas. Seules les images et les polices sont servies
+   depuis le cache en priorité, puisqu'elles ne changent pas.
    ============================================================ */
-var VERSION = 'tela-v1';
+var VERSION = 'tela-v3';
 var COQUILLE = [
   '/', '/index.html', '/app.js', '/data.js', '/recu.js', '/tela.css',
   '/manifest.webmanifest',
   '/img/logo.png', '/img/logo-encre.png',
   '/img/icones/icone-192.png', '/img/icones/icone-512.png'
 ];
+var CODE = /\.(?:html|js|css|webmanifest)(?:\?.*)?$/i;
 
 self.addEventListener('install', function(e){
   e.waitUntil(
@@ -29,25 +33,33 @@ self.addEventListener('activate', function(e){
   );
 });
 
+function reseauDAbord(req){
+  return fetch(req).then(function(rep){
+    if (rep && rep.status === 200){
+      var copie = rep.clone();
+      caches.open(VERSION).then(function(c){ c.put(req, copie); });
+    }
+    return rep;
+  }).catch(function(){
+    return caches.match(req).then(function(r){
+      return r || (req.mode === 'navigate' ? caches.match('/index.html') : Response.error());
+    });
+  });
+}
+
 self.addEventListener('fetch', function(e){
   var req = e.request;
   if (req.method !== 'GET') return;
+  var url = new URL(req.url);
+  var memeOrigine = url.origin === location.origin;
 
-  /* navigation : le réseau d'abord, le cache si la connexion manque */
-  if (req.mode === 'navigate'){
-    e.respondWith(
-      fetch(req).then(function(rep){
-        var copie = rep.clone();
-        caches.open(VERSION).then(function(c){ c.put(req, copie); });
-        return rep;
-      }).catch(function(){
-        return caches.match(req).then(function(r){ return r || caches.match('/index.html'); });
-      })
-    );
+  /* navigation et code : le réseau fait foi */
+  if (req.mode === 'navigate' || (memeOrigine && CODE.test(url.pathname))){
+    e.respondWith(reseauDAbord(req));
     return;
   }
 
-  /* le reste : le cache d'abord, rafraîchi en arrière-plan */
+  /* images, polices, tuiles : le cache d'abord, rafraîchi en arrière-plan */
   e.respondWith(
     caches.match(req).then(function(cache){
       var reseau = fetch(req).then(function(rep){

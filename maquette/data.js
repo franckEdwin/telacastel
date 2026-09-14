@@ -16,6 +16,8 @@ var T = window.TELA = {};
 var clone = function(o){ return JSON.parse(JSON.stringify(o)); };
 
 /* ---------------------------------------------------------- boutique */
+T.version = '14/09 17h42';
+
 T.boutique = {
   nom: 'Tela Castle',
   slogan: 'Bien manger, un plaisir à partager',

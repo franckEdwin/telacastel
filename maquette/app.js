@@ -1252,6 +1252,7 @@ function rendreInfos(){
   dd.appendChild(el('span','aide','La carte reste consultable même sans connexion.'));
 
   dd.appendChild(el('p','aide','<a href="gestion.html" style="text-decoration:underline">Espace gestion</a> — maquette de la partie boutique.'));
+  dd.appendChild(el('p','aide','Version en ligne : <b>' + T.version + '</b>'));
   pan.appendChild(dd);
 }
 
@@ -1406,7 +1407,16 @@ window.addEventListener('tela:maj', function(){ /* même onglet : déjà géré 
 var invitationInstall = null;
 if ('serviceWorker' in navigator && location.protocol !== 'file:'){
   window.addEventListener('load', function(){
-    navigator.serviceWorker.register('sw.js').catch(function(){});
+    navigator.serviceWorker.register('sw.js').then(function(reg){
+      reg.update();
+      /* une version plus récente vient de prendre la main : on recharge une fois */
+      var dejaRecharge = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function(){
+        if (dejaRecharge) return;
+        dejaRecharge = true;
+        location.reload();
+      });
+    }).catch(function(){});
   });
 }
 window.addEventListener('beforeinstallprompt', function(e){
