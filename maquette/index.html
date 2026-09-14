@@ -127,7 +127,7 @@ body{overflow-x:hidden}
 .sous-sec::after{content:"";flex:1;height:var(--ep-bord);background:var(--bord)}
 
 .plats{display:grid;gap:14px;grid-template-columns:1fr}
-.plat{display:flex;gap:14px;padding:14px;border:var(--ep-bord) solid var(--bord);border-radius:var(--r);
+.plat{display:flex;gap:13px;padding:13px;border:var(--ep-bord) solid var(--bord);border-radius:var(--r);
   background:var(--surface);text-align:left;position:relative;transition:border-color var(--t),transform var(--t)}
 .plat:hover{border-color:var(--bord-fort)}
 .plat .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;align-items:flex-start}
@@ -140,13 +140,15 @@ body{overflow-x:hidden}
 .plat .prix{font-family:var(--titre);font-weight:700;font-size:15.5px;color:var(--encre)}
 .plat .etoile{display:inline-flex;align-items:center;gap:4px}
 .plat .etoile svg{width:12px;height:12px;fill:var(--or)}
-.plat .vis{width:104px;flex:none;border-radius:12px;overflow:hidden;background:var(--surface-2);position:relative}
+.plat .vis{width:96px;height:96px;flex:none;border-radius:12px;overflow:hidden;background:var(--surface-2);position:relative;
+  align-self:flex-start}
 .plat .vis img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .5s}
 .plat:hover .vis img{transform:scale(1.05)}
-.plat .plus{position:absolute;right:10px;bottom:10px;width:32px;height:32px;border-radius:50%;background:var(--surface);
-  border:var(--ep-bord) solid var(--bord);display:grid;place-items:center;font-size:19px;line-height:1;transition:var(--t)}
+.plat .plus{position:absolute;right:11px;bottom:11px;width:34px;height:34px;border-radius:50%;background:var(--surface);
+  border:var(--ep-bord) solid var(--bord);display:grid;place-items:center;font-size:20px;line-height:1;transition:var(--t);
+  box-shadow:var(--ombre)}
 .plat:hover .plus{background:var(--or);border-color:var(--or);color:#241A12}
-.plat .cpt{position:absolute;right:10px;bottom:10px}
+.plat .cpt{position:absolute;right:11px;bottom:11px;background:var(--surface)}
 .plat.epuise{opacity:.55}
 .plat.epuise .plus{display:none}
 .plat .restant{color:var(--rouge)}
@@ -232,6 +234,38 @@ body{overflow-x:hidden}
 .pas .t p{font-size:11.5px;color:var(--doux)}
 .pas:not(.ok):not(.now) .t b{color:var(--doux);font-weight:300}
 
+/* ---------------------------------------------------------- feuille basse */
+.feuille{position:fixed;z-index:97;left:0;right:0;bottom:0;background:var(--fond);border-top:var(--ep-bord) solid var(--bord);
+  border-radius:var(--r-g) var(--r-g) 0 0;transform:translateY(101%);transition:transform .32s cubic-bezier(.4,0,.2,1);
+  padding:10px 18px calc(20px + env(safe-area-inset-bottom));box-shadow:var(--ombre-flot);max-height:86vh;overflow-y:auto;
+  scrollbar-width:none}
+.feuille::-webkit-scrollbar{width:0}
+.feuille.on{transform:none}
+.feuille .poignee{width:38px;height:4px;border-radius:99px;background:var(--bord-fort);margin:0 auto 16px}
+.feuille .ic-rond{width:74px;height:74px;border-radius:50%;background:var(--or-doux);display:grid;place-items:center;
+  margin:2px auto 16px}
+.feuille .ic-rond svg{width:32px;height:32px;stroke:var(--or-fonce);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.feuille h3{font-size:21px;text-align:center}
+.feuille .sous{font-size:13.5px;color:var(--doux);text-align:center;margin-top:7px;line-height:1.5}
+.feuille .actions{display:grid;gap:9px;margin-top:20px}
+@media (min-width:1100px){
+  .feuille{left:50%;right:auto;bottom:auto;top:50%;width:min(420px,calc(100vw - 48px));
+    border-radius:var(--r-g);border:var(--ep-bord) solid var(--bord);
+    transform:translate(-50%,-50%) scale(.97);opacity:0;transition:opacity .2s var(--t),transform .2s var(--t)}
+  .feuille.on{transform:translate(-50%,-50%) scale(1);opacity:1}
+  .feuille .poignee{display:none}
+}
+
+/* ---------------------------------------------------------- barre de total */
+.barre-total{position:fixed;left:12px;right:12px;bottom:calc(88px + env(safe-area-inset-bottom));z-index:79;
+  display:none;align-items:center;gap:12px;height:54px;padding:0 8px 0 18px;border-radius:999px;
+  background:var(--encre);color:var(--fond);box-shadow:var(--ombre-flot)}
+.barre-total .q{font-size:12.5px;opacity:.75}
+.barre-total .t{margin-left:auto;display:flex;align-items:center;gap:7px;height:40px;padding:0 17px;border-radius:999px;
+  background:var(--or);color:#241A12;font-size:13.5px;font-weight:600}
+.barre-total.on{display:flex}
+@media (min-width:1100px){ .barre-total{display:none!important} }
+
 /* ---------------------------------------------------------- barre flottante */
 .nav-flot{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));z-index:80;
   display:none;gap:2px;padding:6px;background:var(--verre);backdrop-filter:blur(16px) saturate(1.4);
@@ -245,6 +279,30 @@ body{overflow-x:hidden}
 .nav-flot .n{position:absolute;top:3px;right:9px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;
   background:var(--or);color:#241A12;font-size:9.5px;font-weight:600;display:grid;place-items:center}
 .nav-flot .n[hidden]{display:none}
+
+/* ---------------------------------------------------------- suggestions */
+.suggest{display:flex;gap:11px;overflow-x:auto;margin:0 -16px;padding:2px 16px 6px;scrollbar-width:none}
+.suggest::-webkit-scrollbar{display:none}
+.suggest .s{flex:0 0 132px;border:var(--ep-bord) solid var(--bord);border-radius:var(--r);overflow:hidden;
+  background:var(--surface);text-align:left;position:relative}
+.suggest .s .im{width:100%;height:84px;object-fit:cover;background:var(--surface-2)}
+.suggest .s .c{padding:9px 10px 11px}
+.suggest .s .n{font-size:12.5px;line-height:1.3;font-weight:400}
+.suggest .s .p{font-family:var(--titre);font-weight:700;font-size:13px;margin-top:5px}
+.suggest .s .a{position:absolute;right:8px;top:62px;width:28px;height:28px;border-radius:50%;background:var(--surface);
+  border:var(--ep-bord) solid var(--bord);display:grid;place-items:center;font-size:17px;line-height:1;box-shadow:var(--ombre)}
+
+/* ---------------------------------------------------------- sections de caisse */
+.sect{border:var(--ep-bord) solid var(--bord);border-radius:var(--r);background:var(--surface);overflow:hidden}
+.sect > .t{display:flex;align-items:center;gap:11px;padding:13px 15px;width:100%;text-align:left}
+.sect > .t .ic{width:30px;height:30px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;flex:none}
+.sect > .t .ic svg{width:16px;height:16px;stroke:var(--encre);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.sect > .t .tx{flex:1;min-width:0}
+.sect > .t .tx b{display:block;font-size:13.5px;font-weight:500}
+.sect > .t .tx span{font-size:12px;color:var(--doux)}
+.sect > .t .fl{color:var(--doux);font-size:14px;flex:none}
+.sect .corps{padding:0 15px 15px;display:grid;gap:12px}
+.sect .corps.ferme{display:none}
 
 /* ---------------------------------------------------------- pied */
 .pied-site{background:var(--surface-2);border-top:var(--ep-bord) solid var(--bord);margin-top:20px;padding:36px 16px 26px}
@@ -289,25 +347,34 @@ body{overflow-x:hidden}
 @media (max-width:1099px){
   :root{--h-bar:62px}
   body{padding-bottom:86px}
-  /* une app n'a pas de bannière de site : on garde l'essentiel */
-  .banniere{display:none}
-  .infos-b{display:none}
+  /* en-tête compact, à la manière des applications de livraison */
+  .banniere{margin-top:10px;border-radius:var(--r)}
+  .banniere .ph{height:132px}
+  .banniere .dedans{padding:12px 14px}
+  .banniere h1{font-size:21px}
+  .banniere p{font-size:12px}
+  .banniere .ouvert{display:none}
+  .infos-b{display:flex;gap:6px 12px;padding:10px 2px 4px;font-size:12px}
+  .infos-b .sp,.infos-b span:nth-of-type(n+4){display:none}
   .themes{display:none}
   #btnCompte{display:none}
   .rappel{margin-top:14px}
   .recherche{max-width:none}
   .nav-flot{display:flex}
-  .rail{position:sticky;top:var(--h-bar);z-index:30;background:var(--fond);margin:0 -16px;padding:10px 16px;
-    border-bottom:var(--ep-bord) solid var(--bord);gap:8px}
-  .rail button{width:auto;flex-direction:row;padding:8px 14px;border:var(--ep-bord) solid var(--bord);border-radius:999px;
-    font-size:12.5px;white-space:nowrap}
+  .rail{position:sticky;top:var(--h-bar);z-index:30;background:var(--fond);margin:0 -16px;padding:0 16px;
+    border-bottom:var(--ep-bord) solid var(--bord);gap:22px}
+  .rail button{width:auto;flex-direction:row;padding:13px 0 11px;border:0;border-radius:0;font-size:13.5px;
+    white-space:nowrap;position:relative;color:var(--doux)}
   .rail .rond{display:none}
-  .rail button[aria-pressed="true"]{background:var(--encre);border-color:var(--encre);color:var(--fond)}
+  .rail button::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2.5px;border-radius:2px;
+    background:var(--encre);transform:scaleX(0);transition:transform .22s var(--t)}
+  .rail button[aria-pressed="true"]{color:var(--encre);font-weight:500}
+  .rail button[aria-pressed="true"]::after{transform:scaleX(1)}
   .sec{scroll-margin-top:calc(var(--h-bar) + 70px)}
   .sec-titre{top:calc(var(--h-bar) + 56px)}
   .pied-site{display:none}
   .panneau{width:100%;border-left:0}
-  .voile{display:none}
+  #voile{display:none}
   .rappel .lg{display:none}
   .rappel{padding:12px 14px;gap:11px}
   .rappel .ic{width:32px;height:32px}
@@ -393,6 +460,14 @@ body{overflow-x:hidden}
 <aside class="panneau" id="panneau-fiche" aria-label="Produit"></aside>
 <aside class="panneau" id="panneau-compte" aria-label="Compte"></aside>
 <aside class="panneau" id="panneau-infos" aria-label="Boutique"></aside>
+
+<button class="barre-total" id="barreTotal">
+  <span class="q"><b id="btQte">0</b> article</span>
+  <span class="t"><span id="btTotal">0 F</span> · Passer à la caisse →</span>
+</button>
+
+<div class="voile" id="voileF"></div>
+<div class="feuille" id="feuille" role="dialog" aria-modal="true"></div>
 
 <nav class="nav-flot" id="navFlot" aria-label="Navigation">
   <button data-ecran="accueil" class="on"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Carte</button>

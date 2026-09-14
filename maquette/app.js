@@ -24,6 +24,7 @@ var S = {
   tel:      (compte && compte.tel) || '+225 07 88 12 44 09',
   adresse:  T.lire('adresse', 'Rue L94, portail vert, en face de la pharmacie'),
   position: T.lire('position', null),
+  especes:  T.lire('especes', null),
   etape:    'panier',
   ref:      T.lire('refEnCours', null),
   q:        '',
@@ -130,12 +131,12 @@ function ligneProduit(id){
   meta.appendChild(el('span','etoile', ETOILE + p.note.toFixed(1).replace('.',',') + ' <span style="color:var(--doux)">(' + p.avis + ')</span>'));
   if (dispo && p.stock != null && p.stock <= 5) meta.appendChild(el('span','restant','plus que ' + p.stock));
   tx.appendChild(meta);
-  b.appendChild(tx);
 
   var vis = el('div','vis');
   var im = el('img'); im.src = T.img(p.img); im.alt = ''; im.loading = 'lazy';
   vis.appendChild(im);
   b.appendChild(vis);
+  b.appendChild(tx);
 
   if (dispo){
     var q = qteProduit(id);
@@ -306,6 +307,23 @@ function ouvrirFiche(id){
   ouvrir('#panneau-fiche');
 }
 
+/* ---------------------------------------------------------- feuille basse
+   Les sous-choix passent par une feuille qui monte du bas, jamais par une
+   fenêtre surgissante : c'est le geste attendu sur téléphone. */
+function feuille(construire){
+  var f = $('#feuille');
+  f.innerHTML = '';
+  f.appendChild(el('div','poignee'));
+  construire(f);
+  $('#voileF').classList.add('on');
+  requestAnimationFrame(function(){ f.classList.add('on'); });
+}
+function fermerFeuille(){
+  $('#feuille').classList.remove('on');
+  $('#voileF').classList.remove('on');
+}
+$('#voileF').onclick = fermerFeuille;
+
 /* ---------------------------------------------------------- panier / commande */
 function rendrePanier(){
   var pan = $('#panneau-panier');
@@ -314,10 +332,13 @@ function rendrePanier(){
   var tete = el('div','tete');
   if (mobile()){
     var ret = el('button','retour', FLECHE); ret.setAttribute('aria-label','Retour');
-    ret.onclick = function(){ if (S.etape === 'panier' || S.etape === 'confirme') ecran('accueil'); else reculerEtape(); };
+    ret.onclick = function(){
+      if (S.etape === 'caisse'){ S.etape = 'panier'; rendrePanier(); return; }
+      ecran('accueil');
+    };
     tete.appendChild(ret);
   }
-  var titres = {panier:'Votre panier', livraison:'Livraison', paiement:'Paiement', confirme:'Commande envoyée'};
+  var titres = {panier:'Votre panier', caisse:'Passage en caisse', confirme:'Commande envoyée'};
   var bloc = el('div');
   bloc.appendChild(el('h3', null, titres[S.etape]));
   if (S.etape === 'panier' && totalArticles()) bloc.appendChild(el('div','sous', totalArticles() + ' article' + (totalArticles()>1?'s':'')));
@@ -331,8 +352,7 @@ function rendrePanier(){
   if (S.etape === 'confirme'){ vueConfirme(dd, pied); }
   else if (!S.panier.length){ vueVide(dd, pied); }
   else if (S.etape === 'panier'){ vuePanier(dd, pied); }
-  else if (S.etape === 'livraison'){ vueLivraison(dd, pied); }
-  else if (S.etape === 'paiement'){ vuePaiement(dd, pied); }
+  else { vueCaisse(dd, pied); }
 
   pan.appendChild(dd); pan.appendChild(pied);
 }
@@ -375,11 +395,11 @@ function vuePanier(dd, pied){
     t.appendChild(el('div','n', l.nom));
     t.appendChild(el('div','o', [l.fmt, l.sup, l.note].filter(Boolean).join(' · ')));
     var cpt = el('div','compteur'); cpt.style.marginTop = '7px';
-    var m = el('button', null, '−'); var n = el('b', null, String(l.qte)); var p = el('button', null, '+');
-    m.setAttribute('aria-label','Retirer un ' + l.nom); p.setAttribute('aria-label','Ajouter un ' + l.nom);
+    var m = el('button', null, '−'); var n = el('b', null, String(l.qte)); var p2 = el('button', null, '+');
+    m.setAttribute('aria-label','Retirer un ' + l.nom); p2.setAttribute('aria-label','Ajouter un ' + l.nom);
     m.onclick = function(){ l.qte--; if (l.qte <= 0) S.panier = S.panier.filter(function(x){ return x !== l; }); sauver(); };
-    p.onclick = function(){ l.qte++; sauver(); };
-    cpt.appendChild(m); cpt.appendChild(n); cpt.appendChild(p);
+    p2.onclick = function(){ l.qte++; sauver(); };
+    cpt.appendChild(m); cpt.appendChild(n); cpt.appendChild(p2);
     t.appendChild(cpt);
     a.appendChild(t);
     a.appendChild(el('div','p','<div class="px">' + F(l.prix * l.qte) + '</div>'));
@@ -387,105 +407,50 @@ function vuePanier(dd, pied){
   });
   dd.appendChild(liste);
 
+  var ajout = el('button','btn creux petit');
+  ajout.style.justifySelf = 'start';
+  ajout.textContent = 'Ajouter des articles';
+  ajout.onclick = function(){ ecran('accueil'); };
+  dd.appendChild(ajout);
+
+  /* suggestions : ce qui va bien avec le panier */
+  var dedans = {};
+  S.panier.forEach(function(l){ dedans[l.id] = 1; });
+  var idees = ['bissap','degue','cafe-milo','pastels','fruits','gingembre','yaourt','the-lait']
+    .filter(function(id){ return T.produits[id] && !dedans[id] && T.dispo(id); }).slice(0,6);
+  if (idees.length){
+    dd.appendChild(el('div','lab','Vous aimerez peut-être aussi'));
+    var rail = el('div','suggest');
+    idees.forEach(function(id){
+      var p3 = T.produits[id];
+      var b = el('button','s');
+      var im2 = el('img','im'); im2.src = T.img(p3.img); im2.alt = ''; im2.loading = 'lazy';
+      b.appendChild(im2);
+      b.appendChild(el('span','a','+'));
+      b.appendChild(el('div','c','<div class="n">' + p3.nom + '</div><div class="p">' + T.prixTxt(p3) + '</div>'));
+      b.onclick = function(){ ajouter(id, 0, 1, [], ''); };
+      rail.appendChild(b);
+    });
+    dd.appendChild(rail);
+  }
+
   var add = el('div','addition');
   add.appendChild(el('div', null, '<span>Sous-total</span><span>' + F(sousTotal()) + '</span>'));
   add.appendChild(el('div', null, '<span>Livraison · ' + T.zone(S.zone).nom + '</span><span>' + (frais() ? F(frais()) : 'Offerte') + '</span>'));
   add.appendChild(el('div','tot','<span>Total</span><span>' + F(total()) + '</span>'));
   pied.appendChild(add);
-  var b = el('button','btn plein grand');
-  b.textContent = 'Commander · ' + F(total());
-  b.onclick = function(){ S.etape = 'livraison'; rendrePanier(); };
-  pied.appendChild(b);
+  var b2 = el('button','btn plein grand');
+  b2.textContent = 'Passer à la caisse · ' + F(total());
+  b2.onclick = function(){ S.etape = 'caisse'; rendrePanier(); };
+  pied.appendChild(b2);
 }
 
-function vueLivraison(dd, pied){
-  dd.appendChild(filEtapes('livraison'));
-
-  if (!compte){
-    var invite = el('div','bloc');
-    invite.style.cssText = 'padding:13px 15px;display:flex;align-items:center;gap:12px';
-    invite.innerHTML = '<span style="width:34px;height:34px;border-radius:50%;background:var(--or-doux);display:grid;' +
-      'place-items:center;flex:none"><svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:var(--or-fonce);' +
-      'fill:none;stroke-width:1.8"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 20a7.5 7.5 0 0 1 14.4 0"/></svg></span>' +
-      '<span style="flex:1;min-width:0;font-size:12.5px;line-height:1.4">' +
-      '<b style="font-weight:500">Pas besoin de compte pour commander.</b><br>' +
-      'Connectez-vous seulement si vous voulez retrouver vos adresses et vos commandes.</span>';
-    var bc = el('button','btn creux petit');
-    bc.textContent = 'Se connecter';
-    bc.onclick = function(){ ecran('compte'); };
-    invite.appendChild(bc);
-    dd.appendChild(invite);
-  }
-
-  var j = el('div','champ');
-  j.appendChild(el('span','lab','Jour de livraison'));
-  j.appendChild(el('div','bloc','<div style="padding:12px 14px;font-size:13.5px">' +
-    '<b style="font-family:var(--titre)">' + D.long.charAt(0).toUpperCase() + D.long.slice(1) + '</b>' +
-    '<div style="color:var(--doux);font-size:12px;margin-top:2px">Commandes closes à 21h ce soir</div></div>'));
-  dd.appendChild(j);
-
-  var c = el('div','champ');
-  c.appendChild(el('span','lab','Créneau'));
-  var ch = el('div','choix');
-  T.creneaux.forEach(function(x){
-    var b = el('button', null, x.nom + (x.type === 'gouter' ? ' <span class="px">goûter</span>' : ''));
-    b.setAttribute('aria-pressed', S.creneau === x.id);
-    b.onclick = function(){ S.creneau = x.id; sauver(); rendrePanier(); };
-    ch.appendChild(b);
-  });
-  c.appendChild(ch); dd.appendChild(c);
-
-  var z = el('div','champ');
-  z.appendChild(el('span','lab','Quartier'));
-  var cz = el('div','choix');
-  T.zones.forEach(function(x){
-    var b = el('button', null, x.nom + '<span class="px">' + F(x.frais) + '</span>');
-    b.setAttribute('aria-pressed', S.zone === x.id);
-    b.onclick = function(){ S.zone = x.id; S.position = null; sauver(); rendrePanier(); };
-    cz.appendChild(b);
-  });
-  z.appendChild(cz); dd.appendChild(z);
-
-  var m = el('div','champ');
-  m.appendChild(el('span','lab','Point de livraison — déplacez le repère'));
-  var carte = el('div'); carte.id = 'carte-map';
-  m.appendChild(carte);
-  m.appendChild(el('span','aide','Carte OpenStreetMap, gratuite et sans clé d’API.'));
-  dd.appendChild(m);
-
-  var a = el('div','champ');
-  a.appendChild(el('label','lab','Adresse et repères'));
-  var ia = el('input'); ia.type = 'text'; ia.value = S.adresse;
-  ia.oninput = function(){ S.adresse = ia.value; };
-  a.appendChild(ia); dd.appendChild(a);
-
-  var n = el('div','champ');
-  n.appendChild(el('label','lab','Nom'));
-  var inom = el('input'); inom.type = 'text'; inom.value = S.nom;
-  inom.oninput = function(){ S.nom = inom.value; };
-  n.appendChild(inom); dd.appendChild(n);
-
-  var tl = el('div','champ');
-  tl.appendChild(el('label','lab','Téléphone'));
-  var it = el('input'); it.type = 'tel'; it.value = S.tel;
-  it.oninput = function(){ S.tel = it.value; };
-  tl.appendChild(it); dd.appendChild(tl);
-
-  var b = el('button','btn plein grand'); b.textContent = 'Continuer';
-  b.onclick = function(){ S.etape = 'paiement'; sauver(); rendrePanier(); };
-  pied.appendChild(b);
-  var r = el('button','btn creux plein'); r.textContent = 'Retour au panier';
-  r.onclick = function(){ S.etape = 'panier'; rendrePanier(); };
-  pied.appendChild(r);
-
-  setTimeout(monterCarte, 60);
-}
-
+/* carte de localisation, posée à l'ouverture de la section adresse */
 var carteL = null, marqueur = null;
 function monterCarte(){
   var noeud = document.getElementById('carte-map');
   if (!noeud) return;
-  if (!window.L){ noeud.innerHTML = '<div class="vide" style="padding:26px">Carte indisponible hors connexion.</div>'; return; }
+  if (!window.L){ noeud.innerHTML = '<div class="vide" style="padding:24px">Carte indisponible hors connexion.</div>'; return; }
   var pos = S.position || T.zone(S.zone).position;
   if (carteL){ try{ carteL.remove(); }catch(e){} carteL = null; }
   carteL = L.map(noeud, {zoomControl:false, attributionControl:false}).setView(pos, 15);
@@ -497,39 +462,243 @@ function monterCarte(){
     T.ecrire('position', S.position);
     avis('Point de livraison enregistré');
   });
-  setTimeout(function(){ carteL.invalidateSize(); }, 120);
+  setTimeout(function(){ carteL.invalidateSize(); }, 140);
 }
 
-function vuePaiement(dd, pied){
-  dd.appendChild(filEtapes('paiement'));
-  var m = el('div','moyens');
-  T.paiements.forEach(function(p){
-    var lab = el('label', S.paiement === p.id ? 'choisi' : '');
-    var r = el('input'); r.type = 'radio'; r.name = 'paiement'; r.checked = S.paiement === p.id;
-    r.onchange = function(){ S.paiement = p.id; sauver(); rendrePanier(); };
-    var img = el('img'); img.src = p.logo; img.alt = '';
-    lab.appendChild(r); lab.appendChild(img);
-    lab.appendChild(el('span','tx','<b>' + p.nom + '</b><span>' + p.aide + '</span>'));
-    m.appendChild(lab);
-  });
-  dd.appendChild(m);
+/* ---------------------------------------------------------- passage en caisse
+   Une seule page, des sections repliables et un bouton qui ne bouge pas :
+   moins d'étapes, moins d'abandon.                                         */
+function section(icone, titre, valeur, construire, ouverteParDefaut){
+  var s2 = el('div','sect');
+  var t = el('button','t');
+  t.innerHTML = '<span class="ic">' + icone + '</span>' +
+    '<span class="tx"><b>' + titre + '</b><span>' + valeur + '</span></span>' +
+    '<span class="fl">' + (ouverteParDefaut ? '⌃' : '⌄') + '</span>';
+  s2.appendChild(t);
+  var corps = el('div','corps' + (ouverteParDefaut ? '' : ' ferme'));
+  construire(corps);
+  s2.appendChild(corps);
+  t.onclick = function(){
+    var ferme = corps.classList.toggle('ferme');
+    t.querySelector('.fl').textContent = ferme ? '⌄' : '⌃';
+    if (!ferme && titre.indexOf('Adresse') > -1) setTimeout(monterCarte, 220);
+  };
+  return s2;
+}
 
+function vueCaisse(dd, pied){
+  var IC = {
+    sac:'<svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7zM9 8V6a3 3 0 0 1 6 0v2"/></svg>',
+    horloge:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+    lieu:'<svg viewBox="0 0 24 24"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>',
+    carte:'<svg viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="3"/><path d="M2.5 10h19"/></svg>'
+  };
+
+  /* 1. le contenu du panier, replié par défaut */
+  dd.appendChild(section(IC.sac, 'Votre commande',
+    totalArticles() + ' article' + (totalArticles() > 1 ? 's' : '') + ' · ' + F(sousTotal()),
+    function(c){
+      S.panier.forEach(function(l){
+        var r = el('div');
+        r.style.cssText = 'display:flex;gap:10px;font-size:13px;align-items:baseline';
+        r.innerHTML = '<span style="color:var(--doux)">' + l.qte + ' ×</span><span style="flex:1">' + l.nom +
+          '<span style="display:block;font-size:11.5px;color:var(--doux)">' +
+          [l.fmt, l.sup, l.note].filter(Boolean).join(' · ') + '</span></span>' +
+          '<span style="font-family:var(--titre);font-weight:700">' + F(l.prix * l.qte) + '</span>';
+        c.appendChild(r);
+      });
+      var mod = el('button','btn creux petit');
+      mod.style.justifySelf = 'start';
+      mod.textContent = 'Modifier le panier';
+      mod.onclick = function(){ S.etape = 'panier'; rendrePanier(); };
+      c.appendChild(mod);
+    }));
+
+  /* 2. le créneau */
+  dd.appendChild(section(IC.horloge, 'Livraison',
+    D.court + ' · ' + T.creneau(S.creneau).nom,
+    function(c){
+      c.appendChild(el('p','aide','Commande préparée le matin même, livrée ' + D.long + '.'));
+      var ch = el('div','choix');
+      T.creneaux.forEach(function(x){
+        var b = el('button', null, x.nom + (x.type === 'gouter' ? ' <span class="px">goûter</span>' : ''));
+        b.setAttribute('aria-pressed', S.creneau === x.id);
+        b.onclick = function(){ S.creneau = x.id; sauver(); rendrePanier(); };
+        ch.appendChild(b);
+      });
+      c.appendChild(ch);
+    }, true));
+
+  /* 3. l'adresse */
+  dd.appendChild(section(IC.lieu, 'Adresse de livraison',
+    T.zone(S.zone).nom + ' — ' + S.adresse.slice(0, 28) + (S.adresse.length > 28 ? '…' : ''),
+    function(c){
+      var carte = el('div'); carte.id = 'carte-map';
+      c.appendChild(carte);
+      var cz = el('div','choix');
+      T.zones.forEach(function(x){
+        var b = el('button', null, x.nom + '<span class="px">' + F(x.frais) + '</span>');
+        b.setAttribute('aria-pressed', S.zone === x.id);
+        b.onclick = function(){ S.zone = x.id; S.position = null; sauver(); rendrePanier(); };
+        cz.appendChild(b);
+      });
+      c.appendChild(cz);
+      var a = el('div','champ');
+      a.appendChild(el('label','lab','Rue, portail, point de repère'));
+      var ia = el('input'); ia.type = 'text'; ia.value = S.adresse;
+      ia.oninput = function(){ S.adresse = ia.value; };
+      a.appendChild(ia); c.appendChild(a);
+      var n = el('div','champ');
+      n.appendChild(el('label','lab','Nom'));
+      var inom = el('input'); inom.type = 'text'; inom.value = S.nom;
+      inom.oninput = function(){ S.nom = inom.value; };
+      n.appendChild(inom); c.appendChild(n);
+      var tl = el('div','champ');
+      tl.appendChild(el('label','lab','Téléphone'));
+      var it = el('input'); it.type = 'tel'; it.value = S.tel;
+      it.oninput = function(){ S.tel = it.value; };
+      tl.appendChild(it); c.appendChild(tl);
+      setTimeout(monterCarte, 120);
+    }, true));
+
+  /* 4. le paiement */
+  var pa = T.paiement(S.paiement);
+  var detailPaiement = pa.nom;
+  if (S.paiement === 'especes' && S.especes && S.especes.montant)
+    detailPaiement += ' · ' + (S.especes.appoint ? 'appoint exact' : 'paie avec ' + F(S.especes.montant));
+  dd.appendChild(section(IC.carte, 'Moyen de paiement', detailPaiement, function(c){
+    var m = el('div','moyens');
+    T.paiements.forEach(function(p3){
+      var lab = el('label', S.paiement === p3.id ? 'choisi' : '');
+      var r = el('input'); r.type = 'radio'; r.name = 'paiement'; r.checked = S.paiement === p3.id;
+      r.onchange = function(){
+        S.paiement = p3.id; sauver();
+        if (p3.id === 'especes') feuilleEspeces();
+        else rendrePanier();
+      };
+      var img = el('img'); img.src = p3.logo; img.alt = '';
+      lab.appendChild(r); lab.appendChild(img);
+      lab.appendChild(el('span','tx','<b>' + p3.nom + '</b><span>' + p3.aide + '</span>'));
+      m.appendChild(lab);
+    });
+    c.appendChild(m);
+    if (S.paiement === 'especes'){
+      var b = el('button','btn creux petit');
+      b.style.justifySelf = 'start';
+      b.textContent = S.especes && S.especes.montant ? 'Modifier le montant' : 'Vous payez avec combien ?';
+      b.onclick = feuilleEspeces;
+      c.appendChild(b);
+    }
+  }, true));
+
+  /* 5. le récapitulatif */
   var rec = el('div','addition');
-  rec.appendChild(el('div', null, '<span>' + totalArticles() + ' articles</span><span>' + F(sousTotal()) + '</span>'));
-  rec.appendChild(el('div', null, '<span>Livraison ' + T.zone(S.zone).nom + '</span><span>' + (frais() ? F(frais()) : 'Offerte') + '</span>'));
-  rec.appendChild(el('div', null, '<span>' + D.court + ' · ' + T.creneau(S.creneau).nom + '</span><span></span>'));
-  rec.appendChild(el('div','tot','<span>Total</span><span>' + F(total()) + '</span>'));
+  rec.appendChild(el('div', null, '<span>Produits</span><span>' + F(sousTotal()) + '</span>'));
+  rec.appendChild(el('div', null, '<span>Livraison</span><span>' + (frais() ? F(frais()) : 'Offerte') + '</span>'));
+  rec.appendChild(el('div','tot','<span>Total à payer</span><span>' + F(total()) + '</span>'));
   dd.appendChild(rec);
+  dd.appendChild(el('p','aide','Rien n\u2019est débité maintenant. Tela Castle confirme la commande, puis vous payez ' +
+    'au livreur ou par ' + pa.nom.toLowerCase() + '.'));
 
-  dd.appendChild(el('p','vide','Aucun paiement n’est débité ici : la boutique confirme d’abord la commande sur WhatsApp.'));
+  var b3 = el('button','btn plein grand');
+  b3.textContent = 'Envoyer ma commande · ' + F(total());
+  b3.onclick = envoyer;
+  pied.appendChild(b3);
+}
 
-  var b = el('button','btn plein grand');
-  b.textContent = 'Envoyer ma commande · ' + F(total());
-  b.onclick = envoyer;
-  pied.appendChild(b);
-  var r2 = el('button','btn creux plein'); r2.textContent = 'Retour';
-  r2.onclick = function(){ S.etape = 'livraison'; rendrePanier(); };
-  pied.appendChild(r2);
+/* feuille « vous payez avec combien ? », comme chez les livreurs d'ici */
+function feuilleEspeces(){
+  var brouillon = {montant: (S.especes && S.especes.montant) || total(), appoint: !!(S.especes && S.especes.appoint)};
+  feuille(function(f){
+    f.appendChild(el('span','ic-rond','<svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/>' +
+      '<circle cx="12" cy="12" r="2.8"/><path d="M6 9.5v5M18 9.5v5"/></svg>'));
+    f.appendChild(el('h3', null, 'Vous payez avec combien ?'));
+    f.appendChild(el('p','sous','Le livreur prépare la monnaie. Total à payer : <b style="color:var(--encre)">' + F(total()) + '</b>'));
+
+    var ch = el('div','champ');
+    ch.style.marginTop = '18px';
+    ch.appendChild(el('label','lab','Montant remis'));
+    var ligne = el('div');
+    ligne.style.cssText = 'display:flex;gap:8px;align-items:center';
+    var inp = el('input');
+    inp.type = 'number'; inp.inputMode = 'numeric'; inp.min = total(); inp.step = 500;
+    inp.value = brouillon.montant;
+    inp.style.cssText = 'flex:1;text-align:right;font-family:var(--titre);font-weight:700;font-size:17px';
+    var u = el('span'); u.textContent = 'F'; u.style.cssText = 'color:var(--doux);font-size:14px';
+    inp.oninput = function(){
+      brouillon.montant = Number(inp.value) || 0;
+      brouillon.appoint = brouillon.montant === total();
+      caseAppoint.setAttribute('aria-pressed', brouillon.appoint);
+      majRendu();
+    };
+    ligne.appendChild(inp); ligne.appendChild(u);
+    ch.appendChild(ligne);
+    f.appendChild(ch);
+
+    var billets = el('div','choix');
+    billets.style.marginTop = '10px';
+    var propositions = [total(), 1000, 2000, 5000, 10000]
+      .filter(function(v, i, a){ return v >= total() && a.indexOf(v) === i; })
+      .sort(function(a, b){ return a - b; })
+      .slice(0, 4);
+    propositions.forEach(function(v){
+      var b = el('button', null, F(v));
+      b.onclick = function(){
+        brouillon.montant = v; inp.value = v;
+        brouillon.appoint = v === total();
+        caseAppoint.setAttribute('aria-pressed', brouillon.appoint);
+        majRendu();
+      };
+      billets.appendChild(b);
+    });
+    f.appendChild(billets);
+
+    var caseAppoint = el('button','choix');
+    caseAppoint = el('button');
+    caseAppoint.style.cssText = 'display:flex;align-items:center;gap:11px;padding:12px 13px;border:var(--ep-bord) solid var(--bord);' +
+      'border-radius:12px;font-size:13px;width:100%;margin-top:12px;text-align:left';
+    caseAppoint.innerHTML = '<span class="c" style="width:20px;height:20px;border-radius:6px;border:var(--ep-bord) solid var(--bord-fort);' +
+      'display:grid;place-items:center;font-size:12px;flex:none"></span><span>J\u2019ai l\u2019appoint exact</span>';
+    function majCase(){
+      var on = brouillon.appoint;
+      caseAppoint.querySelector('.c').textContent = on ? '✓' : '';
+      caseAppoint.querySelector('.c').style.background = on ? 'var(--or)' : 'transparent';
+      caseAppoint.querySelector('.c').style.borderColor = on ? 'var(--or)' : 'var(--bord-fort)';
+    }
+    caseAppoint.onclick = function(){
+      brouillon.appoint = !brouillon.appoint;
+      if (brouillon.appoint){ brouillon.montant = total(); inp.value = total(); }
+      majCase(); majRendu();
+    };
+    f.appendChild(caseAppoint);
+
+    var rendu = el('p','sous');
+    rendu.style.marginTop = '12px';
+    f.appendChild(rendu);
+    function majRendu(){
+      majCase();
+      var d2 = brouillon.montant - total();
+      rendu.innerHTML = d2 > 0
+        ? 'Le livreur rendra <b style="color:var(--encre)">' + F(d2) + '</b>'
+        : (d2 === 0 ? 'Aucune monnaie à rendre.' : '<span style="color:var(--rouge)">Montant inférieur au total.</span>');
+    }
+    majRendu();
+
+    var act = el('div','actions');
+    var ok = el('button','btn plein');
+    ok.textContent = 'Confirmer';
+    ok.onclick = function(){
+      S.especes = {montant:brouillon.montant, appoint:brouillon.appoint};
+      T.ecrire('especes', S.especes);
+      fermerFeuille(); rendrePanier();
+      avis(brouillon.appoint ? 'Appoint exact noté' : 'Monnaie à préparer : ' + F(brouillon.montant - total()));
+    };
+    var non = el('button','btn creux');
+    non.textContent = 'Annuler';
+    non.onclick = fermerFeuille;
+    act.appendChild(ok); act.appendChild(non);
+    f.appendChild(act);
+  });
 }
 
 function envoyer(){
@@ -542,7 +711,9 @@ function envoyer(){
     creneau: S.creneau, jourLivraison: D.livraison.toISOString(),
     lignes: S.panier.map(function(l){ return {id:l.id, nom:l.nom, img:l.img, fmt:l.fmt, sup:l.sup, prix:l.prix, qte:l.qte, note:l.note}; }),
     sousTotal: sousTotal(), frais: frais(), total: total(),
-    paiement: S.paiement, statut: 'recue', canal: 'app',
+    paiement: S.paiement,
+    especes: S.paiement === 'especes' ? S.especes : null,
+    statut: 'recue', canal: 'app',
     journal: [{quand:new Date().toISOString(), quoi:'recue'}]
   };
   T.enregistrerCommande(cmd);
@@ -1108,14 +1279,12 @@ function ecran(nom){
   majNav();
 }
 function majNav(){
+  majBarreTotal();
   Array.prototype.forEach.call(document.querySelectorAll('.nav-flot button'), function(b){
     b.classList.toggle('on', b.dataset.ecran === S.ecran);
   });
 }
-function reculerEtape(){
-  S.etape = S.etape === 'paiement' ? 'livraison' : 'panier';
-  rendrePanier();
-}
+function reculerEtape(){ S.etape = 'panier'; rendrePanier(); }
 
 /* ---------------------------------------------------------- section courante */
 function hautBarre(){ var b = $('.bar'); return b ? b.offsetHeight : 66; }
@@ -1151,6 +1320,15 @@ function chrono(){
   var h = Math.floor(ms/36e5), m = Math.floor(ms%36e5/6e4), s = Math.floor(ms%6e4/1000);
   $('#chrono').textContent = h > 0 ? h + 'h' + String(m).padStart(2,'0') : m + 'min ' + String(s).padStart(2,'0');
 }
+function majBarreTotal(){
+  var n = totalArticles();
+  var b = $('#barreTotal');
+  var visible = n > 0 && S.ecran === 'accueil' && mobile();
+  b.classList.toggle('on', visible);
+  $('#btQte').textContent = n;
+  b.querySelector('.q').innerHTML = '<b id="btQte">' + n + '</b> article' + (n > 1 ? 's' : '');
+  $('#btTotal').textContent = F(total());
+}
 function rendreTout(){
   var n = totalArticles();
   var bn = $('#btnPanierN');
@@ -1158,7 +1336,7 @@ function rendreTout(){
   $('#btnPanier').title = n ? n + ' article' + (n > 1 ? 's' : '') + ' · ' + F(total()) : 'Panier vide';
   var nn = $('#navN'); nn.hidden = !n; nn.textContent = n;
   $('#zoneNom').textContent = T.zone(S.zone).nom;
-  rendreMenu(); rendrePanier();
+  rendreMenu(); rendrePanier(); majBarreTotal();
 }
 
 /* ---------------------------------------------------------- animations */
@@ -1189,6 +1367,7 @@ function animations(){
 
 /* ---------------------------------------------------------- branchements */
 $('#btnPanier').onclick = function(){ ecran('panier'); };
+$('#barreTotal').onclick = function(){ ecran('panier'); };
 $('#btnCompte').onclick = function(){ ecran('compte'); };
 $('#btnAdresse').onclick = function(){ S.etape = 'livraison'; ecran('panier'); };
 $('#voile').onclick = function(){ fermer(); };
@@ -1204,8 +1383,10 @@ window.addEventListener('scroll', function(){
   var y = window.scrollY;
   var nav = $('#navFlot');
   if (mobile() && S.ecran === 'accueil'){
-    nav.classList.toggle('cache', y > dernierY + 6 && y > 200);
-  } else nav.classList.remove('cache');
+    var descend = y > dernierY + 6 && y > 200;
+    nav.classList.toggle('cache', descend);
+    $('#barreTotal').style.transform = descend ? 'translateY(140%)' : '';
+  } else { nav.classList.remove('cache'); $('#barreTotal').style.transform = ''; }
   dernierY = y;
   spy();
 }, {passive:true});

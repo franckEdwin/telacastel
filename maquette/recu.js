@@ -103,7 +103,7 @@ T.dessinerRecu = function(cmd){
           + 118                      /* référence + statut */
           + hBloc + 54               /* bloc livraison */
           + 66 + hLignes             /* articles */
-          + 176                      /* totaux */
+          + 176 + (cmd.especes && cmd.especes.montant ? 44 : 0)   /* totaux */
           + 152                      /* total en valeur */
           + 150;                     /* pied */
 
@@ -221,6 +221,10 @@ T.dessinerRecu = function(cmd){
     rang('Sous-total', T.F(cmd.sousTotal));
     rang('Livraison ' + z.nom, cmd.frais ? T.F(cmd.frais) : 'offerte');
     rang('Paiement', pa.nom);
+    if (cmd.especes && cmd.especes.montant){
+      rang('Espèces', cmd.especes.appoint ? 'appoint exact'
+        : F(cmd.especes.montant) + ' — rendre ' + F(cmd.especes.montant - cmd.total));
+    }
     y += 14;
 
     /* --- total --- */

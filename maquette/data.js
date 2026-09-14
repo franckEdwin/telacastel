@@ -570,6 +570,11 @@ T.messageWhatsApp = function(cmd){
   l.push('Livraison ' + z.nom + '  ' + (cmd.frais ? T.F(cmd.frais) : 'offerte'));
   l.push('*TOTAL  ' + T.F(cmd.total) + '*');
   l.push('Paiement : ' + p.nom);
+  if (cmd.especes && cmd.especes.montant){
+    l.push(cmd.especes.appoint
+      ? '  (le client a l\u2019appoint exact)'
+      : '  (paie avec ' + T.F(cmd.especes.montant) + ' — rendre ' + T.F(cmd.especes.montant - cmd.total) + ')');
+  }
   return l.join('\n');
 };
 T.lienWhatsApp = function(cmd){
