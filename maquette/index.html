@@ -166,6 +166,10 @@ body{overflow-x:hidden}
 .panneau .tete .sous{font-size:11.5px;color:var(--doux)}
 .panneau .dedans{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:16px;display:flex;flex-direction:column;gap:18px;
   scrollbar-width:none}
+/* Conteneur flex vertical : sans cela tout ce qui a une hauteur fixe s'y
+   fait comprimer — boutons de 44 px écrasés à 24, zones de texte réduites
+   à un trait. */
+.panneau .dedans > *{flex:none}
 .panneau .dedans::-webkit-scrollbar{width:0;height:0}
 .panneau .pied{flex:none;padding:14px 16px;border-top:var(--ep-bord) solid var(--bord);background:var(--surface);display:grid;gap:10px}
 .retour{width:36px;height:36px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;flex:none}
@@ -320,7 +324,7 @@ body{overflow-x:hidden}
 /* ---------------------------------------------------------- accès directs */
 .acces{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 4px}
 .acces button{display:flex;align-items:center;gap:11px;padding:12px 14px;text-align:left;
-  background:var(--surface);border:var(--ep-bord) solid var(--bord);border-radius:var(--r-m)}
+  background:var(--surface);border:var(--ep-bord) solid var(--bord);border-radius:var(--r)}
 .acces button:hover{border-color:var(--bord-fort)}
 .acces .ic{width:36px;height:36px;border-radius:11px;background:var(--or-doux);display:grid;place-items:center;flex:none}
 .acces .ic svg{width:18px;height:18px;stroke:var(--or-fonce);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -333,7 +337,7 @@ body{overflow-x:hidden}
 /* ---------------------------------------------------------- bandeau de suivi
    Une commande en cours doit rester visible où qu'on soit dans l'application. */
 .bandeau-suivi{position:fixed;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:94;
-  display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--r-m);
+  display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--r);
   background:var(--encre);color:var(--fond);text-align:left;box-shadow:0 6px 22px rgba(0,0,0,.18)}
 .bandeau-suivi .pulse{width:9px;height:9px;border-radius:50%;background:var(--vert);flex:none;
   box-shadow:0 0 0 0 rgba(90,170,110,.7);animation:onde 2s infinite}
@@ -351,7 +355,7 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
 
 /* ---------------------------------------------------------- historique */
 .hcmd{display:block;width:100%;text-align:left;background:var(--surface);border:var(--ep-bord) solid var(--bord);
-  border-radius:var(--r-m);padding:13px 15px}
+  border-radius:var(--r);padding:13px 15px}
 .hcmd .h{display:flex;align-items:center;gap:9px}
 .hcmd .h b{font-family:var(--titre);font-size:14.5px}
 .hcmd .h .t{margin-left:auto;font-family:var(--titre);font-weight:700;font-size:15px}
@@ -360,8 +364,10 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
 .hcmd .v img{width:30px;height:30px;border-radius:8px;object-fit:cover;border:2px solid var(--surface);margin-right:-8px}
 .hcmd .v span{align-self:center;margin-left:14px;font-size:11.5px;color:var(--doux)}
 .hcmd .a{display:flex;gap:8px;margin-top:11px}
-.hcmd .a button{flex:1;font-size:12.5px;padding:8px;border-radius:var(--r-p);border:var(--ep-bord) solid var(--bord-fort)}
-.hcmd .a button.plein{background:var(--encre);color:var(--fond);border-color:var(--encre)}
+.hcmd .a button{flex:1;height:40px;font-size:13px;font-weight:500;border-radius:999px;
+  background:var(--surface);color:var(--encre);border:var(--ep-bord) solid var(--bord-fort)}
+/* l'action principale est jaune partout ailleurs : ici aussi */
+.hcmd .a button.plein{background:var(--or);color:#241A12;border-color:var(--or)}
 .filtres{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
 .filtres::-webkit-scrollbar{display:none}
 .filtres button{flex:none;font-size:12.5px;padding:7px 13px;border-radius:999px;border:var(--ep-bord) solid var(--bord);
@@ -370,13 +376,13 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
 
 /* plateaux */
 .compteur{display:flex;align-items:center;gap:14px;background:var(--surface);border:var(--ep-bord) solid var(--bord);
-  border-radius:var(--r-m);padding:12px 15px}
+  border-radius:var(--r);padding:12px 15px}
 .compteur .n{flex:1;font-family:var(--titre);font-weight:700;font-size:26px;text-align:center}
 .compteur button{width:38px;height:38px;border-radius:50%;border:var(--ep-bord) solid var(--bord-fort);
   font-size:19px;line-height:1;flex:none}
 .form-pl{display:grid;gap:9px}
 .form-pl label{display:flex;gap:13px;align-items:center;background:var(--surface);
-  border:var(--ep-bord) solid var(--bord);border-radius:var(--r-m);padding:14px 15px;cursor:pointer;
+  border:var(--ep-bord) solid var(--bord);border-radius:var(--r);padding:14px 15px;cursor:pointer;
   min-height:72px}
 .form-pl label:has(input:checked){border-color:var(--or);background:var(--or-doux)}
 /* la case native mélangeait un rond et un carré jaune : on la dessine */
@@ -406,7 +412,7 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
 .jours-pl button[aria-pressed="true"]{background:var(--encre);border-color:var(--encre);color:var(--fond)}
 .jours-pl button[aria-pressed="true"] .j,
 .jours-pl button[aria-pressed="true"] .m{color:rgba(255,255,255,.7)}
-.devis{background:var(--or-doux);border-radius:var(--r-m);padding:15px 16px}
+.devis{background:var(--or-doux);border-radius:var(--r);padding:15px 16px}
 .devis .l{display:flex;justify-content:space-between;font-size:13px;padding:5px 0}
 .devis .l.gros{border-top:var(--ep-bord) solid rgba(0,0,0,.12);margin-top:6px;padding-top:11px;
   font-family:var(--titre);font-weight:700;font-size:17px}

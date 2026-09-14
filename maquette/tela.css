@@ -145,6 +145,10 @@ a{color:inherit;text-decoration:none}
   padding:11px 13px;font-size:13.5px;font-weight:300;transition:border-color var(--t)}
 .champ input:focus,.champ select:focus,.champ textarea:focus{outline:none;border-color:var(--or)}
 .champ input::placeholder,.champ textarea::placeholder{color:var(--doux);opacity:.7}
+/* Le texte d'aide n'existait qu'à l'intérieur d'une enveloppe de champ :
+   partout ailleurs la classe ne faisait rien et le texte sortait en 15 px
+   d'encre pleine, au lieu d'une note discrète. */
+.aide{font-size:11.5px;color:var(--doux);line-height:1.5}
 .champ .aide{font-size:11.5px;color:var(--doux)}
 
 .choix{display:flex;gap:7px;flex-wrap:wrap}
