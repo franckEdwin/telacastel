@@ -14,19 +14,20 @@ const VIDE = { commandes: [], produits: null, categories: null, maj: 0 };
 
 async function lire(){
   try {
-    const r = await get(CHEMIN, { abortSignal: AbortSignal.timeout(7000) });
+    const r = await get(CHEMIN);
     if (!r) return { ...VIDE };
-    const texte = await new Response(r.stream ?? r.blob).text();
+    const texte = await new Response(r.stream ?? r.blob ?? r.body).text();
     return { ...VIDE, ...JSON.parse(texte) };
   } catch (e) {
-    if (e && /not.?found/i.test(e.name + e.message)) return { ...VIDE };
+    if (e && /not.?found/i.test(String(e.name) + String(e.message))) return { ...VIDE };
+    e.etape = 'lecture';
     throw e;
   }
 }
 
 async function ecrire(etat){
   await put(CHEMIN, JSON.stringify(etat), {
-    access: 'public',
+    access: 'private',
     contentType: 'application/json',
     addRandomSuffix: false,
     allowOverwrite: true,
@@ -73,6 +74,6 @@ export default async function handler(req, res){
     res.setHeader('allow', 'GET, PUT');
     return res.status(405).json({ erreur: 'méthode non permise' });
   } catch (e) {
-    return res.status(500).json({ erreur: String((e && e.message) || e) });
+    return res.status(500).json({ erreur: String((e && e.message) || e), etape: (e && e.etape) || 'écriture' });
   }
 }
