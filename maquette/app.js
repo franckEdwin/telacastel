@@ -1,5 +1,5 @@
 /* ============================================================
-   Tela Castel — application client
+   Tela Castle — application client
    Mobile : des écrans, jamais de fenêtre surgissante.
    Bureau : menu au centre, panier en colonne permanente.
    ============================================================ */
@@ -401,6 +401,21 @@ function vuePanier(dd, pied){
 function vueLivraison(dd, pied){
   dd.appendChild(filEtapes('livraison'));
 
+  if (!compte){
+    var invite = el('div','bloc');
+    invite.style.cssText = 'padding:13px 15px;display:flex;align-items:center;gap:12px';
+    invite.innerHTML = '<span style="width:34px;height:34px;border-radius:50%;background:var(--or-doux);display:grid;' +
+      'place-items:center;flex:none"><svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:var(--or-fonce);' +
+      'fill:none;stroke-width:1.8"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 20a7.5 7.5 0 0 1 14.4 0"/></svg></span>' +
+      '<span style="flex:1;min-width:0;font-size:12.5px;line-height:1.4">Connectez-vous pour retrouver votre adresse ' +
+      'et suivre vos commandes.</span>';
+    var bc = el('button','btn creux petit');
+    bc.textContent = 'Se connecter';
+    bc.onclick = function(){ ecran('compte'); };
+    invite.appendChild(bc);
+    dd.appendChild(invite);
+  }
+
   var j = el('div','champ');
   j.appendChild(el('span','lab','Jour de livraison'));
   j.appendChild(el('div','bloc','<div style="padding:12px 14px;font-size:13.5px">' +
@@ -535,11 +550,12 @@ function envoyer(){
     var p = T.produits[l.id];
     if (p && p.stock != null) T.majStock(l.id, p.stock - l.qte);
   });
+  if (compte){ T.gagnerFidelite(compte.tel); compte = T.compte(); }
   S.ref = cmd.ref; T.ecrire('refEnCours', cmd.ref);
   S.etape = 'confirme';
   S.panier = [];
   sauver();
-  avis('Commande envoyée à Tela Castel');
+  avis('Commande envoyée à Tela Castle');
 }
 
 function commandeCourante(){
@@ -605,7 +621,7 @@ function ticket(cmd){
   var z = T.zone(cmd.zone), c = T.creneau(cmd.creneau), p = T.paiement(cmd.paiement);
   var t = el('div','ticket'); t.style.maxWidth = 'none';
   var tete = el('div','tete');
-  tete.innerHTML = '<img src="img/logo.png" alt=""><b>TELA CASTEL</b><span>' + T.boutique.adresse + '</span><span>' + T.boutique.tel + '</span>';
+  tete.innerHTML = '<img src="img/logo.png" alt=""><b>TELA CASTLE</b><span>' + T.boutique.adresse + '</span><span>' + T.boutique.tel + '</span>';
   t.appendChild(tete);
   t.appendChild(el('div','traits'));
   t.appendChild(el('div','l','<span>Commande</span><span>' + cmd.ref + '</span>'));
@@ -626,111 +642,344 @@ function ticket(cmd){
   return t;
 }
 
-/* ---------------------------------------------------------- compte */
+/* ---------------------------------------------------------- compte
+   Parcours en trois temps, comme les applications de commande d'ici :
+   numéro → code reçu par message → profil si le numéro est inconnu.      */
+var CPT = {etape:'tel', tel:'', attendu:'', restant:0, minuteur:null};
+
 function rendreCompte(){
   var pan = $('#panneau-compte');
   pan.innerHTML = '';
+
   var tete = el('div','tete');
-  var ret = el('button','retour', FLECHE); ret.setAttribute('aria-label','Retour'); ret.onclick = fermer;
+  var ret = el('button','retour', FLECHE);
+  ret.setAttribute('aria-label','Retour');
+  ret.onclick = function(){
+    if (!compte && CPT.etape === 'code'){ CPT.etape = 'tel'; rendreCompte(); return; }
+    if (!compte && CPT.etape === 'profil'){ CPT.etape = 'code'; rendreCompte(); return; }
+    fermer();
+  };
   tete.appendChild(ret);
-  tete.appendChild(el('div', null, '<h3>' + (compte ? 'Mon compte' : 'Se connecter') + '</h3>'));
+  var titres = {tel:'Connexion', code:'Code de confirmation', profil:'Votre profil'};
+  tete.appendChild(el('div', null, '<h3>' + (compte ? 'Mon compte' : titres[CPT.etape]) + '</h3>'));
   pan.appendChild(tete);
+
   var dd = el('div','dedans');
   var pied = el('div','pied');
+  pan.appendChild(dd); pan.appendChild(pied);
 
-  if (!compte){
-    var onglet = {v:'connexion'};
-    var ch = el('div','choix');
-    [['connexion','Connexion'],['inscription','Créer un compte']].forEach(function(o){
-      var b = el('button', null, o[1]);
-      b.setAttribute('aria-pressed', onglet.v === o[0]);
-      b.onclick = function(){ onglet.v = o[0]; rendreFormulaire(); Array.prototype.forEach.call(ch.children, function(x,i){ x.setAttribute('aria-pressed', i === (o[0]==='connexion'?0:1)); }); };
-      ch.appendChild(b);
-    });
-    dd.appendChild(ch);
-    var form = el('div'); form.style.cssText = 'display:grid;gap:12px';
-    dd.appendChild(form);
+  if (compte) vueCompte(dd, pied);
+  else if (CPT.etape === 'tel') vueTelephone(dd, pied);
+  else if (CPT.etape === 'code') vueCode(dd, pied);
+  else vueProfil(dd, pied);
+}
 
-    function rendreFormulaire(){
-      form.innerHTML = '';
-      if (onglet.v === 'inscription'){
-        form.appendChild(champ('Nom complet', 'text', 'nom', S.nom));
-        form.appendChild(champ('Téléphone', 'tel', 'tel', S.tel));
-        form.appendChild(champ('Quartier', 'text', 'zone', T.zone(S.zone).nom));
-      } else {
-        form.appendChild(champ('Téléphone', 'tel', 'tel', S.tel));
-      }
-      form.appendChild(champ('Code à 4 chiffres', 'password', 'code', ''));
-      form.appendChild(el('p','aide','Maquette : n’importe quel code fonctionne. En vrai, un code arrive par SMS ou WhatsApp.'));
-    }
-    rendreFormulaire();
+function illustration(ic, titre, sous){
+  var b = el('div');
+  b.style.cssText = 'text-align:center;padding:6px 0 4px';
+  b.innerHTML = '<span style="width:62px;height:62px;border-radius:50%;background:var(--or-doux);display:grid;' +
+    'place-items:center;margin:0 auto 14px">' + ic + '</span>' +
+    '<h2 style="font-size:21px">' + titre + '</h2>' +
+    '<p style="font-size:13.5px;color:var(--doux);margin-top:6px;line-height:1.5">' + sous + '</p>';
+  return b;
+}
 
-    var b = el('button','btn plein grand');
-    b.textContent = 'Continuer';
-    b.onclick = function(){
-      var nom = ($('#ch-nom') && $('#ch-nom').value) || S.nom;
-      var tel = ($('#ch-tel') && $('#ch-tel').value) || S.tel;
-      compte = {id:'c-local', nom:nom, tel:tel, depuis:new Date().toISOString(), fidelite:0};
-      T.connexion(compte);
-      S.nom = nom; S.tel = tel;
-      avis('Bienvenue, ' + nom.split(' ')[0]);
-      rendreCompte();
-    };
-    pied.appendChild(b);
-    pan.appendChild(dd); pan.appendChild(pied);
-    return;
+/* --- 1. le numéro --- */
+function vueTelephone(dd, pied){
+  dd.appendChild(illustration(
+    '<svg viewBox="0 0 24 24" style="width:26px;height:26px;stroke:var(--or-fonce);fill:none;stroke-width:1.8;stroke-linecap:round"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M11 18.5h2"/></svg>',
+    'Votre numéro',
+    'Nous vous envoyons un code à quatre chiffres<br>par message pour retrouver vos commandes.'));
+
+  var ch = el('div','champ');
+  ch.appendChild(el('label','lab','Numéro de téléphone'));
+  var ligne = el('div');
+  ligne.style.cssText = 'display:flex;gap:8px;align-items:center';
+  var ind = el('span');
+  ind.style.cssText = 'flex:none;padding:11px 13px;border:var(--ep-bord) solid var(--bord);border-radius:var(--r-s);' +
+    'font-size:13.5px;background:var(--surface-2)';
+  ind.textContent = '🇨🇮 +225';
+  var inp = el('input');
+  inp.type = 'tel'; inp.inputMode = 'numeric'; inp.placeholder = '07 00 00 00 00';
+  inp.value = CPT.tel ? T.telCle(CPT.tel).replace(/(\d{2})(?=\d)/g,'$1 ').trim() : '';
+  inp.style.flex = '1';
+  inp.oninput = function(){
+    var n = inp.value.replace(/[^0-9]/g,'').slice(0,10);
+    inp.value = n.replace(/(\d{2})(?=\d)/g,'$1 ').trim();
+    CPT.tel = n;
+    cta.disabled = n.length < 8;
+  };
+  ligne.appendChild(ind); ligne.appendChild(inp);
+  ch.appendChild(ligne);
+  ch.appendChild(el('span','aide','Le même numéro que sur WhatsApp, pour recevoir le suivi de vos commandes.'));
+  dd.appendChild(ch);
+
+  var cta = el('button','btn plein grand');
+  cta.textContent = 'Recevoir le code';
+  cta.disabled = T.telCle(CPT.tel).length < 8;
+  cta.onclick = function(){
+    CPT.attendu = String(Math.floor(1000 + Math.random() * 9000));
+    CPT.etape = 'code';
+    lancerCompteARebours();
+    rendreCompte();
+    avis('Code envoyé au ' + T.telJoli(CPT.tel));
+  };
+  pied.appendChild(cta);
+  var sans = el('button','btn creux plein');
+  sans.textContent = 'Continuer sans compte';
+  sans.onclick = function(){ fermer(); };
+  pied.appendChild(sans);
+  setTimeout(function(){ inp.focus(); }, 120);
+}
+
+/* --- 2. le code --- */
+function lancerCompteARebours(){
+  CPT.restant = 30;
+  clearInterval(CPT.minuteur);
+  CPT.minuteur = setInterval(function(){
+    CPT.restant--;
+    var e = $('#renvoi');
+    if (!e){ clearInterval(CPT.minuteur); return; }
+    if (CPT.restant <= 0){
+      clearInterval(CPT.minuteur);
+      e.textContent = 'Renvoyer le code';
+      e.disabled = false;
+    } else e.textContent = 'Renvoyer le code dans ' + CPT.restant + ' s';
+  }, 1000);
+}
+function vueCode(dd, pied){
+  dd.appendChild(illustration(
+    '<svg viewBox="0 0 24 24" style="width:26px;height:26px;stroke:var(--or-fonce);fill:none;stroke-width:1.8;stroke-linecap:round"><path d="M3 8.5 12 14l9-5.5"/><rect x="3" y="5" width="18" height="14" rx="3"/></svg>',
+    'Entrez le code',
+    'Envoyé au <b style="color:var(--encre)">' + T.telJoli(CPT.tel) + '</b>'));
+
+  var cases = el('div');
+  cases.style.cssText = 'display:flex;gap:10px;justify-content:center;margin:4px 0 2px';
+  var champs = [];
+  for (var i = 0; i < 4; i++){
+    (function(n){
+      var c = el('input');
+      c.type = 'text'; c.inputMode = 'numeric'; c.maxLength = 1;
+      c.style.cssText = 'width:58px;height:66px;text-align:center;font-family:var(--titre);font-weight:700;' +
+        'font-size:26px;border:var(--ep-bord) solid var(--bord);border-radius:var(--r);background:var(--surface)';
+      c.oninput = function(){
+        c.value = c.value.replace(/[^0-9]/g,'');
+        if (c.value && n < 3) champs[n+1].focus();
+        verifier();
+      };
+      c.onkeydown = function(e){
+        if (e.key === 'Backspace' && !c.value && n > 0) champs[n-1].focus();
+      };
+      c.onpaste = function(e){
+        var t = (e.clipboardData.getData('text') || '').replace(/[^0-9]/g,'').slice(0,4);
+        if (!t) return;
+        e.preventDefault();
+        t.split('').forEach(function(ch, j){ if (champs[j]) champs[j].value = ch; });
+        champs[Math.min(t.length,3)].focus();
+        verifier();
+      };
+      c.onfocus = function(){ c.style.borderColor = 'var(--or)'; };
+      c.onblur = function(){ c.style.borderColor = 'var(--bord)'; };
+      champs.push(c); cases.appendChild(c);
+    })(i);
   }
+  dd.appendChild(cases);
 
-  /* connecté */
+  var indice = el('div');
+  indice.style.cssText = 'border:1.5px dashed var(--bord-fort);border-radius:var(--r);padding:12px 14px;' +
+    'font-size:12.5px;color:var(--doux);text-align:center';
+  indice.innerHTML = 'Maquette — aucun SMS n\u2019est envoyé.<br>Votre code est <b style="color:var(--encre);' +
+    'font-family:var(--titre);font-size:15px;letter-spacing:.08em">' + CPT.attendu + '</b>';
+  dd.appendChild(indice);
+
+  var renvoi = el('button');
+  renvoi.id = 'renvoi';
+  renvoi.style.cssText = 'font-size:13px;color:var(--doux);text-decoration:underline;margin:0 auto';
+  renvoi.textContent = 'Renvoyer le code dans ' + CPT.restant + ' s';
+  renvoi.disabled = CPT.restant > 0;
+  renvoi.onclick = function(){
+    if (CPT.restant > 0) return;
+    CPT.attendu = String(Math.floor(1000 + Math.random() * 9000));
+    lancerCompteARebours();
+    rendreCompte();
+    avis('Nouveau code envoyé');
+  };
+  dd.appendChild(renvoi);
+
+  var cta = el('button','btn plein grand');
+  cta.textContent = 'Confirmer';
+  cta.disabled = true;
+  cta.onclick = valider;
+  pied.appendChild(cta);
+  var chg = el('button','btn creux plein');
+  chg.textContent = 'Modifier le numéro';
+  chg.onclick = function(){ CPT.etape = 'tel'; clearInterval(CPT.minuteur); rendreCompte(); };
+  pied.appendChild(chg);
+
+  function saisi(){ return champs.map(function(c){ return c.value; }).join(''); }
+  function verifier(){
+    var v = saisi();
+    cta.disabled = v.length < 4;
+    if (v.length === 4) valider();
+  }
+  function valider(){
+    var v = saisi();
+    if (v.length < 4) return;
+    if (v !== CPT.attendu){
+      champs.forEach(function(c){ c.value = ''; c.style.borderColor = 'var(--rouge)'; });
+      champs[0].focus();
+      avis('Code incorrect, réessayez');
+      return;
+    }
+    clearInterval(CPT.minuteur);
+    var connu = T.compteParTel(CPT.tel);
+    if (connu){
+      compte = connu;
+      T.connexion(connu);
+      S.nom = connu.nom; S.tel = connu.tel;
+      if (connu.zone) S.zone = connu.zone;
+      if (connu.adresse) S.adresse = connu.adresse;
+      sauver();
+      avis('Bon retour, ' + connu.nom.split(' ')[0]);
+      rendreCompte();
+    } else {
+      CPT.etape = 'profil';
+      rendreCompte();
+    }
+  }
+  setTimeout(function(){ champs[0].focus(); }, 140);
+}
+
+/* --- 3. le profil, uniquement pour un numéro inconnu --- */
+function vueProfil(dd, pied){
+  dd.appendChild(illustration(
+    '<svg viewBox="0 0 24 24" style="width:26px;height:26px;stroke:var(--or-fonce);fill:none;stroke-width:1.8;stroke-linecap:round"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 20a7.5 7.5 0 0 1 14.4 0"/></svg>',
+    'Bienvenue chez Tela Castle',
+    'Encore deux informations et votre compte est prêt.'));
+
+  var brouillon = {nom:'', zone:S.zone, adresse:''};
+
+  var c1 = el('div','champ');
+  c1.appendChild(el('label','lab','Votre nom'));
+  var i1 = el('input'); i1.type = 'text'; i1.placeholder = 'Prénom et nom';
+  i1.oninput = function(){ brouillon.nom = i1.value; cta.disabled = brouillon.nom.trim().length < 2; };
+  c1.appendChild(i1); dd.appendChild(c1);
+
+  var c2 = el('div','champ');
+  c2.appendChild(el('span','lab','Votre quartier'));
+  var ch = el('div','choix');
+  T.zones.forEach(function(z){
+    var b = el('button', null, z.nom);
+    b.setAttribute('aria-pressed', brouillon.zone === z.id);
+    b.onclick = function(){
+      brouillon.zone = z.id;
+      Array.prototype.forEach.call(ch.children, function(x,i){ x.setAttribute('aria-pressed', T.zones[i].id === z.id); });
+    };
+    ch.appendChild(b);
+  });
+  c2.appendChild(ch); dd.appendChild(c2);
+
+  var c3 = el('div','champ');
+  c3.appendChild(el('label','lab','Adresse et repères'));
+  var i3 = el('input'); i3.type = 'text'; i3.placeholder = 'Rue, portail, point de repère…';
+  i3.oninput = function(){ brouillon.adresse = i3.value; };
+  c3.appendChild(i3); dd.appendChild(c3);
+
+  var cta = el('button','btn plein grand');
+  cta.textContent = 'Créer mon compte';
+  cta.disabled = true;
+  cta.onclick = function(){
+    compte = T.enregistrerCompte({
+      tel: T.telJoli(CPT.tel), nom: brouillon.nom.trim(), zone: brouillon.zone,
+      adresse: brouillon.adresse || S.adresse, fidelite: 0, depuis: new Date().toISOString()
+    });
+    S.nom = compte.nom; S.tel = compte.tel; S.zone = compte.zone;
+    if (compte.adresse) S.adresse = compte.adresse;
+    sauver();
+    avis('Compte créé — bienvenue ' + compte.nom.split(' ')[0]);
+    rendreCompte();
+  };
+  pied.appendChild(cta);
+  setTimeout(function(){ i1.focus(); }, 140);
+}
+
+/* --- le compte --- */
+function vueCompte(dd, pied){
   dd.appendChild(el('div','bloc','<div style="padding:16px;display:flex;align-items:center;gap:13px">' +
-    '<span style="width:46px;height:46px;border-radius:50%;background:var(--or-doux);display:grid;place-items:center;' +
-    'font-family:var(--titre);font-weight:700;font-size:18px;color:var(--or-fonce)">' + compte.nom.charAt(0) + '</span>' +
+    '<span style="width:48px;height:48px;border-radius:50%;background:var(--or-doux);display:grid;place-items:center;' +
+    'font-family:var(--titre);font-weight:700;font-size:19px;color:var(--or-fonce)">' + compte.nom.charAt(0) + '</span>' +
     '<div><b style="font-family:var(--titre);font-size:16px">' + compte.nom + '</b>' +
-    '<div style="font-size:12.5px;color:var(--doux)">' + compte.tel + '</div></div></div>'));
+    '<div style="font-size:12.5px;color:var(--doux)">' + T.telJoli(compte.tel) + '</div></div></div>'));
 
-  var fid = (compte.fidelite || 0);
+  var fid = compte.fidelite || 0;
   dd.appendChild(el('div','bloc','<div style="padding:14px 16px">' +
     '<div style="font-size:12px;color:var(--doux)">Carte de fidélité</div>' +
-    '<div style="display:flex;gap:6px;margin-top:9px">' +
+    '<div style="display:flex;gap:6px;margin-top:9px;flex-wrap:wrap">' +
     [0,1,2,3,4,5,6,7].map(function(i){
-      return '<span style="width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:11px;' +
+      return '<span style="width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:11px;' +
         'background:' + (i < fid ? 'var(--or)' : 'var(--surface-3)') + ';color:' + (i < fid ? '#241A12' : 'var(--doux)') + '">' +
         (i < fid ? '✓' : (i+1)) + '</span>';
     }).join('') + '</div>' +
-    '<div style="font-size:12px;color:var(--doux);margin-top:9px">8 commandes = un dêguê offert. Encore ' + Math.max(0, 8-fid) + '.</div></div>'));
+    '<div style="font-size:12px;color:var(--doux);margin-top:9px">Huit commandes, un dêguê offert. Encore ' +
+    Math.max(0, 8 - fid) + '.</div></div>'));
 
-  var mesCmds = T.commandes().filter(function(c){ return c.client.tel === compte.tel; });
+  var miennes = T.commandes().filter(function(c){ return T.telCle(c.client.tel) === T.telCle(compte.tel); });
   dd.appendChild(el('div','lab','Mes commandes'));
-  if (!mesCmds.length) dd.appendChild(el('p','vide','Aucune commande pour l’instant.'));
-  mesCmds.slice(0,6).forEach(function(c){
+  if (!miennes.length) dd.appendChild(el('p','vide','Aucune commande pour l\u2019instant.'));
+  miennes.slice(0,6).forEach(function(c){
     var st = T.statuts[c.statut] || T.statuts.recue;
     var b = el('button','bloc');
     b.style.cssText = 'padding:13px 15px;text-align:left;display:block;width:100%';
-    b.innerHTML = '<div style="display:flex;align-items:center;gap:10px">' +
-      '<b style="font-family:var(--titre);font-size:14px">' + c.ref + '</b>' +
-      '<span class="etq ' + st.couleur + '">' + st.nom + '</span>' +
+    b.innerHTML = '<div style="display:flex;align-items:center;gap:10px"><b style="font-family:var(--titre);font-size:14px">' +
+      c.ref + '</b><span class="etq ' + st.couleur + '">' + st.nom + '</span>' +
       '<span style="margin-left:auto;font-family:var(--titre);font-weight:700">' + F(c.total) + '</span></div>' +
       '<div style="font-size:12px;color:var(--doux);margin-top:4px">' + T.dateCourte(c.creele) + ' · ' +
-      c.lignes.length + ' article' + (c.lignes.length>1?'s':'') + ' · ' + T.zone(c.zone).nom + '</div>';
-    b.onclick = function(){ S.ref = c.ref; T.ecrire('refEnCours', c.ref); S.etape = 'confirme'; rendrePanier(); ecran('panier'); };
+      c.lignes.length + ' article' + (c.lignes.length > 1 ? 's' : '') + ' · ' + T.zone(c.zone).nom + '</div>';
+    b.onclick = function(){
+      S.ref = c.ref; T.ecrire('refEnCours', c.ref);
+      S.etape = 'confirme'; rendrePanier(); ecran('panier');
+    };
     dd.appendChild(b);
   });
 
-  dd.appendChild(el('div','lab','Adresse enregistrée'));
-  dd.appendChild(el('div','bloc','<div style="padding:13px 15px;font-size:13px">' + T.zone(S.zone).nom + '<br>' +
-    '<span style="color:var(--doux);font-size:12px">' + S.adresse + '</span></div>'));
+  dd.appendChild(el('div','lab','Adresse de livraison'));
+  var adr = el('div','bloc');
+  adr.style.padding = '14px 16px';
+  adr.innerHTML = '<div style="font-size:13px">' + T.zone(compte.zone || S.zone).nom + '</div>' +
+    '<div style="color:var(--doux);font-size:12px;margin-top:3px">' + (compte.adresse || S.adresse) + '</div>';
+  dd.appendChild(adr);
+  var modif = el('button','btn creux plein');
+  modif.textContent = 'Modifier mon adresse';
+  modif.onclick = function(){ S.etape = 'livraison'; ecran('panier'); };
+  dd.appendChild(modif);
 
-  var d = el('button','btn creux plein'); d.textContent = 'Se déconnecter';
-  d.onclick = function(){ T.deconnexion(); compte = null; avis('Déconnecté'); rendreCompte(); };
+  dd.appendChild(el('div','lab','Apparence'));
+  var th = el('div','choix');
+  [['clair','Clair'],['sombre','Sombre'],['cacao','Cacao']].forEach(function(o){
+    var b = el('button', null, o[1]);
+    b.setAttribute('aria-pressed', T.lire('theme','clair') === o[0]);
+    b.onclick = function(){
+      T.theme(o[0]);
+      Array.prototype.forEach.call(th.children, function(x,i){
+        x.setAttribute('aria-pressed', ['clair','sombre','cacao'][i] === o[0]);
+      });
+      Array.prototype.forEach.call(document.querySelectorAll('#themes button'), function(x){
+        x.setAttribute('aria-pressed', x.dataset.th === o[0]);
+      });
+    };
+    th.appendChild(b);
+  });
+  dd.appendChild(th);
+
+  var d = el('button','btn creux plein');
+  d.textContent = 'Se déconnecter';
+  d.onclick = function(){
+    T.deconnexion(); compte = null;
+    CPT = {etape:'tel', tel:'', attendu:'', restant:0, minuteur:null};
+    avis('Déconnecté');
+    rendreCompte();
+  };
   pied.appendChild(d);
-  pan.appendChild(dd); pan.appendChild(pied);
-}
-function champ(lab, type, id, valeur){
-  var c = el('div','champ');
-  c.appendChild(el('label','lab', lab));
-  var i = el('input'); i.type = type; i.id = 'ch-' + id; i.value = valeur || '';
-  c.appendChild(i);
-  return c;
 }
 
 /* ---------------------------------------------------------- boutique */
@@ -745,7 +994,7 @@ function rendreInfos(){
   var dd = el('div','dedans');
 
   dd.appendChild(el('div','bloc','<div style="padding:16px">' +
-    '<b style="font-family:var(--titre);font-size:17px">Tela Castel</b>' +
+    '<b style="font-family:var(--titre);font-size:17px">Tela Castle</b>' +
     '<div style="font-size:13px;color:var(--doux);margin-top:4px">' + T.boutique.slogan + '</div>' +
     '<div style="font-size:13px;margin-top:12px">' + T.boutique.adresse + '<br>' + T.boutique.ville + '</div>' +
     '<a class="btn creux plein" style="margin-top:12px" href="tel:' + T.boutique.tel.replace(/ /g,'') + '">Appeler ' + T.boutique.tel + '</a>' +

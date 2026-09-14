@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Tela Castel — gestion</title>
+<title>Tela Castle — gestion</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -367,11 +367,11 @@ body{background:var(--surface-2)}
 
 <div class="portail" id="portail">
   <div class="carte">
-    <img src="img/logo.png" alt="Tela Castel">
+    <img src="img/logo.png" alt="Tela Castle">
     <h1>Espace gestion</h1>
     <p>Commandes, catalogue, stock et clients.</p>
     <form id="formConnexion">
-      <div class="champ"><label class="lab" for="ident">Identifiant</label><input id="ident" type="text" value="boutique@telacastel.ci"></div>
+      <div class="champ"><label class="lab" for="ident">Identifiant</label><input id="ident" type="text" value="boutique@telacastle.ci"></div>
       <div class="champ"><label class="lab" for="mdp">Mot de passe</label><input id="mdp" type="password" value="demo1234"></div>
       <button class="btn plein grand" type="submit">Entrer</button>
       <p class="aide">Maquette — n'importe quel identifiant fonctionne.<br><a href="index.html" style="text-decoration:underline">Retour à la boutique</a></p>
@@ -381,7 +381,7 @@ body{background:var(--surface-2)}
 
 <div class="admin" id="admin">
   <aside class="flanc" id="flanc">
-    <div class="marque"><img src="img/logo.png" alt="Tela Castel"><span class="tag">Gestion</span></div>
+    <div class="marque"><img src="img/logo.png" alt="Tela Castle"><span class="tag">Gestion</span></div>
     <nav id="menuAdmin">
       <button data-vue="tableau" data-lib="Tableau de bord" class="on"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg><span class="lib">Tableau de bord</span></button>
       <button data-vue="commandes" data-lib="Commandes"><svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7zM9 8V6a3 3 0 0 1 6 0v2"/></svg><span class="lib">Commandes</span><span class="n" id="badgeCmd" hidden>0</span></button>
@@ -969,7 +969,7 @@ function ouvrirCommande(ref){
 function ticket(x){
   var z = T.zone(x.zone), cr = T.creneau(x.creneau), p = T.paiement(x.paiement);
   var t = el('div','ticket');
-  t.appendChild(el('div','tete','<img src="img/logo.png" alt=""><b>TELA CASTEL</b><span>' + T.boutique.adresse + '</span><span>' + T.boutique.tel + '</span>'));
+  t.appendChild(el('div','tete','<img src="img/logo.png" alt=""><b>TELA CASTLE</b><span>' + T.boutique.adresse + '</span><span>' + T.boutique.tel + '</span>'));
   t.appendChild(el('div','traits'));
   t.appendChild(el('div','l','<span>Commande</span><span>' + x.ref + '</span>'));
   t.appendChild(el('div','l','<span>Passée le</span><span>' + T.dateCourte(x.creele) + ' ' + T.heure(x.creele) + '</span>'));

@@ -1,5 +1,5 @@
 /* ============================================================
-   Tela Castel — reçu de commande en image
+   Tela Castle — reçu de commande en image
    WhatsApp n'affiche que du texte brut : on fabrique donc une image
    du reçu, que l'on partage (partage natif sur mobile) ou télécharge.
    Aucune dépendance : tout est dessiné au canvas.
@@ -125,7 +125,7 @@ T.dessinerRecu = function(cmd){
     } else {
       ctx.fillStyle = C.encre;
       ctx.font = '700 44px ' + POLICE_T;
-      ctx.fillText('TELA CASTEL', M, 120);
+      ctx.fillText('TELA CASTLE', M, 120);
     }
     ctx.textAlign = 'right';
     ctx.fillStyle = 'rgba(36,26,18,.72)';

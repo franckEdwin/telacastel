@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Tela Castel — commander</title>
+<title>Tela Castle — commander</title>
 <meta name="theme-color" content="#F5B21F">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,7 +24,6 @@ body{overflow-x:hidden}
 .bar-in{max-width:1400px;margin:0 auto;height:var(--h-bar);padding:0 16px;display:flex;align-items:center;gap:12px}
 .marque{display:flex;align-items:center;gap:9px;flex:none}
 .marque img{width:74px}
-.marque b{display:none;font-family:var(--titre);font-size:17px}
 .adresse{display:none;align-items:center;gap:7px;height:38px;padding:0 13px;border-radius:999px;background:var(--surface-2);
   font-size:12.5px;color:var(--doux);white-space:nowrap;border:var(--ep-bord) solid transparent}
 .adresse:hover{border-color:var(--bord)}
@@ -256,7 +255,6 @@ body{overflow-x:hidden}
 @media (min-width:760px){
   .bar-in{padding:0 24px;gap:16px}
   .enveloppe{padding:0 24px}
-  .marque b{display:block}
   .adresse{display:flex}
   .pied-site .in{grid-template-columns:1.6fr 1fr 1fr 1fr}
   .pied-site{padding:36px 24px 26px}
@@ -305,7 +303,7 @@ body{overflow-x:hidden}
 
 <header class="bar" id="bar">
   <div class="bar-in">
-    <span class="marque"><img src="img/logo.png" alt="Tela Castel"><b>Tela Castel</b></span>
+    <span class="marque"><img src="img/logo.png" alt="Tela Castle"></span>
     <button class="adresse" id="btnAdresse">
       <svg viewBox="0 0 24 24"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>
       Livrer à <b id="zoneNom">Angré 8e</b>
@@ -336,7 +334,7 @@ body{overflow-x:hidden}
     <img class="ph" id="banniereImg" src="img/jaune-jaune.jpg" alt="">
     <div class="voile-b"></div>
     <div class="dedans">
-      <div><h1>Tela Castel</h1><p>Bien manger, un plaisir à partager</p></div>
+      <div><h1>Tela Castle</h1><p>Bien manger, un plaisir à partager</p></div>
       <span class="ouvert"><i></i> Commandes ouvertes</span>
     </div>
   </section>
@@ -366,7 +364,7 @@ body{overflow-x:hidden}
 
 <footer class="pied-site">
   <div class="in">
-    <div><img src="img/logo.png" alt="Tela Castel"><p style="margin-top:10px">Bien manger, un plaisir à partager.</p></div>
+    <div><img src="img/logo.png" alt="Tela Castle"><p style="margin-top:10px">Bien manger, un plaisir à partager.</p></div>
     <div><h4>La carte</h4><ul><li>P'tit déj' et goûter</li><li>Dêguê et yaourt maison</li><li>Menu du jour</li><li>Boissons</li></ul></div>
     <div><h4>Horaires</h4><ul id="piedHoraires"></ul></div>
     <div><h4>Contact</h4><ul><li id="piedTel"></li><li>WhatsApp et Facebook</li><li id="piedVille"></li></ul></div>

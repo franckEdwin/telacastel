@@ -1,5 +1,5 @@
 /* ============================================================
-   Tela Castel — données partagées entre l'app client et le back-office.
+   Tela Castle — données partagées entre l'app client et le back-office.
 
    Catalogue  : T.produits   (dictionnaire, modifiable depuis l'admin)
    Catégories : T.categories (liste ordonnée, un produit peut appartenir
@@ -17,7 +17,7 @@ var clone = function(o){ return JSON.parse(JSON.stringify(o)); };
 
 /* ---------------------------------------------------------- boutique */
 T.boutique = {
-  nom: 'Tela Castel',
+  nom: 'Tela Castle',
   slogan: 'Bien manger, un plaisir à partager',
   tel: '+225 05 76 06 62 63',
   telBrut: '2250576066263',
@@ -356,7 +356,7 @@ T.reapprovisionner = function(id, n){ T.majStock(id, (T.produits[id].stock || 0)
 /* ---------------------------------------------------------- statuts */
 T.statuts = {
   recue:       {nom:'Reçue',          couleur:'bleu',  etape:0, client:'Commande reçue par la boutique'},
-  validee:     {nom:'Validée',        couleur:'vert',  etape:1, client:'Validée par Tela Castel'},
+  validee:     {nom:'Validée',        couleur:'vert',  etape:1, client:'Validée par Tela Castle'},
   preparation: {nom:'En préparation', couleur:'or',    etape:2, client:'En préparation'},
   route:       {nom:'En route',       couleur:'or',    etape:3, client:'Le livreur est en route'},
   livree:      {nom:'Livrée',         couleur:'vert',  etape:4, client:'Livrée'},
@@ -471,21 +471,69 @@ T.commandesDemo = function(){
 };
 
 /* ---------------------------------------------------------- thème & compte */
+/* Le changement de thème touche des dizaines de propriétés : les animer une
+   par une donne un effet saccadé. On fait donc un fondu de la page entière
+   quand le navigateur sait le faire (View Transitions), sinon bascule sèche. */
 T.theme = function(nom){
-  if (nom){ T.ecrire('theme', nom); document.documentElement.setAttribute('data-theme', nom); return nom; }
-  var t = T.lire('theme', 'clair');
-  document.documentElement.setAttribute('data-theme', t);
-  return t;
+  if (!nom){
+    var t = T.lire('theme', 'clair');
+    document.documentElement.setAttribute('data-theme', t);
+    return t;
+  }
+  var poser = function(){
+    T.ecrire('theme', nom);
+    document.documentElement.setAttribute('data-theme', nom);
+  };
+  var reduit = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (document.startViewTransition && !reduit) document.startViewTransition(poser);
+  else poser();
+  return nom;
+};
+/* ---------------------------------------------------------- comptes clients
+   Identification par numéro de téléphone, comme toutes les applications
+   de commande ici. Les clients de démonstration sont pré-enregistrés :
+   taper leur numéro fait retrouver leur compte et leur historique. */
+T.telCle = function(t){ return String(t || '').replace(/[^0-9]/g,'').replace(/^225/,''); };
+T.telJoli = function(t){
+  var n = T.telCle(t);
+  return '+225 ' + n.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
+};
+T.comptes = function(){
+  var c = T.lire('comptes', null);
+  if (c) return c;
+  c = {};
+  T.clientsDemo.forEach(function(x){
+    c[T.telCle(x.tel)] = {tel:x.tel, nom:x.nom, zone:x.zone, adresse:x.adresse,
+                          fidelite:x.fidelite || 0, depuis:x.depuis};
+  });
+  T.ecrire('comptes', c);
+  return c;
+};
+T.compteParTel = function(tel){ return T.comptes()[T.telCle(tel)] || null; };
+T.enregistrerCompte = function(c){
+  var l = T.comptes();
+  l[T.telCle(c.tel)] = c;
+  T.ecrire('comptes', l);
+  T.ecrire('compte', c);
+  return c;
 };
 T.compte = function(){ return T.lire('compte', null); };
 T.connexion = function(p){ T.ecrire('compte', p); };
 T.deconnexion = function(){ T.ecrire('compte', null); };
+T.gagnerFidelite = function(tel){
+  var l = T.comptes(), k = T.telCle(tel);
+  if (!l[k]) return;
+  l[k].fidelite = ((l[k].fidelite || 0) + 1) % 8;
+  T.ecrire('comptes', l);
+  var c = T.compte();
+  if (c && T.telCle(c.tel) === k){ c.fidelite = l[k].fidelite; T.ecrire('compte', c); }
+};
 
 /* ---------------------------------------------------------- message WhatsApp */
 T.messageWhatsApp = function(cmd){
   var z = T.zone(cmd.zone), c = T.creneau(cmd.creneau), p = T.paiement(cmd.paiement);
   var l = [];
-  l.push('*TELA CASTEL — COMMANDE ' + cmd.ref + '*');
+  l.push('*TELA CASTLE — COMMANDE ' + cmd.ref + '*');
   l.push('Livraison ' + new Date(cmd.jourLivraison).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}) + ' · ' + c.nom);
   l.push('Client : ' + cmd.client.nom + ' · ' + cmd.client.tel);
   l.push('Adresse : ' + z.nom + ' — ' + cmd.adresse);

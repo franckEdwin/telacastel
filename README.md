@@ -1,6 +1,6 @@
-# Tela Castel
+# Tela Castle
 
-Maquette d'application de commande pour **Tela Castel**, boutique de petits déjeuners
+Maquette d'application de commande pour **Tela Castle**, boutique de petits déjeuners
 africains, dêguê et yaourt maison à Abidjan.
 
 > *Bien manger, un plaisir à partager.*

@@ -1,5 +1,5 @@
 /* ============================================================
-   Tela Castel — système de design partagé (client + back-office)
+   Tela Castle — système de design partagé (client + back-office)
    Thèmes : clair (défaut) · sombre · cacao (cadres marrons)
    ============================================================ */
 
@@ -92,7 +92,17 @@ body{
   margin:0;background:var(--fond);color:var(--encre);
   font-family:var(--texte);font-size:15px;line-height:1.55;font-weight:300;
   -webkit-font-smoothing:antialiased;
-  transition:background var(--t),color var(--t);
+}
+
+/* fondu du changement de thème */
+::view-transition-old(root),
+::view-transition-new(root){ animation-duration:.32s; animation-timing-function:cubic-bezier(.4,0,.2,1) }
+::view-transition-old(root){ animation-name:tela-sort }
+::view-transition-new(root){ animation-name:tela-entre }
+@keyframes tela-sort{ to{ opacity:0 } }
+@keyframes tela-entre{ from{ opacity:0 } }
+@media (prefers-reduced-motion:reduce){
+  ::view-transition-old(root),::view-transition-new(root){ animation:none }
 }
 h1,h2,h3,h4,h5{margin:0;font-family:var(--titre);font-weight:700;line-height:1.15}
 p{margin:0}
