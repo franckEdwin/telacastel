@@ -1436,38 +1436,61 @@ function rendrePlateaux(){
   FORMULES_PL.forEach(function(o){
     var l = el('label');
     l.innerHTML = '<input type="radio" name="fpl"' + (PL.formule === o.id ? ' checked' : '') + '>' +
+      '<span class="case"></span>' +
       '<span class="tx"><b>' + o.nom + '</b><span>' + o.det + '</span></span>' +
-      '<span class="pr">' + F(o.par) + '<br><span style="font-family:var(--texte);font-weight:400;font-size:11px;color:var(--doux)">par personne</span></span>';
+      '<span class="pr">' + F(o.par) + '<span>par personne</span></span>';
     l.onclick = function(){ PL.formule = o.id; rendrePlateaux(); };
     fp.appendChild(l);
   });
   dd.appendChild(fp);
 
-  var bo = el('label','form-pl');
-  bo.style.cssText = 'display:flex;gap:12px;align-items:flex-start;background:var(--surface);' +
-    'border:var(--ep-bord) solid var(--bord);border-radius:var(--r-m);padding:13px 15px;cursor:pointer';
-  bo.innerHTML = '<input type="checkbox"' + (PL.boissons ? ' checked' : '') + ' style="margin-top:3px;accent-color:var(--or-fonce)">' +
-    '<span style="flex:1"><b style="font-size:13.8px;display:block">Boissons à volonté</b>' +
-    '<span style="font-size:12px;color:var(--doux)">Bissap, gingembre et jus de baobab en bonbonnes</span></span>' +
-    '<span style="font-family:var(--titre);font-weight:700;font-size:13.5px">+ 800 F</span>';
+  var enveloppeBo = el('div','form-pl');
+  var bo = el('label');
+  bo.innerHTML = '<input type="checkbox"' + (PL.boissons ? ' checked' : '') + '>' +
+    '<span class="case carre"></span>' +
+    '<span class="tx"><b>Boissons à volonté</b>' +
+    '<span>Bissap, gingembre et jus de baobab en bonbonnes</span></span>' +
+    '<span class="pr">+ 800 F<span>par personne</span></span>';
   bo.onclick = function(e){ if (e.target.tagName !== 'INPUT') e.preventDefault(); PL.boissons = !PL.boissons; rendrePlateaux(); };
-  dd.appendChild(bo);
+  enveloppeBo.appendChild(bo);
+  dd.appendChild(enveloppeBo);
 
-  dd.appendChild(el('div','lab','Quand ?'));
-  var gr = el('div'); gr.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:9px';
-  var dj = el('input','champ'); dj.type = 'date'; dj.value = PL.jour;
-  dj.min = new Date(Date.now() + 2*864e5).toISOString().slice(0,10);
-  dj.onchange = function(){ PL.jour = dj.value; majDevis(); };
-  var dh = el('input','champ'); dh.type = 'time'; dh.value = PL.quand || '07:30';
-  dh.onchange = function(){ PL.quand = dh.value; };
-  gr.appendChild(dj); gr.appendChild(dh);
-  dd.appendChild(gr);
+  /* Le champ date natif s'affiche au format du navigateur — « mm/dd/yyyy »
+     sur un Chrome anglais. Pour une boutique d'Abidjan on propose les
+     quatorze prochains jours, écrits en français. */
+  dd.appendChild(el('div','lab','Quel jour ?'));
+  var jours = el('div','jours-pl');
+  for (var i = 2; i < 16; i++){
+    var dte = new Date(Date.now() + i * 864e5);
+    var cle = dte.getFullYear() + '-' + String(dte.getMonth()+1).padStart(2,'0') + '-' + String(dte.getDate()).padStart(2,'0');
+    var b = el('button');
+    b.innerHTML = '<span class="j">' + dte.toLocaleDateString('fr-FR',{weekday:'short'}).replace('.','') + '</span>' +
+      '<span class="d">' + dte.getDate() + '</span>' +
+      '<span class="m">' + dte.toLocaleDateString('fr-FR',{month:'short'}).replace('.','') + '</span>';
+    b.setAttribute('aria-pressed', PL.jour === cle);
+    (function(c){ b.onclick = function(){ PL.jour = c; rendrePlateaux(); }; })(cle);
+    jours.appendChild(b);
+  }
+  dd.appendChild(jours);
 
-  var mot = el('textarea','champ');
+  dd.appendChild(el('div','lab','À quelle heure ?'));
+  var hh = el('div','choix');
+  ['06h30','07h30','08h30','09h30','15h30','16h30'].forEach(function(o){
+    var b = el('button', null, o);
+    b.setAttribute('aria-pressed', (PL.quand || '07h30') === o);
+    b.onclick = function(){ PL.quand = o; rendrePlateaux(); };
+    hh.appendChild(b);
+  });
+  dd.appendChild(hh);
+
+  dd.appendChild(el('div','lab','Un mot pour la boutique'));
+  var boite = el('div','champ');
+  var mot = el('textarea');
   mot.rows = 3; mot.placeholder = 'Adresse précise, allergies, nombre de couverts…';
   mot.value = PL.mot;
   mot.oninput = function(){ PL.mot = mot.value; };
-  dd.appendChild(mot);
+  boite.appendChild(mot);
+  dd.appendChild(boite);
 
   dd.appendChild(el('div','lab','Votre devis'));
   var dv = el('div','devis'); dv.id = 'devisPl';
@@ -1477,14 +1500,14 @@ function rendrePlateaux(){
   var env = el('button','btn plein');
   env.textContent = 'Demander le devis sur WhatsApp';
   env.onclick = function(){
-    if (!PL.jour){ avis('Choisissez d\u2019abord une date'); dj.focus(); return; }
+    if (!PL.jour){ avis('Choisissez d\u2019abord un jour'); return; }
     var c = calculPlateaux();
     var f = FORMULES_PL.filter(function(x){ return x.id === PL.formule; })[0];
     var txt = 'Bonjour Tela Castle, je souhaite un devis pour un plateau.%0A%0A' +
       '*' + f.nom + '*%0A' + PL.personnes + ' personnes%0A' +
       (PL.boissons ? 'Avec boissons à volonté%0A' : '') +
       'Date : ' + new Date(PL.jour).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}) +
-      ' à ' + (PL.quand || '07:30') + '%0A' +
+      ' à ' + (PL.quand || '07h30') + '%0A' +
       'Estimation : ' + F(c.total) + '%0A' +
       (PL.mot ? '%0APrécisions : ' + encodeURIComponent(PL.mot) : '');
     window.open('https://wa.me/' + T.boutique.telBrut + '?text=' + txt, '_blank');

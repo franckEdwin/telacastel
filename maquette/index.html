@@ -375,14 +375,37 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
 .compteur button{width:38px;height:38px;border-radius:50%;border:var(--ep-bord) solid var(--bord-fort);
   font-size:19px;line-height:1;flex:none}
 .form-pl{display:grid;gap:9px}
-.form-pl label{display:flex;gap:12px;align-items:flex-start;background:var(--surface);
-  border:var(--ep-bord) solid var(--bord);border-radius:var(--r-m);padding:13px 15px;cursor:pointer}
+.form-pl label{display:flex;gap:13px;align-items:center;background:var(--surface);
+  border:var(--ep-bord) solid var(--bord);border-radius:var(--r-m);padding:14px 15px;cursor:pointer;
+  min-height:72px}
 .form-pl label:has(input:checked){border-color:var(--or);background:var(--or-doux)}
-.form-pl input{margin-top:3px;accent-color:var(--or-fonce);flex:none}
+/* la case native mélangeait un rond et un carré jaune : on la dessine */
+.form-pl input{position:absolute;opacity:0;pointer-events:none}
+.form-pl .case{width:22px;height:22px;border-radius:50%;border:2px solid var(--bord-fort);
+  flex:none;display:grid;place-items:center;transition:var(--t)}
+.form-pl .case.carre{border-radius:7px}
+.form-pl label:has(input:checked) .case{border-color:var(--or-fonce);background:var(--or-fonce)}
+.form-pl .case::after{content:"";width:8px;height:8px;border-radius:inherit;background:#fff;
+  transform:scale(0);transition:transform var(--t)}
+.form-pl label:has(input:checked) .case::after{transform:scale(1)}
 .form-pl .tx{flex:1;min-width:0}
-.form-pl .tx b{font-size:13.8px;display:block}
-.form-pl .tx span{font-size:12px;color:var(--doux);display:block;margin-top:2px;line-height:1.45}
-.form-pl .pr{font-family:var(--titre);font-weight:700;font-size:13.5px;white-space:nowrap}
+.form-pl .tx b{font-size:13.8px;display:block;line-height:1.3}
+.form-pl .tx span{font-size:12px;color:var(--doux);display:block;margin-top:3px;line-height:1.38}
+.form-pl .pr{font-family:var(--titre);font-weight:700;font-size:13.5px;white-space:nowrap;
+  text-align:right;align-self:center}
+.form-pl .pr span{display:block;font-family:var(--texte);font-weight:400;font-size:11px;color:var(--doux);margin-top:2px}
+
+/* choix du jour, à la place du champ date natif */
+.jours-pl{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.jours-pl::-webkit-scrollbar{display:none}
+.jours-pl button{flex:none;width:58px;padding:9px 0 10px;border-radius:16px;background:var(--surface);
+  border:var(--ep-bord) solid var(--bord);display:grid;gap:1px;justify-items:center;transition:var(--t)}
+.jours-pl .j{font-size:10.5px;color:var(--doux);text-transform:uppercase;letter-spacing:.05em}
+.jours-pl .d{font-family:var(--titre);font-weight:700;font-size:18px;line-height:1.1}
+.jours-pl .m{font-size:10.5px;color:var(--doux)}
+.jours-pl button[aria-pressed="true"]{background:var(--encre);border-color:var(--encre);color:var(--fond)}
+.jours-pl button[aria-pressed="true"] .j,
+.jours-pl button[aria-pressed="true"] .m{color:rgba(255,255,255,.7)}
 .devis{background:var(--or-doux);border-radius:var(--r-m);padding:15px 16px}
 .devis .l{display:flex;justify-content:space-between;font-size:13px;padding:5px 0}
 .devis .l.gros{border-top:var(--ep-bord) solid rgba(0,0,0,.12);margin-top:6px;padding-top:11px;
@@ -712,10 +735,15 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
   [data-dessin="epure"] body.ec-accueil .enveloppe{padding:0 0 var(--h-nav)}
   .ac-pied{height:8px}
 
-  /* Les panneaux s'arrêtent au-dessus d'elle au lieu de la recouvrir. */
+  /* Le panneau va jusqu'en bas : s'arrêter au-dessus de la barre laissait
+     voir la carte par-dessous, dans une bande de 80 px. La pilule flotte
+     au-dessus du panneau, et le pied réserve sa hauteur. */
   .nav-flot{z-index:99}
-  .panneau{bottom:var(--h-nav)}
-  .panneau .pied{padding-bottom:14px}
+  .panneau{bottom:0}
+  .panneau .pied{padding-bottom:calc(var(--h-nav) - 4px)}
+  .panneau .dedans{padding-bottom:calc(var(--h-nav) - 4px)}
+  .panneau .pied + .dedans,
+  .panneau .dedans:has(+ .pied){padding-bottom:16px}
   /* La feuille reste au ras du bas : remontée de la hauteur des onglets,
      sa translation de sortie ne la sortait plus de l'écran et elle
      masquait la barre. Ouverte, elle a le droit de la recouvrir. */
