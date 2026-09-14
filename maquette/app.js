@@ -1251,7 +1251,6 @@ function rendreInfos(){
   dd.appendChild(inst);
   dd.appendChild(el('span','aide','La carte reste consultable même sans connexion.'));
 
-  dd.appendChild(el('p','aide','<a href="gestion.html" style="text-decoration:underline">Espace gestion</a> — maquette de la partie boutique.'));
   dd.appendChild(el('p','aide','Version en ligne : <b>' + T.version + '</b>'));
   pan.appendChild(dd);
 }
