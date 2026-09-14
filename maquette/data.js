@@ -16,7 +16,7 @@ var T = window.TELA = {};
 var clone = function(o){ return JSON.parse(JSON.stringify(o)); };
 
 /* ---------------------------------------------------------- boutique */
-T.version = '15/09 02h50';
+T.version = '15/09 03h15';
 
 T.boutique = {
   nom: 'Tela Castle',
@@ -455,9 +455,21 @@ T.majCommande = function(ref, champs){
 };
 T.nouvelleRef = function(){
   var d = T.dates().livraison;
-  var n = T.lire('compteur', 140) + 1;
+  /* Le compteur partait de 141, or les commandes de démonstration occupent
+     déjà 136 à 141 : la première vraie commande doublonnait. On repart donc
+     au-dessus du plus grand numéro existant, et on vérifie l'unicité. */
+  var existantes = T.commandes();
+  var maxi = T.lire('compteur', 140);
+  existantes.forEach(function(c){
+    var n = parseInt(String(c.ref).split('-').pop(), 10);
+    if (!isNaN(n) && n > maxi) maxi = n;
+  });
+  var prefixe = 'TC-' + String(d.getDate()).padStart(2,'0') + String(d.getMonth()+1).padStart(2,'0') + '-';
+  var n = maxi, ref;
+  do { n++; ref = prefixe + n; }
+  while (existantes.some(function(c){ return c.ref === ref; }));
   T.ecrire('compteur', n);
-  return 'TC-' + String(d.getDate()).padStart(2,'0') + String(d.getMonth()+1).padStart(2,'0') + '-' + n;
+  return ref;
 };
 T.commandesDemo = function(){
   var d = T.dates();

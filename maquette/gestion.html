@@ -790,10 +790,29 @@ function rendre(){
 function vueTableau(c){
   var jour = duJour();
   var ca = jour.reduce(function(a,x){ return a + x.total; }, 0);
+
+  /* Tous les chiffres viennent des commandes réelles. Les mentions
+     inventées — « +2 vs hier », « +18 % sur 7 jours », « objectif
+     6 000 F » — s'affichaient à côté de zéros et ne voulaient rien dire. */
+  var hier = new Date(D.livraison.getTime() - 864e5).toDateString();
+  var nHier = cmds().filter(function(x){ return new Date(x.jourLivraison).toDateString() === hier; }).length;
+  var ecart = jour.length - nHier;
+  var depuis7 = new Date(Date.now() - 7 * 864e5);
+  var ca7 = cmds().filter(function(x){ return new Date(x.creele) >= depuis7 && x.statut !== 'refusee'; })
+                  .reduce(function(a, x){ return a + x.total; }, 0);
+  /* Une commande encore « reçue » pour un jour déjà passé est en retard :
+     c'est ce qui faisait dire « 0 commande » sous une liste de trois. */
+  var retard = aValider().filter(function(x){
+    return new Date(x.jourLivraison).toDateString() !== D.livraison.toDateString();
+  }).length;
+
   var k = el('div','kpis');
-  k.appendChild(kpi('Commandes ' + D.court, jour.length, jour.length ? '<b>+2</b> vs hier' : '—'));
-  k.appendChild(kpi('Chiffre d’affaires', F(ca), '<b>+18 %</b> sur 7 jours'));
-  k.appendChild(kpi('Panier moyen', F(jour.length ? Math.round(ca/jour.length) : 0), 'objectif 6 000 F'));
+  k.appendChild(kpi('Commandes ' + D.court, jour.length,
+    retard ? '<b class="bas">' + retard + ' en retard</b> sur un autre jour'
+           : (nHier ? (ecart >= 0 ? '+' : '') + ecart + ' vs hier' : '—')));
+  k.appendChild(kpi('Chiffre d’affaires', F(ca), F(ca7) + ' sur 7 jours'));
+  k.appendChild(kpi('Panier moyen', F(jour.length ? Math.round(ca/jour.length) : 0),
+    jour.length ? 'sur ' + jour.length + ' commande' + (jour.length > 1 ? 's' : '') : 'aucune commande'));
   k.appendChild(kpi('À valider', aValider().length, aValider().length ? '<b class="bas">sous 15 min</b>' : 'tout est traité'));
   k.appendChild(kpi('Alertes stock', alertes().length, 'sur ' + idsProduits().length + ' produits'));
   c.appendChild(k);
