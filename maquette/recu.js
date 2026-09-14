@@ -262,25 +262,44 @@ T.recuFichier = function(cmd){
   });
 };
 
-/* Partage natif si le téléphone le permet (WhatsApp apparaît dans la liste),
-   téléchargement sinon. */
+/* Trois chemins, du meilleur au plus simple :
+   1. téléphone  : partage natif, WhatsApp apparaît dans la liste ;
+   2. ordinateur : copie de l'image dans le presse-papier, à coller (Ctrl+V)
+                   directement dans la conversation WhatsApp Web ;
+   3. secours    : téléchargement du PNG. */
+function telecharger(fichier){
+  var url = URL.createObjectURL(fichier);
+  var a = document.createElement('a');
+  a.href = url; a.download = fichier.name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+}
 T.partagerRecu = function(cmd, retour){
   retour = retour || function(){};
   T.recuFichier(cmd).then(function(fichier){
     var texte = 'Reçu de la commande ' + cmd.ref + ' — ' + T.F(cmd.total);
+
     if (navigator.canShare && navigator.canShare({files:[fichier]})){
       navigator.share({files:[fichier], title:'Reçu ' + cmd.ref, text:texte})
         .then(function(){ retour('partage'); })
         .catch(function(){ retour('annule'); });
-    } else {
-      var url = URL.createObjectURL(fichier);
-      var a = document.createElement('a');
-      a.href = url; a.download = fichier.name;
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
-      retour('telecharge');
+      return;
     }
+    if (navigator.clipboard && window.ClipboardItem && window.isSecureContext){
+      var item = {}; item['image/png'] = fichier;
+      navigator.clipboard.write([new ClipboardItem(item)])
+        .then(function(){ retour('copie'); })
+        .catch(function(){ telecharger(fichier); retour('telecharge'); });
+      return;
+    }
+    telecharger(fichier);
+    retour('telecharge');
   }).catch(function(){ retour('erreur'); });
+};
+T.telechargerRecu = function(cmd, retour){
+  retour = retour || function(){};
+  T.recuFichier(cmd).then(function(f){ telecharger(f); retour('telecharge'); })
+                    .catch(function(){ retour('erreur'); });
 };
 
 /* Aperçu du reçu dans un panneau, avec les actions */

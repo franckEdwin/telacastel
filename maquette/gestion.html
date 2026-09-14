@@ -31,7 +31,8 @@ body{background:var(--surface-2)}
 .flanc .marque{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:var(--ep-bord) solid var(--bord);min-height:60px}
 .flanc .marque img{width:74px;transition:width .2s}
 .flanc .marque .tag{font-size:10px;color:var(--doux);border:var(--ep-bord) solid var(--bord);padding:2px 7px;border-radius:999px}
-.flanc nav{padding:10px;display:grid;gap:2px;flex:1;align-content:start;overflow-y:auto;overflow-x:hidden}
+.flanc nav{padding:10px;display:grid;gap:2px;flex:1;align-content:start;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.flanc nav::-webkit-scrollbar{width:0}
 .flanc nav .grp{font-size:10px;color:var(--doux);text-transform:uppercase;letter-spacing:.08em;margin:14px 12px 6px}
 .flanc nav button{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;font-size:13.5px;
   color:var(--doux);text-align:left;transition:var(--t);width:100%;position:relative}
@@ -187,7 +188,9 @@ body{background:var(--surface-2)}
 .tiroir.on{transform:none}
 .tiroir .tete{flex:none;display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:var(--ep-bord) solid var(--bord)}
 .tiroir .tete h3{font-size:16.5px}
-.tiroir .dedans{flex:1;overflow-y:auto;padding:16px;display:grid;gap:16px;align-content:start}
+.tiroir .dedans{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:16px;display:grid;gap:16px;align-content:start;
+  scrollbar-width:none}
+.tiroir .dedans::-webkit-scrollbar{width:0;height:0}
 .tiroir .pied{flex:none;padding:13px 16px;border-top:var(--ep-bord) solid var(--bord);background:var(--surface);display:grid;gap:8px}
 .fermer{width:34px;height:34px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;margin-left:auto;flex:none}
 
@@ -916,19 +919,22 @@ function ouvrirCommande(ref){
     env.disabled = true;
     T.partagerRecu(x, function(etat){
       env.disabled = false;
-      if (etat === 'telecharge') toast('Reçu enregistré', 'Joignez l\u2019image à votre message', 'succes');
+      if (etat === 'copie') toast('Reçu copié', 'Collez-le dans WhatsApp avec Ctrl+V', 'succes');
+      else if (etat === 'telecharge') toast('Reçu enregistré', 'Joignez l\u2019image à votre message', 'succes');
       else if (etat === 'partage') toast('Reçu partagé', null, 'succes');
       else if (etat === 'erreur') toast('Reçu impossible à créer', null, 'erreur');
     });
   };
   var imp = el('button','btn creux petit'); imp.textContent = 'Imprimer'; imp.onclick = function(){ window.print(); };
+  var dl = el('button','btn creux petit'); dl.textContent = 'Enregistrer l\u2019image';
+  dl.onclick = function(){ T.telechargerRecu(x, function(){ toast('Reçu enregistré', null, 'succes'); }); };
   var cop = el('button','btn creux petit'); cop.textContent = 'Copier le texte';
   cop.onclick = function(){
     if (navigator.clipboard) navigator.clipboard.writeText(T.messageWhatsApp(x));
     toast('Message copié', 'Prêt à coller dans WhatsApp', 'info');
   };
   var wa = el('a','btn vert petit'); wa.href = T.lienWhatsApp(x); wa.target = '_blank'; wa.rel = 'noopener'; wa.textContent = 'WhatsApp';
-  actions.appendChild(env); actions.appendChild(imp); actions.appendChild(cop); actions.appendChild(wa);
+  actions.appendChild(env); actions.appendChild(dl); actions.appendChild(imp); actions.appendChild(cop); actions.appendChild(wa);
   dd2.appendChild(actions);
 
   /* version imprimable conservée hors écran */

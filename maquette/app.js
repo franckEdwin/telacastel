@@ -584,17 +584,18 @@ function vueConfirme(dd, pied){
     partage.disabled = true;
     T.partagerRecu(cmd, function(etat){
       partage.disabled = false;
-      if (etat === 'telecharge') avis('Reçu enregistré — joignez-le à votre message');
+      if (etat === 'copie') avis('Reçu copié — collez-le dans WhatsApp avec Ctrl+V');
+      else if (etat === 'telecharge') avis('Reçu enregistré — joignez-le à votre message');
       else if (etat === 'partage') avis('Reçu partagé');
       else if (etat === 'erreur') avis('Le reçu n\u2019a pas pu être créé');
     });
   };
   pied.appendChild(partage);
 
-  var wa = el('a','btn vert plein');
-  wa.href = T.lienWhatsApp(cmd); wa.target = '_blank'; wa.rel = 'noopener';
-  wa.innerHTML = 'Ouvrir WhatsApp';
-  pied.appendChild(wa);
+  var tel = el('button','btn creux plein');
+  tel.textContent = 'Enregistrer le reçu';
+  tel.onclick = function(){ T.telechargerRecu(cmd, function(){ avis('Reçu enregistré'); }); };
+  pied.appendChild(tel);
   var nb = el('button','btn creux plein'); nb.textContent = 'Nouvelle commande';
   nb.onclick = function(){ S.ref = null; T.ecrire('refEnCours', null); S.etape = 'panier'; rendrePanier(); ecran('accueil'); };
   pied.appendChild(nb);
