@@ -779,12 +779,6 @@ function vueConfirme(dd, pied){
   if (T.apercuRecu) T.apercuRecu(cmd, boite);
   else dd.appendChild(ticket(cmd));
 
-  var enr = el('button');
-  enr.style.cssText = 'font-size:12.5px;color:var(--doux);text-decoration:underline;margin:0 auto';
-  enr.textContent = 'Enregistrer l\u2019image du reçu';
-  enr.onclick = function(){ T.telechargerRecu(cmd, function(){ avis('Reçu enregistré'); }); };
-  dd.appendChild(enr);
-
   /* proposition de compte, seulement si le client n'en a pas */
   if (!compte){
     var prop = el('div','bloc');
@@ -818,16 +812,16 @@ function vueConfirme(dd, pied){
       else if (etat === 'erreur') avis('Le reçu n\u2019a pas pu être créé');
     });
   };
-  pied.appendChild(partage);
+  dd.appendChild(partage);
   if (capacite !== 'partage'){
-    pied.appendChild(el('span','aide', capacite === 'copie'
+    dd.appendChild(el('span','aide', capacite === 'copie'
       ? 'Ce navigateur ne sait pas envoyer une image directement. Le reçu est copié, il ne reste qu\u2019à le coller dans la conversation.'
       : 'Ce navigateur ne sait pas envoyer une image directement. Le reçu est enregistré dans vos téléchargements.'));
   }
 
   var nb = el('button','btn creux plein'); nb.textContent = 'Nouvelle commande';
   nb.onclick = function(){ S.ref = null; T.ecrire('refEnCours', null); S.etape = 'panier'; rendrePanier(); ecran('accueil'); };
-  pied.appendChild(nb);
+  dd.appendChild(nb);
 }
 
 function ticket(cmd){
