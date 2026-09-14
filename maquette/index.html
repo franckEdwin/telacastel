@@ -317,6 +317,19 @@ body{overflow-x:hidden}
 .rv{opacity:0;transform:translateY(16px)}
 .rv.vu{opacity:1;transform:none;transition:opacity .6s cubic-bezier(.4,0,.2,1),transform .6s cubic-bezier(.4,0,.2,1)}
 
+/* ---------------------------------------------------------- accès directs */
+.acces{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 4px}
+.acces button{display:flex;align-items:center;gap:11px;padding:12px 14px;text-align:left;
+  background:var(--surface);border:var(--ep-bord) solid var(--bord);border-radius:var(--r-m)}
+.acces button:hover{border-color:var(--bord-fort)}
+.acces .ic{width:36px;height:36px;border-radius:11px;background:var(--or-doux);display:grid;place-items:center;flex:none}
+.acces .ic svg{width:18px;height:18px;stroke:var(--or-fonce);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.acces .tx{flex:1;min-width:0}
+.acces .tx b{display:block;font-family:var(--titre);font-size:13.5px}
+.acces .tx span{display:block;font-size:11.5px;color:var(--doux);margin-top:1px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:520px){ .acces{grid-template-columns:1fr} }
+
 /* ---------------------------------------------------------- bandeau de suivi
    Une commande en cours doit rester visible où qu'on soit dans l'application. */
 .bandeau-suivi{position:fixed;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:94;
@@ -493,6 +506,17 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
     <span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9.5V13l2.5 1.5M9 2h6"/></svg></span>
     <span class="tx"><b>On cuisine le matin, pas la nuit.</b><span class="lg" id="rappelLong"></span><span class="ct" id="rappelCourt"></span></span>
     <span class="chrono">Clôture dans <b id="chrono">—</b></span>
+  </div>
+
+  <div class="acces" id="acces">
+    <button data-va="histo">
+      <span class="ic"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/><circle cx="18.5" cy="17" r="2.6"/></svg></span>
+      <span class="tx"><b>Mes commandes</b><span>Recommander en un geste</span></span>
+    </button>
+    <button data-va="plateaux">
+      <span class="ic"><svg viewBox="0 0 24 24"><path d="M4 14h16M6 14a6 6 0 0 1 12 0M3 18h18M12 5v3"/></svg></span>
+      <span class="tx"><b>Plateaux &amp; événements</b><span>Devis dès 8 personnes</span></span>
+    </button>
   </div>
 
   <div class="rail" id="rail"></div>

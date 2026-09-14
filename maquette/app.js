@@ -1634,6 +1634,9 @@ function animations(){
 $('#btnPanier').onclick = function(){ ecran('panier'); };
 $('#barreTotal').onclick = function(){ ecran('panier'); };
 $('#btnCompte').onclick = function(){ ecran('compte'); };
+Array.prototype.forEach.call(document.querySelectorAll('#acces button'), function(b){
+  b.onclick = function(){ ecran(b.dataset.va); };
+});
 $('#btnAdresse').onclick = function(){ S.etape = 'livraison'; ecran('panier'); };
 $('#voile').onclick = function(){ fermer(); };
 $('#q').oninput = function(){ S.q = this.value.trim(); rendreMenu(); };
