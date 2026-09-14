@@ -299,13 +299,49 @@ body{background:var(--surface-2)}
   .admin.reduit.on{grid-template-columns:72px minmax(0,1fr)}
   .flanc{position:sticky;top:0;height:100vh}
 }
+/* ---------------------------------------------------------- navigation mobile */
+.barre-nav{display:none}
+.feuille{position:fixed;z-index:97;left:0;right:0;bottom:0;background:var(--fond);
+  border-top:var(--ep-bord) solid var(--bord);border-radius:var(--r-g) var(--r-g) 0 0;
+  transform:translateY(101%);transition:transform .3s cubic-bezier(.4,0,.2,1);
+  padding:10px 14px calc(18px + env(safe-area-inset-bottom));box-shadow:var(--ombre-flot)}
+.feuille.on{transform:none}
+.feuille .poignee{width:38px;height:4px;border-radius:99px;background:var(--bord-fort);margin:0 auto 12px}
+.feuille .items{display:grid;gap:3px}
+.feuille .items button{display:flex;align-items:center;gap:12px;padding:12px 12px;border-radius:11px;
+  font-size:14px;color:var(--encre);text-align:left;width:100%}
+.feuille .items button svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.feuille .items button:hover{background:var(--surface-2)}
+.feuille .items button.on{background:var(--encre);color:var(--fond)}
+.feuille .pied-f{display:flex;align-items:center;gap:11px;margin-top:12px;padding-top:12px;border-top:var(--ep-bord) solid var(--bord)}
+.feuille .pied-f .av{width:34px;height:34px;border-radius:50%;background:var(--or-doux);color:var(--or-fonce);
+  display:grid;place-items:center;font-family:var(--titre);font-weight:700;font-size:13px;flex:none}
+.feuille .pied-f b{display:block;font-size:13px;font-weight:500}
+.feuille .pied-f span{font-size:11.5px;color:var(--doux)}
+.feuille .pied-f .themes{margin-left:auto}
+
 @media (max-width:899px){
   .flanc{position:fixed;z-index:96;top:0;bottom:0;left:0;width:264px;transform:translateX(-100%);
     transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:var(--ombre-flot)}
   .flanc.on{transform:none}
-  .contenu{padding:13px}
-  .haut{padding:10px 13px}
-  .burger{display:grid}
+  /* pas de tiroir latéral sur mobile : une barre de navigation en bas */
+  .flanc{display:none}
+  .contenu{padding:13px 13px 96px}
+  .haut{padding:9px 13px;min-height:52px}
+  .haut h1{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .burger{display:none}
+  .service{display:none}
+  .haut .themes{display:none}
+  .barre-nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom));
+    z-index:80;display:flex;gap:2px;padding:6px;background:var(--surface);border:var(--ep-bord) solid var(--bord);
+    border-radius:999px;box-shadow:var(--ombre-flot);max-width:calc(100vw - 20px)}
+  .barre-nav button{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;width:64px;height:50px;border-radius:999px;font-size:9.5px;color:var(--doux);transition:var(--t)}
+  .barre-nav button svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .barre-nav button.on{background:var(--encre);color:var(--fond)}
+  .barre-nav .n{position:absolute;top:3px;right:9px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;
+    background:var(--rouge);color:#fff;font-size:9.5px;font-weight:600;display:grid;place-items:center}
+  .barre-nav .n[hidden]{display:none}
   /* en tiroir mobile la barre est large : on annule le mode replié */
   .admin.reduit .flanc .lib,.admin.reduit .flanc .grp,.admin.reduit .flanc .profil div{display:block}
   .admin.reduit .flanc .tag{display:inline}
@@ -375,6 +411,29 @@ body{background:var(--surface-2)}
     </header>
     <div class="contenu" id="contenu"></div>
   </div>
+</div>
+
+<nav class="barre-nav" id="barreNav" aria-label="Navigation">
+  <button data-vue="tableau" class="on"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>Bord</button>
+  <button data-vue="commandes"><svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7zM9 8V6a3 3 0 0 1 6 0v2"/></svg>Commandes<span class="n" id="navCmd" hidden>0</span></button>
+  <button data-vue="produits"><svg viewBox="0 0 24 24"><path d="M20 7 12 3 4 7v10l8 4 8-4z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>Produits</button>
+  <button data-vue="stock"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h10"/><circle cx="19" cy="18" r="2.5"/></svg>Stock<span class="n" id="navStock" hidden>0</span></button>
+  <button id="btnPlus"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>Plus</button>
+</nav>
+
+<div class="feuille" id="feuillePlus" aria-label="Autres sections">
+  <div class="poignee"></div>
+  <div class="items" id="itemsPlus"></div>
+  <div class="pied-f">
+    <span class="av">M</span>
+    <div><b>Mariam D.</b><span>Propriétaire</span></div>
+    <div class="themes" id="themesMobile" role="group" aria-label="Thème">
+      <button data-th="clair" title="Clair"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/></svg></button>
+      <button data-th="sombre" title="Sombre"><svg viewBox="0 0 24 24"><path d="M20 14.5A8.2 8.2 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z"/></svg></button>
+      <button data-th="cacao" title="Cacao"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 12h8"/></svg></button>
+    </div>
+  </div>
+  <button class="btn creux petit plein" id="quitterMobile" style="margin-top:10px">Se déconnecter</button>
 </div>
 
 <div class="voile" id="voile"></div>
@@ -480,16 +539,18 @@ function fermerDd(){
   if (ddOuvert){ ddOuvert.classList.remove('ouvert'); ddOuvert = null; }
 }
 document.addEventListener('click', fermerDd);
-document.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ fermerDd(); fermerTiroir(); } });
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ fermerDd(); fermerTiroir(); fermerFeuille(); } });
 
 /* ---------------------------------------------------------- thème + session */
 (function(){
   var c = T.theme();
-  Array.prototype.forEach.call(document.querySelectorAll('#themes button'), function(b){
+  Array.prototype.forEach.call(document.querySelectorAll('.themes button'), function(b){
     b.setAttribute('aria-pressed', b.dataset.th === c);
     b.onclick = function(){
       T.theme(b.dataset.th);
-      Array.prototype.forEach.call(document.querySelectorAll('#themes button'), function(x){ x.setAttribute('aria-pressed', x.dataset.th === b.dataset.th); });
+      Array.prototype.forEach.call(document.querySelectorAll('.themes button'), function(x){
+        x.setAttribute('aria-pressed', x.dataset.th === b.dataset.th);
+      });
     };
   });
 })();
@@ -521,12 +582,45 @@ Array.prototype.forEach.call(document.querySelectorAll('#menuAdmin button'), fun
   b.title = b.dataset.lib || '';
   b.onclick = function(){ aller(b.dataset.vue); };
 });
+Array.prototype.forEach.call(document.querySelectorAll('#barreNav button[data-vue]'), function(b){
+  b.onclick = function(){ aller(b.dataset.vue); };
+});
+$('#btnPlus').onclick = function(e){
+  e.stopPropagation();
+  if ($('#feuillePlus').classList.contains('on')) fermerFeuille(); else ouvrirFeuille();
+};
+$('#quitterMobile').onclick = function(){ T.ecrire('admin', false); majPortail(); };
+var PRINCIPALES = ['tableau','commandes','produits','stock'];
 function aller(v){
   vue = v;
   Array.prototype.forEach.call(document.querySelectorAll('#menuAdmin button'), function(x){ x.classList.toggle('on', x.dataset.vue === v); });
+  Array.prototype.forEach.call(document.querySelectorAll('#barreNav button[data-vue]'), function(x){ x.classList.toggle('on', x.dataset.vue === v); });
+  $('#btnPlus').classList.toggle('on', PRINCIPALES.indexOf(v) === -1);
+  fermerFeuille();
   $('#flanc').classList.remove('on');
   if (!$('#tiroir').classList.contains('on')) $('#voile').classList.remove('on');
   rendre();
+}
+
+/* feuille « Plus » : les sections qui ne tiennent pas dans la barre */
+function rendreFeuille(){
+  var box = $('#itemsPlus'); box.innerHTML = '';
+  Array.prototype.forEach.call(document.querySelectorAll('#menuAdmin button'), function(src){
+    if (PRINCIPALES.indexOf(src.dataset.vue) > -1) return;
+    var b = el('button', vue === src.dataset.vue ? 'on' : '');
+    b.innerHTML = src.querySelector('svg').outerHTML + '<span>' + src.dataset.lib + '</span>';
+    b.onclick = function(){ aller(src.dataset.vue); };
+    box.appendChild(b);
+  });
+}
+function ouvrirFeuille(){
+  rendreFeuille();
+  $('#feuillePlus').classList.add('on');
+  $('#voile').classList.add('on');
+}
+function fermerFeuille(){
+  $('#feuillePlus').classList.remove('on');
+  if (!$('#tiroir').classList.contains('on')) $('#voile').classList.remove('on');
 }
 
 /* ---------------------------------------------------------- outils communs */
@@ -536,8 +630,11 @@ function aValider(){ return cmds().filter(function(c){ return c.statut === 'recu
 function idsProduits(){ return Object.keys(T.produits); }
 function alertes(){ return idsProduits().filter(function(id){ var e = T.etatStock(id); return e === 'epuise' || e === 'bas' || e === 'retire'; }); }
 function badges(){
-  var b1 = $('#badgeCmd'), n1 = aValider().length; b1.hidden = !n1; b1.textContent = n1;
-  var b2 = $('#badgeStock'), n2 = alertes().length; b2.hidden = !n2; b2.textContent = n2;
+  var n1 = aValider().length, n2 = alertes().length;
+  [['#badgeCmd', n1], ['#navCmd', n1], ['#badgeStock', n2], ['#navStock', n2]].forEach(function(p){
+    var e = $(p[0]); if (!e) return;
+    e.hidden = !p[1]; e.textContent = p[1];
+  });
 }
 function etq(statut){
   var s = T.statuts[statut] || T.statuts.recue;
@@ -866,6 +963,7 @@ function ouvrirTiroir(){ $('#tiroir').classList.add('on'); $('#voile').classList
 function fermerTiroir(){ $('#tiroir').classList.remove('on'); $('#voile').classList.remove('on'); }
 $('#voile').onclick = function(){
   fermerTiroir();
+  fermerFeuille();
   $('#flanc').classList.remove('on');
   $('#voile').classList.remove('on');
 };

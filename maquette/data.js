@@ -19,8 +19,8 @@ var clone = function(o){ return JSON.parse(JSON.stringify(o)); };
 T.boutique = {
   nom: 'Tela Castel',
   slogan: 'Bien manger, un plaisir à partager',
-  tel: '+225 05 06 45 70 70',
-  telBrut: '2250506457070',
+  tel: '+225 05 76 06 62 63',
+  telBrut: '2250576066263',
   ville: 'Abidjan, Côte d’Ivoire',
   adresse: 'Angré 8e tranche, Cocody',
   position: [5.3975, -3.9868],
@@ -51,7 +51,8 @@ T.paiements = [
 /* ---------------------------------------------------------- visuels disponibles */
 T.visuels = ['jaune-jaune','bouillie','yaourt','yassa','placali','wintchin','crudites','fruits','alloco',
              'arachide','gombo','garba','bissap','gingembre','baobab','pastels','galette','macedoine',
-             'salade-pates','salade-pdt','yaourt-boire','attieke'];
+             'salade-pates','salade-pdt','yaourt-boire','attieke',
+             'sandwich-oeuf','sandwich-omelette','sandwich-viande','sandwich-saucisson','beignet'];
 
 /* ---------------------------------------------------------- suppléments */
 var SUP_DOUX = [ {nom:'Lait concentré', prix:200}, {nom:'Sucre à part', prix:0}, {nom:'Glaçons', prix:0} ];
@@ -59,6 +60,32 @@ var SUP_SALE = [ {nom:'Piment fort', prix:0}, {nom:'Supplément viande', prix:50
 
 /* ---------------------------------------------------------- catalogue par défaut */
 T.produitsDefaut = {
+  /* --- formules : une composition complète à prix fixe --- */
+  'f-eleve':      {nom:'Formule Élève', desc:'Beignet + une bouillie au choix', img:'beignet',
+                   formats:[['Avec bouillie de mil',800],['Avec bouillie de maïs',800]], note:4.8, avis:74,
+                   tag:'Petit budget', stock:30, seuil:6, actif:true, sup:[{nom:'Lait concentré', prix:200}]},
+  'f-sandwich-1': {nom:'Formule Sandwich 1', desc:'Sandwich œuf + boisson naturelle', img:'sandwich-oeuf',
+                   formats:[['Avec bissap',1000],['Avec gingembre',1000],['Avec baobab',1000]], note:4.7, avis:58,
+                   stock:20, seuil:5, actif:true, sup:[{nom:'Piment fort', prix:0}]},
+  'f-sandwich-2': {nom:'Formule Sandwich 2', desc:'Sandwich omelette + fromage + boisson', img:'sandwich-omelette',
+                   formats:[['Avec bissap',1200],['Avec gingembre',1200],['Avec baobab',1200]], note:4.9, avis:91,
+                   tag:'Le plus copieux', stock:18, seuil:5, actif:true, sup:[{nom:'Piment fort', prix:0}]},
+  'f-sandwich-3': {nom:'Formule Sandwich 3', desc:'Sandwich viande hachée + boisson', img:'sandwich-viande',
+                   formats:[['Avec bissap',1000],['Avec gingembre',1000],['Avec baobab',1000]], note:4.8, avis:67,
+                   stock:18, seuil:5, actif:true, sup:[{nom:'Piment fort', prix:0}]},
+  'f-sandwich-4': {nom:'Formule Sandwich 4', desc:'Sandwich saucisson + boisson', img:'sandwich-saucisson',
+                   formats:[['Avec bissap',1000],['Avec gingembre',1000],['Avec baobab',1000]], note:4.6, avis:43,
+                   stock:16, seuil:4, actif:true, sup:[{nom:'Piment fort', prix:0}]},
+  'f-galette':    {nom:'Formule Galette', desc:'Galette + yaourt, bouillie ou jus au choix', img:'galette',
+                   formats:[['Avec yaourt',1000],['Avec bouillie',1000],['Avec jus',1000]], note:4.8, avis:82,
+                   stock:24, seuil:6, actif:true},
+  'f-tela':       {nom:'Formule Tela', desc:'Galette jaune aux vermicelles + bouillie + boisson', img:'jaune-jaune',
+                   formats:[['La formule',1500]], note:5.0, avis:136, tag:'La signature', neuf:true,
+                   stock:20, seuil:5, actif:true, sup:[{nom:'Piment fort', prix:0}, {nom:'Lait concentré', prix:200}]},
+  'f-eco':        {nom:'Formule Éco', desc:'Sandwich œuf simple + une bouillie', img:'sandwich-oeuf',
+                   formats:[['La formule',800]], note:4.7, avis:61, tag:'Petit budget',
+                   stock:25, seuil:6, actif:true, sup:[{nom:'Lait concentré', prix:200}]},
+
   'jj-viande':     {nom:'Jaune Jaune viande hachée', desc:'Galette de mil dorée, vermicelle, sauce tomate maison', img:'jaune-jaune', formats:[['La part',2500]], note:4.9, avis:184, tag:'Le plus commandé', sup:clone(SUP_SALE), stock:24, seuil:5, actif:true},
   'jj-poisson':    {nom:'Jaune Jaune poisson', desc:'Le même, au poisson braisé du matin', img:'jaune-jaune', formats:[['La part',2000]], note:4.8, avis:96, sup:clone(SUP_SALE), stock:18, seuil:5, actif:true},
   'galette':       {nom:'Galette au sucre', desc:'Sortie de la poêle, sucre de canne', img:'galette', formats:[['La part',1500]], note:4.7, avis:52, stock:30, seuil:6, actif:true},
@@ -97,6 +124,9 @@ T.produitsDefaut = {
    pastels sont au p'tit déj' ET au goûter, le dêguê est en goûter et en rayon
    maison. Chaque catégorie garde son propre ordre d'affichage.              */
 T.categoriesDefaut = [
+  { id:'formules', nom:'Formules', vignette:'sandwich-oeuf', actif:true,
+    produits:['f-tela','f-eleve','f-eco','f-galette','f-sandwich-1','f-sandwich-2','f-sandwich-3','f-sandwich-4'] },
+
   { id:'petitdej', nom:"P'tit déj'", vignette:'jaune-jaune', actif:true,
     produits:['jj-viande','jj-poisson','galette','pastels','bouillie-mil','bouillie-mais'] },
 
@@ -158,6 +188,20 @@ T.ecrire = function(cle, valeur){
 /* catalogue vivant */
 T.produits   = T.lire('produits',   null) || clone(T.produitsDefaut);
 T.categories = T.lire('categories', null) || clone(T.categoriesDefaut);
+
+/* Le catalogue évolue : on complète ce qui existe déjà au lieu de l'écraser,
+   pour que les retouches faites dans l'admin survivent aux mises à jour. */
+(function migration(){
+  var change = false;
+  Object.keys(T.produitsDefaut).forEach(function(id){
+    if (!T.produits[id]){ T.produits[id] = clone(T.produitsDefaut[id]); change = true; }
+  });
+  T.categoriesDefaut.forEach(function(c, i){
+    var existe = T.categories.filter(function(x){ return x.id === c.id; })[0];
+    if (!existe){ T.categories.splice(Math.min(i, T.categories.length), 0, clone(c)); change = true; }
+  });
+  if (change && T.lire('produits', null)){ T.ecrire('produits', T.produits); T.ecrire('categories', T.categories); }
+})();
 
 T.sauverProduits   = function(){ T.ecrire('produits', T.produits); };
 T.sauverCategories = function(){ T.ecrire('categories', T.categories); };

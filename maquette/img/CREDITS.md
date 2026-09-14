@@ -13,3 +13,8 @@
 - **salade-pdt.jpg** — Multi-colored potato salad.jpg · licence CC BY 2.0 · https://commons.wikimedia.org/wiki/File:Multi-colored_potato_salad.jpg
 - **yaourt-boire.jpg** — Ayran (1.5 lt.).jpg · licence CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:Ayran_(1.5_lt.).jpg
 - **attieke.jpg** — Attieke and chicken.jpg · licence CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:Attieke_and_chicken.jpg
+- **sandwich-oeuf.jpg** — Egg Sandwich.jpg · licence CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:Egg_Sandwich.jpg
+- **sandwich-omelette.jpg** — Omelette Sandwich.jpg · licence CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:Omelette_Sandwich.jpg
+- **sandwich-viande.jpg** — Princess Sandwich.jpg · licence CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:Princess_Sandwich.jpg
+- **sandwich-saucisson.jpg** — Italian Sausage Sandwich.jpg · licence CC BY-SA 3.0 · https://commons.wikimedia.org/wiki/File:Italian_Sausage_Sandwich.jpg
+- **beignet.jpg** — Puff Puff Making series 6.jpg · licence CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:Puff_Puff_Making_series_6.jpg
