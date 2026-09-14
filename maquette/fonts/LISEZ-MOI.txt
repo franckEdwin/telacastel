@@ -1,0 +1,10 @@
+Police de titre du flyer : GLIKER (Regular + Bold) — police commerciale Canva.
+
+Pour que la maquette utilise la vraie police :
+  déposer ici Gliker-Regular.woff2 (ou .ttf) et Gliker-Bold.woff2 (ou .ttf)
+  avec exactement ces noms. Rien d'autre à faire, la page les prend
+  automatiquement ; sans elles, elle retombe sur Baloo 2 (la plus proche en libre).
+
+Les polices intégrées dans le PDF du flyer ne sont pas réutilisables :
+Canva n'y embarque qu'un sous-ensemble (le Gliker Bold du flyer ne contient
+que 20 caractères, ceux des titres).

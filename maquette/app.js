@@ -1,0 +1,924 @@
+/* ============================================================
+   Tela Castel — application client
+   Mobile : des écrans, jamais de fenêtre surgissante.
+   Bureau : menu au centre, panier en colonne permanente.
+   ============================================================ */
+(function(){
+"use strict";
+var T = window.TELA, D = T.dates();
+var $ = function(s, r){ return (r||document).querySelector(s); };
+var el = function(t,c,h){ var e=document.createElement(t); if(c) e.className=c; if(h!=null) e.innerHTML=h; return e; };
+var F = T.F;
+var ETOILE = '<svg viewBox="0 0 24 24"><path d="m12 3 2.6 5.6 6.1.8-4.5 4.2 1.2 6.1L12 16.8 6.6 19.7l1.2-6.1L3.3 9.4l6.1-.8z"/></svg>';
+var FLECHE = '<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>';
+var mobile = function(){ return window.innerWidth < 1100; };
+
+/* ---------------------------------------------------------- état */
+var compte = T.compte();
+var S = {
+  panier:   T.lire('panier', []),
+  zone:     T.lire('zone', 'angre'),
+  creneau:  T.lire('creneau', 'c1'),
+  paiement: T.lire('paiement', 'especes'),
+  nom:      (compte && compte.nom) || 'Aïcha Koné',
+  tel:      (compte && compte.tel) || '+225 07 88 12 44 09',
+  adresse:  T.lire('adresse', 'Rue L94, portail vert, en face de la pharmacie'),
+  position: T.lire('position', null),
+  etape:    'panier',
+  ref:      T.lire('refEnCours', null),
+  q:        '',
+  jour:     (D.jourCle === 'samedi' || D.jourCle === 'dimanche') ? 'lundi' : D.jourCle,
+  sectionActive: null,
+  ecran:    'accueil'
+};
+
+/* ---------------------------------------------------------- thème */
+(function theme(){
+  var courant = T.theme();
+  Array.prototype.forEach.call(document.querySelectorAll('#themes button'), function(b){
+    b.setAttribute('aria-pressed', b.dataset.th === courant);
+    b.onclick = function(){
+      T.theme(b.dataset.th);
+      Array.prototype.forEach.call(document.querySelectorAll('#themes button'), function(x){
+        x.setAttribute('aria-pressed', x.dataset.th === b.dataset.th);
+      });
+      avis('Thème ' + b.title.toLowerCase());
+    };
+  });
+})();
+
+/* ---------------------------------------------------------- panier */
+function totalArticles(){ return S.panier.reduce(function(a,l){ return a + l.qte; }, 0); }
+function sousTotal(){ return S.panier.reduce(function(a,l){ return a + l.prix * l.qte; }, 0); }
+function frais(){ var st = sousTotal(); return !st ? 0 : (st >= T.boutique.seuilLivraisonOfferte ? 0 : T.zone(S.zone).frais); }
+function total(){ return sousTotal() + frais(); }
+function qteProduit(id){ return S.panier.reduce(function(a,l){ return a + (l.id === id ? l.qte : 0); }, 0); }
+
+function ajouter(id, iFmt, qte, sups, note, silencieux){
+  var p = T.produits[id];
+  sups = sups || [];
+  var supTxt = sups.map(function(s){ return s.nom; }).join(', ');
+  var prix = p.formats[iFmt][1] + sups.reduce(function(a,s){ return a + s.prix; }, 0);
+  var cle = id + '|' + iFmt + '|' + supTxt + '|' + (note || '');
+  var l = S.panier.filter(function(x){ return x.cle === cle; })[0];
+  if (l) l.qte += qte;
+  else S.panier.push({cle:cle, id:id, nom:p.nom, img:p.img, fmt:p.formats[iFmt][0], sup:supTxt, prix:prix, qte:qte, note:note||''});
+  if (S.etape === 'confirme'){ S.etape = 'panier'; S.ref = null; T.ecrire('refEnCours', null); }
+  sauver();
+  if (!silencieux){
+    avis(qte + ' × ' + p.nom + ' ajouté');
+    var b = $('#btnPanier'); b.classList.remove('saute'); void b.offsetWidth; b.classList.add('saute');
+  }
+}
+function retirer(id){
+  for (var i = S.panier.length - 1; i >= 0; i--){
+    if (S.panier[i].id === id){ S.panier[i].qte--; if (S.panier[i].qte <= 0) S.panier.splice(i,1); break; }
+  }
+  sauver();
+}
+function sauver(){
+  T.ecrire('panier', S.panier);
+  T.ecrire('zone', S.zone); T.ecrire('creneau', S.creneau);
+  T.ecrire('paiement', S.paiement); T.ecrire('adresse', S.adresse);
+  rendreTout();
+}
+
+/* ---------------------------------------------------------- rail + sommaire */
+function rendreRail(){
+  var r = $('#rail'); r.innerHTML = '';
+  categoriesActives().forEach(function(c){
+    var b = el('button');
+    var rond = el('span','rond');
+    var i = el('img'); i.src = T.img(c.vignette); i.alt = '';
+    rond.appendChild(i); b.appendChild(rond);
+    b.appendChild(el('span', null, c.nom));
+    b.dataset.cible = 'sec-' + c.id;
+    b.setAttribute('aria-pressed', S.sectionActive === 'sec-' + c.id);
+    b.onclick = function(){ allerSection('sec-' + c.id); };
+    r.appendChild(b);
+  });
+  var s = $('#sommaire'); s.innerHTML = '';
+  categoriesActives().forEach(function(c){
+    var a = el('a', null, c.nom + '<span>' + produitsDe(c).length + '</span>');
+    a.href = '#sec-' + c.id; a.dataset.cible = 'sec-' + c.id;
+    a.onclick = function(e){ e.preventDefault(); allerSection('sec-' + c.id); };
+    s.appendChild(a);
+  });
+  marquerActif();
+}
+function categoriesActives(){ return T.categories.filter(function(c){ return c.actif !== false; }); }
+function produitsDe(c){ return T.produitsDe(c, S.jour); }
+function allerSection(id){
+  if (mobile()) ecran('accueil');
+  var e = document.getElementById(id);
+  if (e) e.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* ---------------------------------------------------------- menu */
+function ligneProduit(id){
+  var p = T.produits[id];
+  if (!p) return el('div');
+  var dispo = T.dispo(id);
+  var b = el('button','plat' + (dispo ? '' : ' epuise'));
+  var tx = el('div','tx');
+  if (!dispo) tx.appendChild(el('span','etq rouge','Épuisé'));
+  else if (p.tag) tx.appendChild(el('span','etq ' + (p.neuf ? 'vert' : 'or'), p.tag));
+  tx.appendChild(el('h3', null, p.nom));
+  tx.appendChild(el('p','d', p.desc));
+  var meta = el('div','meta');
+  meta.appendChild(el('span','prix', T.prixTxt(p)));
+  meta.appendChild(el('span','etoile', ETOILE + p.note.toFixed(1).replace('.',',') + ' <span style="color:var(--doux)">(' + p.avis + ')</span>'));
+  if (dispo && p.stock != null && p.stock <= 5) meta.appendChild(el('span','restant','plus que ' + p.stock));
+  tx.appendChild(meta);
+  b.appendChild(tx);
+
+  var vis = el('div','vis');
+  var im = el('img'); im.src = T.img(p.img); im.alt = ''; im.loading = 'lazy';
+  vis.appendChild(im);
+  b.appendChild(vis);
+
+  if (dispo){
+    var q = qteProduit(id);
+    if (q > 0){
+      var c = el('div','compteur cpt');
+      var m = el('button', null, '−'); m.setAttribute('aria-label','Retirer un ' + p.nom);
+      var n = el('b', null, String(q));
+      var pl = el('button', null, '+'); pl.setAttribute('aria-label','Ajouter un ' + p.nom);
+      m.onclick = function(e){ e.stopPropagation(); retirer(id); };
+      pl.onclick = function(e){ e.stopPropagation(); ajouter(id, 0, 1, [], '', true); };
+      c.appendChild(m); c.appendChild(n); c.appendChild(pl);
+      b.appendChild(c);
+    } else b.appendChild(el('span','plus','+'));
+  }
+  b.onclick = function(){ if (dispo) ouvrirFiche(id); };
+  return b;
+}
+
+function rendreMenu(){
+  var m = $('#menu'); m.innerHTML = '';
+
+  if (S.q){
+    var q = S.q.toLowerCase();
+    var ids = Object.keys(T.produits).filter(function(id){
+      var p = T.produits[id];
+      return (p.nom + ' ' + p.desc).toLowerCase().indexOf(q) > -1;
+    });
+    var sec = el('section','sec');
+    var t = el('div','sec-titre');
+    var h = el('div','t-haut');
+    h.appendChild(el('h2', null, 'Résultats'));
+    h.appendChild(el('span', null, ids.length + ' article' + (ids.length > 1 ? 's' : '')));
+    t.appendChild(h); sec.appendChild(t);
+    if (!ids.length) sec.appendChild(el('p','vide','Rien pour « ' + S.q +' ». Essayez « dêguê », « jus » ou « poisson ».'));
+    var g = el('div','plats');
+    ids.forEach(function(id){ g.appendChild(ligneProduit(id)); });
+    sec.appendChild(g); m.appendChild(sec);
+    return;
+  }
+
+  categoriesActives().forEach(function(c){
+    var sec = el('section','sec'); sec.id = 'sec-' + c.id;
+    var t = el('div','sec-titre');
+    var h = el('div','t-haut');
+    h.appendChild(el('h2', null, c.nom));
+    h.appendChild(el('span', null, c.parJour ? 'Livraison ' + D.long : produitsDe(c).length + ' articles'));
+    t.appendChild(h);
+    if (c.parJour){
+      var j = el('div','jours');
+      ['lundi','mardi','mercredi','jeudi','vendredi'].forEach(function(x){
+        var b = el('button', null, x.charAt(0).toUpperCase() + x.slice(1) + (x === D.jourCle ? ' · demain' : ''));
+        b.setAttribute('aria-pressed', S.jour === x);
+        b.onclick = function(){
+          var y = window.scrollY; S.jour = x; rendreMenu(); rendreRail(); window.scrollTo({top:y});
+        };
+        j.appendChild(b);
+      });
+      t.appendChild(j);
+    }
+    sec.appendChild(t);
+
+    if (c.parJour){
+      var groupes = (c.jours || {})[S.jour] || [];
+      if (!groupes.length) sec.appendChild(el('p','vide','Pas de service déjeuner ce jour-là. Le p’tit déj et le goûter restent disponibles.'));
+      groupes.forEach(function(gr){
+        sec.appendChild(el('div','sous-sec', gr.groupe));
+        var g = el('div','plats');
+        gr.produits.filter(function(id){ return !!T.produits[id]; }).forEach(function(id){ g.appendChild(ligneProduit(id)); });
+        sec.appendChild(g);
+      });
+    } else {
+      var g2 = el('div','plats');
+      produitsDe(c).forEach(function(id){ g2.appendChild(ligneProduit(id)); });
+      sec.appendChild(g2);
+    }
+    m.appendChild(sec);
+  });
+  spy();
+}
+
+/* ---------------------------------------------------------- fiche produit */
+function ouvrirFiche(id){
+  var p = T.produits[id];
+  var etat = {f:0, qte:1, sups:[]};
+  var pan = $('#panneau-fiche');
+  pan.innerHTML = '';
+
+  var tete = el('div','tete');
+  var ret = el('button','retour', FLECHE); ret.setAttribute('aria-label','Retour'); ret.onclick = fermer;
+  tete.appendChild(ret);
+  tete.appendChild(el('div', null, '<h3>' + p.nom + '</h3>'));
+  pan.appendChild(tete);
+
+  var dd = el('div','dedans');
+  var im = el('img','fiche-ph'); im.src = T.img(p.img); im.alt = '';
+  dd.appendChild(im);
+
+  var ft = el('div','fiche-tete');
+  ft.appendChild(el('h2', null, p.nom));
+  ft.appendChild(el('p','d', p.desc));
+  var meta = el('div','meta');
+  meta.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;color:var(--encre);font-weight:500">'
+    + ETOILE + p.note.toFixed(1).replace('.',',') + '</span><span>' + p.avis + ' avis</span>'
+    + (p.stock != null ? '<span>· ' + p.stock + ' portions préparées</span>' : '');
+  ft.appendChild(meta);
+  dd.appendChild(ft);
+
+  var bf = el('div','champ');
+  bf.appendChild(el('span','lab','Format'));
+  var ch = el('div','choix');
+  p.formats.forEach(function(f, i){
+    var b = el('button', null, f[0] + '<span class="px">' + F(f[1]) + '</span>');
+    b.setAttribute('aria-pressed', i === 0);
+    b.onclick = function(){
+      etat.f = i;
+      Array.prototype.forEach.call(ch.children, function(x,j){ x.setAttribute('aria-pressed', j === i); });
+      maj();
+    };
+    ch.appendChild(b);
+  });
+  bf.appendChild(ch); dd.appendChild(bf);
+
+  if (p.sup && p.sup.length){
+    var bs = el('div','champ');
+    bs.appendChild(el('span','lab','Suppléments'));
+    var box = el('div','sups');
+    p.sup.forEach(function(s){
+      var lab = el('label');
+      var cb = el('input'); cb.type = 'checkbox';
+      cb.onchange = function(){
+        if (cb.checked) etat.sups.push(s);
+        else etat.sups = etat.sups.filter(function(x){ return x !== s; });
+        maj();
+      };
+      lab.appendChild(cb);
+      lab.appendChild(el('span', null, s.nom));
+      lab.appendChild(el('span','px', s.prix ? '+ ' + F(s.prix) : 'offert'));
+      box.appendChild(lab);
+    });
+    bs.appendChild(box); dd.appendChild(bs);
+  }
+
+  var bn = el('div','champ');
+  bn.appendChild(el('label','lab','Un mot pour la cuisine'));
+  var note = el('input'); note.type = 'text'; note.placeholder = 'Sans piment, bien sucré…';
+  bn.appendChild(note); dd.appendChild(bn);
+  pan.appendChild(dd);
+
+  var pied = el('div','pied');
+  var rang = el('div'); rang.style.cssText = 'display:flex;gap:12px;align-items:center';
+  var cpt = el('div','compteur');
+  var moins = el('button', null, '−'); moins.setAttribute('aria-label','Retirer un');
+  var nb = el('b', null, '1');
+  var plus = el('button', null, '+'); plus.setAttribute('aria-label','Ajouter un');
+  moins.onclick = function(){ if (etat.qte > 1){ etat.qte--; nb.textContent = etat.qte; maj(); } };
+  plus.onclick = function(){ etat.qte++; nb.textContent = etat.qte; maj(); };
+  cpt.appendChild(moins); cpt.appendChild(nb); cpt.appendChild(plus);
+  rang.appendChild(cpt);
+  var cta = el('button','btn plein');
+  cta.onclick = function(){ ajouter(id, etat.f, etat.qte, etat.sups, note.value); fermer(); };
+  rang.appendChild(cta);
+  pied.appendChild(rang);
+  pan.appendChild(pied);
+
+  function prixUnite(){ return p.formats[etat.f][1] + etat.sups.reduce(function(a,s){ return a + s.prix; }, 0); }
+  function maj(){ cta.textContent = 'Ajouter · ' + F(prixUnite() * etat.qte); }
+  maj();
+  ouvrir('#panneau-fiche');
+}
+
+/* ---------------------------------------------------------- panier / commande */
+function rendrePanier(){
+  var pan = $('#panneau-panier');
+  pan.innerHTML = '';
+
+  var tete = el('div','tete');
+  if (mobile()){
+    var ret = el('button','retour', FLECHE); ret.setAttribute('aria-label','Retour');
+    ret.onclick = function(){ if (S.etape === 'panier' || S.etape === 'confirme') ecran('accueil'); else reculerEtape(); };
+    tete.appendChild(ret);
+  }
+  var titres = {panier:'Votre panier', livraison:'Livraison', paiement:'Paiement', confirme:'Commande envoyée'};
+  var bloc = el('div');
+  bloc.appendChild(el('h3', null, titres[S.etape]));
+  if (S.etape === 'panier' && totalArticles()) bloc.appendChild(el('div','sous', totalArticles() + ' article' + (totalArticles()>1?'s':'')));
+  if (S.etape === 'confirme' && S.ref) bloc.appendChild(el('div','sous', S.ref));
+  tete.appendChild(bloc);
+  pan.appendChild(tete);
+
+  var dd = el('div','dedans');
+  var pied = el('div','pied');
+
+  if (S.etape === 'confirme'){ vueConfirme(dd, pied); }
+  else if (!S.panier.length){ vueVide(dd, pied); }
+  else if (S.etape === 'panier'){ vuePanier(dd, pied); }
+  else if (S.etape === 'livraison'){ vueLivraison(dd, pied); }
+  else if (S.etape === 'paiement'){ vuePaiement(dd, pied); }
+
+  pan.appendChild(dd); pan.appendChild(pied);
+}
+
+function filEtapes(actif){
+  var f = el('div','fil');
+  [['panier','1','Panier'],['livraison','2','Livraison'],['paiement','3','Paiement']].forEach(function(e,i){
+    var ordre = ['panier','livraison','paiement'];
+    var etat = ordre.indexOf(e[0]) < ordre.indexOf(actif) ? 'ok' : (e[0] === actif ? 'on' : '');
+    var b = el('span','e ' + etat, '<span class="p">' + (etat === 'ok' ? '✓' : e[1]) + '</span>' + e[2]);
+    f.appendChild(b);
+    if (i < 2) f.appendChild(el('span','tr'));
+  });
+  return f;
+}
+
+function vueVide(dd, pied){
+  dd.appendChild(el('div','vide',
+    '<span class="ic"><svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7zM9 8V6a3 3 0 0 1 6 0v2"/></svg></span>' +
+    'Votre panier est vide.<br>La commande de demain se prépare ce soir.'));
+  var b = el('button','btn creux plein'); b.textContent = 'Parcourir la carte';
+  b.onclick = function(){ ecran('accueil'); var c = categoriesActives()[0]; if (c) allerSection('sec-' + c.id); };
+  pied.appendChild(b);
+}
+
+function vuePanier(dd, pied){
+  var reste = T.boutique.seuilLivraisonOfferte - sousTotal();
+  var j = el('div');
+  j.appendChild(el('div','jauge-tx', reste > 0
+    ? 'Plus que <b>' + F(reste) + '</b> pour la livraison offerte'
+    : '<b>Livraison offerte</b> — seuil atteint'));
+  j.appendChild(el('div','jauge','<i style="width:' + Math.min(100, Math.round(sousTotal()/T.boutique.seuilLivraisonOfferte*100)) + '%"></i>'));
+  dd.appendChild(j);
+
+  var liste = el('div');
+  S.panier.forEach(function(l){
+    var a = el('div','art');
+    var im = el('img','v'); im.src = T.img(l.img); im.alt = ''; a.appendChild(im);
+    var t = el('div');
+    t.appendChild(el('div','n', l.nom));
+    t.appendChild(el('div','o', [l.fmt, l.sup, l.note].filter(Boolean).join(' · ')));
+    var cpt = el('div','compteur'); cpt.style.marginTop = '7px';
+    var m = el('button', null, '−'); var n = el('b', null, String(l.qte)); var p = el('button', null, '+');
+    m.setAttribute('aria-label','Retirer un ' + l.nom); p.setAttribute('aria-label','Ajouter un ' + l.nom);
+    m.onclick = function(){ l.qte--; if (l.qte <= 0) S.panier = S.panier.filter(function(x){ return x !== l; }); sauver(); };
+    p.onclick = function(){ l.qte++; sauver(); };
+    cpt.appendChild(m); cpt.appendChild(n); cpt.appendChild(p);
+    t.appendChild(cpt);
+    a.appendChild(t);
+    a.appendChild(el('div','p','<div class="px">' + F(l.prix * l.qte) + '</div>'));
+    liste.appendChild(a);
+  });
+  dd.appendChild(liste);
+
+  var add = el('div','addition');
+  add.appendChild(el('div', null, '<span>Sous-total</span><span>' + F(sousTotal()) + '</span>'));
+  add.appendChild(el('div', null, '<span>Livraison · ' + T.zone(S.zone).nom + '</span><span>' + (frais() ? F(frais()) : 'Offerte') + '</span>'));
+  add.appendChild(el('div','tot','<span>Total</span><span>' + F(total()) + '</span>'));
+  pied.appendChild(add);
+  var b = el('button','btn plein grand');
+  b.textContent = 'Commander · ' + F(total());
+  b.onclick = function(){ S.etape = 'livraison'; rendrePanier(); };
+  pied.appendChild(b);
+}
+
+function vueLivraison(dd, pied){
+  dd.appendChild(filEtapes('livraison'));
+
+  var j = el('div','champ');
+  j.appendChild(el('span','lab','Jour de livraison'));
+  j.appendChild(el('div','bloc','<div style="padding:12px 14px;font-size:13.5px">' +
+    '<b style="font-family:var(--titre)">' + D.long.charAt(0).toUpperCase() + D.long.slice(1) + '</b>' +
+    '<div style="color:var(--doux);font-size:12px;margin-top:2px">Commandes closes à 21h ce soir</div></div>'));
+  dd.appendChild(j);
+
+  var c = el('div','champ');
+  c.appendChild(el('span','lab','Créneau'));
+  var ch = el('div','choix');
+  T.creneaux.forEach(function(x){
+    var b = el('button', null, x.nom + (x.type === 'gouter' ? ' <span class="px">goûter</span>' : ''));
+    b.setAttribute('aria-pressed', S.creneau === x.id);
+    b.onclick = function(){ S.creneau = x.id; sauver(); rendrePanier(); };
+    ch.appendChild(b);
+  });
+  c.appendChild(ch); dd.appendChild(c);
+
+  var z = el('div','champ');
+  z.appendChild(el('span','lab','Quartier'));
+  var cz = el('div','choix');
+  T.zones.forEach(function(x){
+    var b = el('button', null, x.nom + '<span class="px">' + F(x.frais) + '</span>');
+    b.setAttribute('aria-pressed', S.zone === x.id);
+    b.onclick = function(){ S.zone = x.id; S.position = null; sauver(); rendrePanier(); };
+    cz.appendChild(b);
+  });
+  z.appendChild(cz); dd.appendChild(z);
+
+  var m = el('div','champ');
+  m.appendChild(el('span','lab','Point de livraison — déplacez le repère'));
+  var carte = el('div'); carte.id = 'carte-map';
+  m.appendChild(carte);
+  m.appendChild(el('span','aide','Carte OpenStreetMap, gratuite et sans clé d’API.'));
+  dd.appendChild(m);
+
+  var a = el('div','champ');
+  a.appendChild(el('label','lab','Adresse et repères'));
+  var ia = el('input'); ia.type = 'text'; ia.value = S.adresse;
+  ia.oninput = function(){ S.adresse = ia.value; };
+  a.appendChild(ia); dd.appendChild(a);
+
+  var n = el('div','champ');
+  n.appendChild(el('label','lab','Nom'));
+  var inom = el('input'); inom.type = 'text'; inom.value = S.nom;
+  inom.oninput = function(){ S.nom = inom.value; };
+  n.appendChild(inom); dd.appendChild(n);
+
+  var tl = el('div','champ');
+  tl.appendChild(el('label','lab','Téléphone'));
+  var it = el('input'); it.type = 'tel'; it.value = S.tel;
+  it.oninput = function(){ S.tel = it.value; };
+  tl.appendChild(it); dd.appendChild(tl);
+
+  var b = el('button','btn plein grand'); b.textContent = 'Continuer';
+  b.onclick = function(){ S.etape = 'paiement'; sauver(); rendrePanier(); };
+  pied.appendChild(b);
+  var r = el('button','btn creux plein'); r.textContent = 'Retour au panier';
+  r.onclick = function(){ S.etape = 'panier'; rendrePanier(); };
+  pied.appendChild(r);
+
+  setTimeout(monterCarte, 60);
+}
+
+var carteL = null, marqueur = null;
+function monterCarte(){
+  var noeud = document.getElementById('carte-map');
+  if (!noeud) return;
+  if (!window.L){ noeud.innerHTML = '<div class="vide" style="padding:26px">Carte indisponible hors connexion.</div>'; return; }
+  var pos = S.position || T.zone(S.zone).position;
+  if (carteL){ try{ carteL.remove(); }catch(e){} carteL = null; }
+  carteL = L.map(noeud, {zoomControl:false, attributionControl:false}).setView(pos, 15);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}).addTo(carteL);
+  marqueur = L.marker(pos, {draggable:true}).addTo(carteL);
+  marqueur.on('dragend', function(){
+    var p = marqueur.getLatLng();
+    S.position = [p.lat, p.lng];
+    T.ecrire('position', S.position);
+    avis('Point de livraison enregistré');
+  });
+  setTimeout(function(){ carteL.invalidateSize(); }, 120);
+}
+
+function vuePaiement(dd, pied){
+  dd.appendChild(filEtapes('paiement'));
+  var m = el('div','moyens');
+  T.paiements.forEach(function(p){
+    var lab = el('label', S.paiement === p.id ? 'choisi' : '');
+    var r = el('input'); r.type = 'radio'; r.name = 'paiement'; r.checked = S.paiement === p.id;
+    r.onchange = function(){ S.paiement = p.id; sauver(); rendrePanier(); };
+    var img = el('img'); img.src = p.logo; img.alt = '';
+    lab.appendChild(r); lab.appendChild(img);
+    lab.appendChild(el('span','tx','<b>' + p.nom + '</b><span>' + p.aide + '</span>'));
+    m.appendChild(lab);
+  });
+  dd.appendChild(m);
+
+  var rec = el('div','addition');
+  rec.appendChild(el('div', null, '<span>' + totalArticles() + ' articles</span><span>' + F(sousTotal()) + '</span>'));
+  rec.appendChild(el('div', null, '<span>Livraison ' + T.zone(S.zone).nom + '</span><span>' + (frais() ? F(frais()) : 'Offerte') + '</span>'));
+  rec.appendChild(el('div', null, '<span>' + D.court + ' · ' + T.creneau(S.creneau).nom + '</span><span></span>'));
+  rec.appendChild(el('div','tot','<span>Total</span><span>' + F(total()) + '</span>'));
+  dd.appendChild(rec);
+
+  dd.appendChild(el('p','vide','Aucun paiement n’est débité ici : la boutique confirme d’abord la commande sur WhatsApp.'));
+
+  var b = el('button','btn vert plein grand');
+  b.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm5.6 14.1c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.7-.1-.4-.1-.9-.3-1.6-.6-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.4-1.1-2.7s.7-1.9 1-2.2c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5s.8 1.9.8 2 .1.3 0 .5c-.1.2-.2.3-.3.5l-.4.5c-.2.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1s.7-.8.9-1.1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg> Envoyer la commande · ' + F(total());
+  b.onclick = envoyer;
+  pied.appendChild(b);
+  var r2 = el('button','btn creux plein'); r2.textContent = 'Retour';
+  r2.onclick = function(){ S.etape = 'livraison'; rendrePanier(); };
+  pied.appendChild(r2);
+}
+
+function envoyer(){
+  if (!S.panier.length) return;
+  var cmd = {
+    ref: T.nouvelleRef(),
+    creele: new Date().toISOString(),
+    client: {nom:S.nom, tel:S.tel, id:(compte && compte.id) || 'invite'},
+    zone: S.zone, adresse: S.adresse, position: S.position,
+    creneau: S.creneau, jourLivraison: D.livraison.toISOString(),
+    lignes: S.panier.map(function(l){ return {id:l.id, nom:l.nom, img:l.img, fmt:l.fmt, sup:l.sup, prix:l.prix, qte:l.qte, note:l.note}; }),
+    sousTotal: sousTotal(), frais: frais(), total: total(),
+    paiement: S.paiement, statut: 'recue', canal: 'app',
+    journal: [{quand:new Date().toISOString(), quoi:'recue'}]
+  };
+  T.enregistrerCommande(cmd);
+  /* le stock diminue comme dans la vraie vie */
+  S.panier.forEach(function(l){
+    var p = T.produits[l.id];
+    if (p && p.stock != null) T.majStock(l.id, p.stock - l.qte);
+  });
+  S.ref = cmd.ref; T.ecrire('refEnCours', cmd.ref);
+  S.etape = 'confirme';
+  S.panier = [];
+  sauver();
+  avis('Commande envoyée à Tela Castel');
+}
+
+function commandeCourante(){
+  if (!S.ref) return null;
+  return T.commandes().filter(function(c){ return c.ref === S.ref; })[0] || null;
+}
+
+function vueConfirme(dd, pied){
+  var cmd = commandeCourante();
+  if (!cmd){ S.etape = 'panier'; rendrePanier(); return; }
+  var st = T.statuts[cmd.statut] || T.statuts.recue;
+
+  dd.appendChild(el('div','bloc','<div style="padding:14px 16px">' +
+    '<div style="display:flex;align-items:center;gap:9px"><span class="etq ' + st.couleur + '"><span class="pt"></span>' + st.nom + '</span>' +
+    '<span style="margin-left:auto;font-size:12px;color:var(--doux)">' + T.heure(cmd.creele) + '</span></div>' +
+    '<div style="margin-top:10px;font-size:13.5px">' + st.client + '</div>' +
+    '<div style="font-size:12px;color:var(--doux);margin-top:3px">Livraison ' + D.long + ' · ' + T.creneau(cmd.creneau).nom + '</div></div>'));
+
+  var suivi = el('div');
+  T.ordreStatuts.forEach(function(cle, i){
+    var e = T.statuts[cle];
+    var etat = (cmd.statut === 'refusee') ? '' : (e.etape < st.etape ? 'ok' : (e.etape === st.etape ? 'now' : ''));
+    var w = el('div','pas ' + etat);
+    var rep = el('div','rep'); rep.appendChild(el('div','pt'));
+    if (i < T.ordreStatuts.length - 1) rep.appendChild(el('div','fil2'));
+    w.appendChild(rep);
+    w.appendChild(el('div','t','<b>' + e.nom + '</b><p>' + (etat ? e.client : '—') + '</p>'));
+    suivi.appendChild(w);
+  });
+  dd.appendChild(suivi);
+
+  dd.appendChild(ticket(cmd));
+
+  var wa = el('a','btn vert plein');
+  wa.href = T.lienWhatsApp(cmd); wa.target = '_blank'; wa.rel = 'noopener';
+  wa.innerHTML = 'Ouvrir le message WhatsApp';
+  pied.appendChild(wa);
+  var nb = el('button','btn creux plein'); nb.textContent = 'Nouvelle commande';
+  nb.onclick = function(){ S.ref = null; T.ecrire('refEnCours', null); S.etape = 'panier'; rendrePanier(); ecran('accueil'); };
+  pied.appendChild(nb);
+}
+
+function ticket(cmd){
+  var z = T.zone(cmd.zone), c = T.creneau(cmd.creneau), p = T.paiement(cmd.paiement);
+  var t = el('div','ticket'); t.style.maxWidth = 'none';
+  var tete = el('div','tete');
+  tete.innerHTML = '<img src="img/logo.png" alt=""><b>TELA CASTEL</b><span>' + T.boutique.adresse + '</span><span>' + T.boutique.tel + '</span>';
+  t.appendChild(tete);
+  t.appendChild(el('div','traits'));
+  t.appendChild(el('div','l','<span>Commande</span><span>' + cmd.ref + '</span>'));
+  t.appendChild(el('div','l','<span>Passée le</span><span>' + T.dateCourte(cmd.creele) + ' ' + T.heure(cmd.creele) + '</span>'));
+  t.appendChild(el('div','l','<span>Livraison</span><span>' + T.dateCourte(cmd.jourLivraison) + ' · ' + c.nom + '</span>'));
+  t.appendChild(el('div','l','<span>Client</span><span>' + cmd.client.nom + '</span>'));
+  t.appendChild(el('div','traits'));
+  cmd.lignes.forEach(function(l){
+    t.appendChild(el('div','l','<span>' + l.qte + ' × ' + l.nom +
+      '<em>' + [l.fmt, l.sup, l.note].filter(Boolean).join(' · ') + '</em></span><span>' + F(l.prix * l.qte) + '</span>'));
+  });
+  t.appendChild(el('div','traits'));
+  t.appendChild(el('div','l','<span>Sous-total</span><span>' + F(cmd.sousTotal) + '</span>'));
+  t.appendChild(el('div','l','<span>Livraison ' + z.nom + '</span><span>' + (cmd.frais ? F(cmd.frais) : 'offerte') + '</span>'));
+  t.appendChild(el('div','l tot','<span>TOTAL</span><span>' + F(cmd.total) + '</span>'));
+  t.appendChild(el('div','l','<span>Paiement</span><span>' + p.nom + '</span>'));
+  t.appendChild(el('div','pied','Merci et à demain matin.<br>Bien manger, un plaisir à partager.'));
+  return t;
+}
+
+/* ---------------------------------------------------------- compte */
+function rendreCompte(){
+  var pan = $('#panneau-compte');
+  pan.innerHTML = '';
+  var tete = el('div','tete');
+  var ret = el('button','retour', FLECHE); ret.setAttribute('aria-label','Retour'); ret.onclick = fermer;
+  tete.appendChild(ret);
+  tete.appendChild(el('div', null, '<h3>' + (compte ? 'Mon compte' : 'Se connecter') + '</h3>'));
+  pan.appendChild(tete);
+  var dd = el('div','dedans');
+  var pied = el('div','pied');
+
+  if (!compte){
+    var onglet = {v:'connexion'};
+    var ch = el('div','choix');
+    [['connexion','Connexion'],['inscription','Créer un compte']].forEach(function(o){
+      var b = el('button', null, o[1]);
+      b.setAttribute('aria-pressed', onglet.v === o[0]);
+      b.onclick = function(){ onglet.v = o[0]; rendreFormulaire(); Array.prototype.forEach.call(ch.children, function(x,i){ x.setAttribute('aria-pressed', i === (o[0]==='connexion'?0:1)); }); };
+      ch.appendChild(b);
+    });
+    dd.appendChild(ch);
+    var form = el('div'); form.style.cssText = 'display:grid;gap:12px';
+    dd.appendChild(form);
+
+    function rendreFormulaire(){
+      form.innerHTML = '';
+      if (onglet.v === 'inscription'){
+        form.appendChild(champ('Nom complet', 'text', 'nom', S.nom));
+        form.appendChild(champ('Téléphone', 'tel', 'tel', S.tel));
+        form.appendChild(champ('Quartier', 'text', 'zone', T.zone(S.zone).nom));
+      } else {
+        form.appendChild(champ('Téléphone', 'tel', 'tel', S.tel));
+      }
+      form.appendChild(champ('Code à 4 chiffres', 'password', 'code', ''));
+      form.appendChild(el('p','aide','Maquette : n’importe quel code fonctionne. En vrai, un code arrive par SMS ou WhatsApp.'));
+    }
+    rendreFormulaire();
+
+    var b = el('button','btn plein grand');
+    b.textContent = 'Continuer';
+    b.onclick = function(){
+      var nom = ($('#ch-nom') && $('#ch-nom').value) || S.nom;
+      var tel = ($('#ch-tel') && $('#ch-tel').value) || S.tel;
+      compte = {id:'c-local', nom:nom, tel:tel, depuis:new Date().toISOString(), fidelite:0};
+      T.connexion(compte);
+      S.nom = nom; S.tel = tel;
+      avis('Bienvenue, ' + nom.split(' ')[0]);
+      rendreCompte();
+    };
+    pied.appendChild(b);
+    pan.appendChild(dd); pan.appendChild(pied);
+    return;
+  }
+
+  /* connecté */
+  dd.appendChild(el('div','bloc','<div style="padding:16px;display:flex;align-items:center;gap:13px">' +
+    '<span style="width:46px;height:46px;border-radius:50%;background:var(--or-doux);display:grid;place-items:center;' +
+    'font-family:var(--titre);font-weight:700;font-size:18px;color:var(--or-fonce)">' + compte.nom.charAt(0) + '</span>' +
+    '<div><b style="font-family:var(--titre);font-size:16px">' + compte.nom + '</b>' +
+    '<div style="font-size:12.5px;color:var(--doux)">' + compte.tel + '</div></div></div>'));
+
+  var fid = (compte.fidelite || 0);
+  dd.appendChild(el('div','bloc','<div style="padding:14px 16px">' +
+    '<div style="font-size:12px;color:var(--doux)">Carte de fidélité</div>' +
+    '<div style="display:flex;gap:6px;margin-top:9px">' +
+    [0,1,2,3,4,5,6,7].map(function(i){
+      return '<span style="width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:11px;' +
+        'background:' + (i < fid ? 'var(--or)' : 'var(--surface-3)') + ';color:' + (i < fid ? '#241A12' : 'var(--doux)') + '">' +
+        (i < fid ? '✓' : (i+1)) + '</span>';
+    }).join('') + '</div>' +
+    '<div style="font-size:12px;color:var(--doux);margin-top:9px">8 commandes = un dêguê offert. Encore ' + Math.max(0, 8-fid) + '.</div></div>'));
+
+  var mesCmds = T.commandes().filter(function(c){ return c.client.tel === compte.tel; });
+  dd.appendChild(el('div','lab','Mes commandes'));
+  if (!mesCmds.length) dd.appendChild(el('p','vide','Aucune commande pour l’instant.'));
+  mesCmds.slice(0,6).forEach(function(c){
+    var st = T.statuts[c.statut] || T.statuts.recue;
+    var b = el('button','bloc');
+    b.style.cssText = 'padding:13px 15px;text-align:left;display:block;width:100%';
+    b.innerHTML = '<div style="display:flex;align-items:center;gap:10px">' +
+      '<b style="font-family:var(--titre);font-size:14px">' + c.ref + '</b>' +
+      '<span class="etq ' + st.couleur + '">' + st.nom + '</span>' +
+      '<span style="margin-left:auto;font-family:var(--titre);font-weight:700">' + F(c.total) + '</span></div>' +
+      '<div style="font-size:12px;color:var(--doux);margin-top:4px">' + T.dateCourte(c.creele) + ' · ' +
+      c.lignes.length + ' article' + (c.lignes.length>1?'s':'') + ' · ' + T.zone(c.zone).nom + '</div>';
+    b.onclick = function(){ S.ref = c.ref; T.ecrire('refEnCours', c.ref); S.etape = 'confirme'; rendrePanier(); ecran('panier'); };
+    dd.appendChild(b);
+  });
+
+  dd.appendChild(el('div','lab','Adresse enregistrée'));
+  dd.appendChild(el('div','bloc','<div style="padding:13px 15px;font-size:13px">' + T.zone(S.zone).nom + '<br>' +
+    '<span style="color:var(--doux);font-size:12px">' + S.adresse + '</span></div>'));
+
+  var d = el('button','btn creux plein'); d.textContent = 'Se déconnecter';
+  d.onclick = function(){ T.deconnexion(); compte = null; avis('Déconnecté'); rendreCompte(); };
+  pied.appendChild(d);
+  pan.appendChild(dd); pan.appendChild(pied);
+}
+function champ(lab, type, id, valeur){
+  var c = el('div','champ');
+  c.appendChild(el('label','lab', lab));
+  var i = el('input'); i.type = type; i.id = 'ch-' + id; i.value = valeur || '';
+  c.appendChild(i);
+  return c;
+}
+
+/* ---------------------------------------------------------- boutique */
+function rendreInfos(){
+  var pan = $('#panneau-infos');
+  pan.innerHTML = '';
+  var tete = el('div','tete');
+  var ret = el('button','retour', FLECHE); ret.setAttribute('aria-label','Retour'); ret.onclick = fermer;
+  tete.appendChild(ret);
+  tete.appendChild(el('div', null, '<h3>La boutique</h3>'));
+  pan.appendChild(tete);
+  var dd = el('div','dedans');
+
+  dd.appendChild(el('div','bloc','<div style="padding:16px">' +
+    '<b style="font-family:var(--titre);font-size:17px">Tela Castel</b>' +
+    '<div style="font-size:13px;color:var(--doux);margin-top:4px">' + T.boutique.slogan + '</div>' +
+    '<div style="font-size:13px;margin-top:12px">' + T.boutique.adresse + '<br>' + T.boutique.ville + '</div>' +
+    '<a class="btn creux plein" style="margin-top:12px" href="tel:' + T.boutique.tel.replace(/ /g,'') + '">Appeler ' + T.boutique.tel + '</a>' +
+    '</div>'));
+
+  dd.appendChild(el('div','lab','Horaires'));
+  dd.appendChild(el('div','bloc','<div style="padding:6px 0">' + T.boutique.horaires.map(function(h){
+    return '<div style="padding:9px 16px;font-size:13px;border-bottom:var(--ep-bord) solid var(--bord)">' + h + '</div>';
+  }).join('') + '<div style="padding:9px 16px;font-size:13px;color:var(--doux)">Commandes jusqu’à 21h pour le lendemain</div></div>'));
+
+  dd.appendChild(el('div','lab','Zones et frais de livraison'));
+  var z = el('div','bloc'); z.style.overflow = 'hidden';
+  var tb = el('table','tabl');
+  tb.innerHTML = '<thead><tr><th>Quartier</th><th>Frais</th><th>Délai</th></tr></thead><tbody>' +
+    T.zones.map(function(x){ return '<tr><td>' + x.nom + '</td><td>' + F(x.frais) + '</td><td style="color:var(--doux)">' + x.delai + '</td></tr>'; }).join('') +
+    '</tbody>';
+  z.appendChild(tb); dd.appendChild(z);
+  dd.appendChild(el('p','aide','Livraison offerte dès ' + F(T.boutique.seuilLivraisonOfferte) + ' de commande.'));
+
+  dd.appendChild(el('div','lab','Moyens de paiement'));
+  var m = el('div','moyens');
+  T.paiements.forEach(function(p){
+    m.appendChild(el('div','bloc','<div style="padding:11px 13px;display:flex;align-items:center;gap:12px">' +
+      '<img src="' + p.logo + '" alt="" style="height:26px"><div><b style="font-size:13.5px;font-weight:500">' + p.nom + '</b>' +
+      '<div style="font-size:11.5px;color:var(--doux)">' + p.aide + '</div></div></div>'));
+  });
+  dd.appendChild(m);
+
+  dd.appendChild(el('div','lab','Apparence'));
+  var th = el('div','choix');
+  [['clair','Clair'],['sombre','Sombre'],['cacao','Cacao']].forEach(function(o){
+    var b = el('button', null, o[1]);
+    b.setAttribute('aria-pressed', T.lire('theme','clair') === o[0]);
+    b.onclick = function(){
+      T.theme(o[0]);
+      Array.prototype.forEach.call(th.children, function(x,i){ x.setAttribute('aria-pressed', ['clair','sombre','cacao'][i] === o[0]); });
+      Array.prototype.forEach.call(document.querySelectorAll('#themes button'), function(x){ x.setAttribute('aria-pressed', x.dataset.th === o[0]); });
+    };
+    th.appendChild(b);
+  });
+  dd.appendChild(th);
+
+  dd.appendChild(el('p','aide','<a href="gestion.html" style="text-decoration:underline">Espace gestion</a> — maquette de la partie boutique.'));
+  pan.appendChild(dd);
+}
+
+/* ---------------------------------------------------------- panneaux & écrans */
+function ouvrir(sel){
+  fermer(true);
+  var p = $(sel);
+  p.classList.add('on');
+  if (!mobile()) $('#voile').classList.add('on');
+  document.body.style.overflow = mobile() ? 'hidden' : '';
+}
+function fermer(silencieux){
+  ['#panneau-fiche','#panneau-compte','#panneau-infos'].forEach(function(s){ $(s).classList.remove('on'); });
+  if (mobile()) $('#panneau-panier').classList.remove('on');
+  $('#voile').classList.remove('on');
+  document.body.style.overflow = '';
+  if (!silencieux){ S.ecran = 'accueil'; majNav(); }
+}
+function ecran(nom){
+  S.ecran = nom;
+  if (nom === 'accueil'){ fermer(true); }
+  else if (nom === 'panier'){ rendrePanier(); if (mobile()) ouvrir('#panneau-panier'); else $('#panneau-panier').scrollIntoView({behavior:'smooth',block:'nearest'}); }
+  else if (nom === 'compte'){ rendreCompte(); ouvrir('#panneau-compte'); }
+  else if (nom === 'infos'){ rendreInfos(); ouvrir('#panneau-infos'); }
+  majNav();
+}
+function majNav(){
+  Array.prototype.forEach.call(document.querySelectorAll('.nav-flot button'), function(b){
+    b.classList.toggle('on', b.dataset.ecran === S.ecran);
+  });
+}
+function reculerEtape(){
+  S.etape = S.etape === 'paiement' ? 'livraison' : 'panier';
+  rendrePanier();
+}
+
+/* ---------------------------------------------------------- section courante */
+function hautBarre(){ var b = $('.bar'); return b ? b.offsetHeight : 66; }
+function marquerActif(){
+  Array.prototype.forEach.call(document.querySelectorAll('.col-nav a'), function(a){
+    a.classList.toggle('actif', a.dataset.cible === S.sectionActive);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.rail button'), function(b){
+    b.setAttribute('aria-pressed', b.dataset.cible === S.sectionActive);
+  });
+}
+function spy(){
+  var secs = document.querySelectorAll('.sec');
+  if (!secs.length) return;
+  var limite = hautBarre() + (mobile() ? 74 : 24);
+  var courant = secs[0].id;
+  for (var i = 0; i < secs.length; i++){
+    if (secs[i].id && secs[i].getBoundingClientRect().top <= limite) courant = secs[i].id;
+  }
+  if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 40) courant = secs[secs.length-1].id || courant;
+  if (courant !== S.sectionActive){ S.sectionActive = courant; marquerActif(); }
+}
+
+/* ---------------------------------------------------------- divers */
+var minuteurAvis;
+function avis(txt){
+  var a = $('#avis'); a.textContent = txt; a.classList.add('on');
+  clearTimeout(minuteurAvis);
+  minuteurAvis = setTimeout(function(){ a.classList.remove('on'); }, 2300);
+}
+function chrono(){
+  var ms = D.resteMs();
+  var h = Math.floor(ms/36e5), m = Math.floor(ms%36e5/6e4), s = Math.floor(ms%6e4/1000);
+  $('#chrono').textContent = h > 0 ? h + 'h' + String(m).padStart(2,'0') : m + 'min ' + String(s).padStart(2,'0');
+}
+function rendreTout(){
+  var n = totalArticles();
+  $('#btnPanierN').textContent = n;
+  $('#btnPanierTx').textContent = n ? F(total()) : 'Panier';
+  var nn = $('#navN'); nn.hidden = !n; nn.textContent = n;
+  $('#zoneNom').textContent = T.zone(S.zone).nom;
+  rendreMenu(); rendrePanier();
+}
+
+/* ---------------------------------------------------------- animations */
+function animations(){
+  var reduit = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduit){
+    Array.prototype.forEach.call(document.querySelectorAll('.rv'), function(e){ e.classList.add('vu'); });
+    return;
+  }
+  /* défilement adouci — la sensation « lourde » demandée, bureau seulement */
+  if (window.Lenis && !mobile()){
+    var lenis = new window.Lenis({duration:1.25, easing:function(t){ return Math.min(1, 1.001 - Math.pow(2, -10*t)); },
+      smoothWheel:true, syncTouch:false});
+    function boucle(t){ lenis.raf(t); requestAnimationFrame(boucle); }
+    requestAnimationFrame(boucle);
+    lenis.on('scroll', function(){ spy(); if (window.ScrollTrigger) window.ScrollTrigger.update(); });
+  }
+  if (window.gsap && window.ScrollTrigger){
+    gsap.registerPlugin(ScrollTrigger);
+    gsap.to('#banniereImg', {yPercent:8, ease:'none',
+      scrollTrigger:{trigger:'.banniere', start:'top top', end:'bottom top', scrub:true}});
+    ScrollTrigger.batch('.sec', {
+      start:'top 88%',
+      onEnter:function(lot){ gsap.fromTo(lot, {opacity:0, y:18}, {opacity:1, y:0, duration:.6, stagger:.08, ease:'power2.out', overwrite:true}); }
+    });
+  }
+}
+
+/* ---------------------------------------------------------- branchements */
+$('#btnPanier').onclick = function(){ ecran('panier'); };
+$('#btnCompte').onclick = function(){ ecran('compte'); };
+$('#btnAdresse').onclick = function(){ S.etape = 'livraison'; ecran('panier'); };
+$('#voile').onclick = function(){ fermer(); };
+$('#q').oninput = function(){ S.q = this.value.trim(); rendreMenu(); };
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape') fermer(); });
+Array.prototype.forEach.call(document.querySelectorAll('.nav-flot button'), function(b){
+  b.onclick = function(){ ecran(b.dataset.ecran); };
+});
+
+/* la barre flottante s'efface quand on descend, revient quand on remonte */
+var dernierY = 0;
+window.addEventListener('scroll', function(){
+  var y = window.scrollY;
+  var nav = $('#navFlot');
+  if (mobile() && S.ecran === 'accueil'){
+    nav.classList.toggle('cache', y > dernierY + 6 && y > 200);
+  } else nav.classList.remove('cache');
+  dernierY = y;
+  spy();
+}, {passive:true});
+
+window.addEventListener('resize', function(){ rendrePanier(); });
+
+/* le back-office change un statut ou le stock : l'app se met à jour, même dans un autre onglet */
+window.addEventListener('storage', function(e){
+  if (!e.key || e.key.indexOf('tela.') !== 0) return;
+  T.recharger();
+  if (e.key === 'tela.commandes' && S.etape === 'confirme') rendrePanier();
+  if (e.key === 'tela.produits' || e.key === 'tela.categories'){ rendreRail(); rendreMenu(); }
+});
+window.addEventListener('tela:maj', function(){ /* même onglet : déjà géré par sauver() */ });
+
+/* ---------------------------------------------------------- démarrage */
+$('#infoJour').textContent = D.court;
+$('#rappelLong').textContent = 'Commandez aujourd’hui avant 21h, vous êtes livré ' + D.long + ' au créneau de votre choix.';
+$('#rappelCourt').textContent = 'Livraison ' + D.long;
+$('#piedTel').textContent = T.boutique.tel;
+$('#piedVille').textContent = T.boutique.ville;
+$('#piedHoraires').innerHTML = T.boutique.horaires.map(function(h){ return '<li>' + h + '</li>'; }).join('');
+if (S.ref && commandeCourante()) S.etape = 'confirme';
+
+rendreRail(); rendreTout(); chrono(); spy(); majNav();
+setInterval(chrono, 1000);
+window.addEventListener('load', animations);
+})();
