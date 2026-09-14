@@ -14,7 +14,9 @@ const VIDE = { commandes: [], produits: null, categories: null, maj: 0 };
 
 async function lire(){
   try {
-    const r = await get(CHEMIN);
+    /* useCache:false : sans cela on lirait la version servie par le CDN,
+       et une commande tout juste passée resterait invisible. */
+    const r = await get(CHEMIN, { access: 'private', useCache: false });
     if (!r) return { ...VIDE };
     const texte = await new Response(r.stream ?? r.blob ?? r.body).text();
     return { ...VIDE, ...JSON.parse(texte) };
