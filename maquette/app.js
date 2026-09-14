@@ -1513,6 +1513,124 @@ function majDevis(){
     (PL.personnes < 30 ? ', et à partir de 30 personnes la remise groupe s\u2019applique.' : '.') + '</div>';
 }
 
+/* ---------------------------------------------------------- écran d'accueil
+   Mobile seulement : la carte devient un onglet à part, et l'accueil
+   répond aux trois questions du matin — où je livre, quand ça ferme,
+   qu'est-ce que je reprends.                                            */
+var IC_ACC = {
+  cloche:'<svg viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 13 6 9z"/><path d="M10 18a2 2 0 0 0 4 0"/></svg>',
+  loupe:'<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>',
+  repeter:'<svg viewBox="0 0 24 24"><path d="M4 11a7 7 0 0 1 12-4.9L19 9"/><path d="M19 4v5h-5"/><path d="M20 13a7 7 0 0 1-12 4.9L5 15"/><path d="M5 20v-5h5"/></svg>',
+  plateau:'<svg viewBox="0 0 24 24"><path d="M4 14h16M6 14a6 6 0 0 1 12 0M3 18h18M12 5v3"/></svg>'
+};
+function rendreAccueil(){
+  var z = $('#ecranAccueil'); if (!z) return;
+  z.innerHTML = '';
+
+  /* en-tête jaune */
+  var tete = el('section','ac-tete');
+  var haut = el('div','ac-haut');
+  var liv = el('button','ac-livrer');
+  liv.innerHTML = '<span class="l">LIVRER À</span><span class="z">' + T.zone(S.zone).nom + ' ▾</span>';
+  liv.onclick = function(){ S.etape = 'livraison'; ecran('panier'); };
+  haut.appendChild(liv);
+  var act = el('div','ac-actions');
+  var cl = el('button'); cl.setAttribute('aria-label','Notifications');
+  cl.innerHTML = IC_ACC.cloche + (commandeActive() ? '<span class="pastille"></span>' : '');
+  cl.onclick = function(){ var c = commandeActive(); if (!c){ avis('Aucune commande en cours'); return; }
+    S.ref = c.ref; T.ecrire('refEnCours', c.ref); S.etape = 'confirme'; rendrePanier(); ecran('panier'); };
+  act.appendChild(cl);
+  var moi = el('button','moi');
+  moi.textContent = compte ? compte.nom.split(' ').map(function(m){ return m.charAt(0); }).join('').slice(0,2).toUpperCase() : '·';
+  moi.setAttribute('aria-label','Compte');
+  moi.onclick = function(){ ecran('compte'); };
+  act.appendChild(moi);
+  haut.appendChild(act);
+  tete.appendChild(haut);
+  tete.appendChild(el('h1', null, 'Bien manger,<br>un plaisir à partager'));
+  tete.appendChild(el('div','sous','Votre petit déjeuner préféré, livré chez vous.'));
+  var cta = el('button','ac-cta', 'Commander maintenant →');
+  cta.onclick = function(){ ecran('carte'); };
+  tete.appendChild(cta);
+  z.appendChild(tete);
+
+  /* recherche à cheval */
+  var rech = el('div','ac-rech');
+  var br = el('button');
+  br.innerHTML = IC_ACC.loupe + '<span>Rechercher un plat, une boisson…</span>';
+  br.onclick = function(){ ecran('carte'); setTimeout(function(){ var c = $('#recherche'); if (c) c.focus(); }, 260); };
+  rech.appendChild(br);
+  z.appendChild(rech);
+
+  /* service du jour */
+  var ouvert = D.resteMs() > 0;
+  var sv = el('section','ac-service');
+  sv.innerHTML =
+    '<div class="etat">' + (ouvert ? '<span class="pt"></span>' : '') +
+    '<b>' + (ouvert ? 'Commandes ouvertes' : 'Commandes closes pour ce matin') + '</b></div>' +
+    '<div class="quand">Livraison ' + D.long + ' dès 06h30</div>' +
+    '<div class="note">On cuisine le matin, pas la nuit.</div>' +
+    '<div class="bas"><div><div class="lab2">CLÔTURE DANS</div>' +
+    '<div class="cpt" id="cptAccueil">—</div></div>' +
+    '<button class="lien">Horaires</button></div>';
+  sv.querySelector('.lien').onclick = function(){ ecran('infos'); };
+  z.appendChild(sv);
+
+  /* deux raccourcis */
+  var duo = el('div','ac-duo');
+  var b1 = el('button');
+  b1.innerHTML = IC_ACC.repeter + '<span><b>Recommander</b><span>en un geste</span></span>';
+  b1.onclick = function(){ ecran('histo'); };
+  var b2 = el('button','or');
+  b2.innerHTML = IC_ACC.plateau + '<span><b>Plateaux</b><span>devis dès 8 pers.</span></span>';
+  b2.onclick = function(){ ecran('plateaux'); };
+  duo.appendChild(b1); duo.appendChild(b2);
+  z.appendChild(duo);
+
+  /* les rayons */
+  var sec = el('section','ac-sec');
+  var t = el('div','t');
+  t.innerHTML = '<b>La carte</b>';
+  var tout = el('button', null, 'Tout voir →');
+  tout.onclick = function(){ ecran('carte'); };
+  t.appendChild(tout);
+  sec.appendChild(t);
+  var ray = el('div','ac-rayons');
+  categoriesActives().forEach(function(c){
+    var b = el('button');
+    b.innerHTML = '<span class="ph"><img src="' + T.img(c.vignette) + '" alt="" loading="lazy"></span>' +
+      '<span class="n">' + c.nom + '</span><span class="q">' + produitsDe(c).length + ' produits</span>';
+    b.onclick = function(){ ecran('carte'); setTimeout(function(){ allerSection('sec-' + c.id); }, 240); };
+    ray.appendChild(b);
+  });
+  sec.appendChild(ray);
+  z.appendChild(sec);
+
+  /* les plus commandés : les produits étiquetés, sinon les premiers disponibles */
+  var vedettes = Object.keys(T.produits).filter(function(id){ return T.produits[id].tag && T.dispo(id); });
+  if (vedettes.length < 3){
+    Object.keys(T.produits).forEach(function(id){
+      if (vedettes.length < 3 && vedettes.indexOf(id) < 0 && T.dispo(id)) vedettes.push(id);
+    });
+  }
+  var top = el('section','ac-top');
+  top.appendChild(el('b', null, 'Les plus commandés'));
+  vedettes.slice(0,3).forEach(function(id){
+    var p = T.produits[id];
+    var l = el('button','ac-ligne');
+    l.innerHTML = '<span class="ph"><img src="' + T.img(p.img) + '" alt="" loading="lazy"></span>' +
+      '<span class="tx"><b>' + p.nom + '</b><span class="d">' + (p.tag || p.desc) + '</span>' +
+      '<span class="p">' + T.prixTxt(p) + '</span></span>' +
+      '<span class="plus">+</span>';
+    l.querySelector('.plus').onclick = function(e){ e.stopPropagation(); ajouter(id, 0, 1, [], ''); };
+    l.onclick = function(){ ouvrirFiche(id); };
+    top.appendChild(l);
+  });
+  z.appendChild(top);
+  z.appendChild(el('div','ac-pied'));
+  chrono();
+}
+
 function ouvrir(sel){
   fermer(true);
   var p = $(sel);
@@ -1529,8 +1647,11 @@ function fermer(silencieux){
   if (!silencieux){ S.ecran = 'accueil'; majNav(); }
 }
 function ecran(nom){
+  /* sur bureau il n'y a qu'une page : l'accueil EST la carte */
+  if (!mobile() && nom === 'carte') nom = 'accueil';
   S.ecran = nom;
-  if (nom === 'accueil'){ fermer(true); }
+  majEcranBase();
+  if (nom === 'accueil' || nom === 'carte'){ fermer(true); }
   else if (nom === 'panier'){ rendrePanier(); if (mobile()) ouvrir('#panneau-panier'); else $('#panneau-panier').scrollIntoView({behavior:'smooth',block:'nearest'}); }
   else if (nom === 'compte'){ rendreCompte(); ouvrir('#panneau-compte'); }
   else if (nom === 'infos'){ rendreInfos(); ouvrir('#panneau-infos'); }
@@ -1538,6 +1659,16 @@ function ecran(nom){
   else if (nom === 'plateaux'){ rendrePlateaux(); ouvrir('#panneau-plateaux'); }
   majNav();
 }
+/* Sur mobile, Accueil et Carte sont deux écrans ; sur bureau, un seul. */
+function majEcranBase(){
+  var z = $('#ecranAccueil'); if (!z) return;
+  var surAccueil = mobile() && S.ecran === 'accueil';
+  z.hidden = !surAccueil;
+  document.body.classList.toggle('ec-accueil', surAccueil);
+  document.body.classList.toggle('ec-carte', mobile() && S.ecran === 'carte');
+  if (surAccueil){ rendreAccueil(); window.scrollTo(0,0); }
+}
+
 function majNav(){
   majBarreTotal();
   majBandeau();
@@ -1577,6 +1708,13 @@ function avis(txt){
   minuteurAvis = setTimeout(function(){ a.classList.remove('on'); }, 2300);
 }
 function chrono(){
+  var ca = $('#cptAccueil');
+  if (ca){
+    var ms = D.resteMs(), h = Math.floor(ms/36e5), m = Math.floor(ms%36e5/6e4), sec = Math.floor(ms%6e4/1000);
+    ca.textContent = ms > 0
+      ? (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec
+      : 'Fermé';
+  }
   var ms = D.resteMs();
   var h = Math.floor(ms/36e5), m = Math.floor(ms%36e5/6e4), s = Math.floor(ms%6e4/1000);
   $('#chrono').textContent = h > 0 ? h + 'h' + String(m).padStart(2,'0') : m + 'min ' + String(s).padStart(2,'0');
@@ -1592,7 +1730,7 @@ function majBandeau(){
   var c = commandeActive();
   /* le bandeau ramène vers la commande depuis la carte ; ailleurs il gêne */
   var panneauOuvert = !!document.querySelector('.panneau.on:not(#panneau-panier)') ||
-                      (mobile() && S.ecran !== 'accueil');
+                      (mobile() && ['accueil','carte'].indexOf(S.ecran) < 0);
   var visible = !!c && S.etape !== 'confirme' && !panneauOuvert;
   b.hidden = !visible;
   document.body.classList.toggle('a-suivi', visible);
@@ -1609,7 +1747,7 @@ function majBandeau(){
 function majBarreTotal(){
   var n = totalArticles();
   var b = $('#barreTotal');
-  var visible = n > 0 && S.ecran === 'accueil' && mobile();
+  var visible = n > 0 && S.ecran === 'carte' && mobile();
   b.classList.toggle('on', visible);
   document.body.classList.toggle('a-total', visible);
   $('#btQte').textContent = n;
@@ -1750,7 +1888,10 @@ $('#piedVille').textContent = T.boutique.ville;
 $('#piedHoraires').innerHTML = T.boutique.horaires.map(function(h){ return '<li>' + h + '</li>'; }).join('');
 if (S.ref && commandeCourante()) S.etape = 'confirme';
 
-rendreRail(); rendreTout(); chrono(); spy(); majNav();
+rendreRail(); rendreTout(); chrono(); spy();
+S.ecran = mobile() ? 'accueil' : 'accueil';
+majEcranBase(); majNav();
+window.addEventListener('resize', majEcranBase);
 setInterval(chrono, 1000);
 window.addEventListener('load', animations);
 })();

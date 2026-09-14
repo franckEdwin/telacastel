@@ -592,6 +592,126 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
   [data-dessin="epure"] .compteur,
   [data-dessin="epure"] .form-pl label{border:0;border-radius:18px}
 }
+/* ============================================================
+   Version mobile — d'après la planche d'écrans validée
+   Couleurs, police et photos de la maison ; la mise en page vient
+   de la planche : en-tête jaune plein, compte à rebours dans un
+   bloc sombre, barre d'onglets pleine largeur à cinq entrées.
+   ============================================================ */
+@media (max-width:1099px){
+  [data-dessin="epure"]{--fond:#FFF8EE;--verre:rgba(255,248,238,.9);
+    --creme:#FBF1E0;--profond:#2E1F14;--or-encre:#2A1D0A}
+  [data-theme="sombre"][data-dessin="epure"]{--fond:#121011;--verre:rgba(18,16,17,.9);
+    --creme:#272220;--profond:#0D0B0A;--or-encre:#2A1D0A}
+
+  /* la page d'accueil n'a plus d'en-tête de site : l'écran commence en haut */
+  [data-dessin="epure"] body.ec-accueil .bar{display:none}
+  [data-dessin="epure"] body.ec-accueil .enveloppe{padding:0}
+  [data-dessin="epure"] body.ec-accueil #accueil > :not(#ecranAccueil){display:none}
+  [data-dessin="epure"] body.ec-carte .banniere,
+  [data-dessin="epure"] body.ec-carte .infos-b,
+  [data-dessin="epure"] body.ec-carte .rappel,
+  [data-dessin="epure"] body.ec-carte #acces{display:none}
+
+  /* --- en-tête jaune --- */
+  .ac-tete{background:var(--or);padding:calc(18px + env(safe-area-inset-top)) 20px 22px;
+    border-radius:0 0 30px 30px;color:var(--or-encre)}
+  .ac-haut{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .ac-livrer{display:flex;flex-direction:column;min-width:0}
+  .ac-livrer .l{font-size:10.5px;font-weight:700;letter-spacing:.11em;color:rgba(42,29,10,.6)}
+  .ac-livrer .z{font-family:var(--titre);font-weight:700;font-size:17px;text-align:left}
+  .ac-actions{display:flex;gap:9px;flex:none}
+  .ac-actions button{width:44px;height:44px;border-radius:15px;background:rgba(42,29,10,.1);
+    display:grid;place-items:center;position:relative}
+  .ac-actions button svg{width:19px;height:19px;stroke:var(--or-encre);fill:none;stroke-width:1.9;
+    stroke-linecap:round;stroke-linejoin:round}
+  .ac-actions .moi{background:var(--or-encre);color:var(--or);font-family:var(--titre);
+    font-weight:700;font-size:15px}
+  .ac-actions .pastille{position:absolute;top:9px;right:10px;width:8px;height:8px;border-radius:50%;
+    background:var(--rouge);border:1.5px solid var(--or)}
+  .ac-tete h1{margin-top:20px;font-size:31px;line-height:1.04;letter-spacing:-.035em}
+  .ac-tete .sous{margin-top:8px;font-size:14px;color:rgba(42,29,10,.72)}
+  .ac-cta{margin-top:16px;width:100%;height:52px;border-radius:17px;background:var(--or-encre);
+    color:#FFF4DC;font-weight:600;font-size:15.5px;display:flex;align-items:center;justify-content:center;gap:9px}
+
+  /* --- recherche à cheval sur l'en-tête --- */
+  .ac-rech{padding:0 20px;margin-top:-14px;position:relative;z-index:2}
+  .ac-rech button{width:100%;height:50px;border-radius:16px;background:var(--surface);
+    display:flex;align-items:center;gap:10px;padding:0 16px;color:var(--doux);font-size:14.5px}
+  .ac-rech svg{width:17px;height:17px;stroke:var(--doux);fill:none;stroke-width:2;flex:none}
+
+  /* --- service du jour, bloc sombre --- */
+  .ac-service{margin:18px 20px 0;border-radius:22px;background:var(--profond);color:#FFF4DC;padding:18px}
+  .ac-service .etat{display:flex;align-items:center;gap:8px}
+  .ac-service .pt{width:9px;height:9px;border-radius:50%;background:#4ADE80;animation:pulseTC 1.8s infinite}
+  @keyframes pulseTC{0%,100%{opacity:1}50%{opacity:.35}}
+  .ac-service .etat b{font-size:15px}
+  .ac-service .quand{margin-top:7px;font-family:var(--titre);font-weight:700;font-size:20px;letter-spacing:-.02em}
+  .ac-service .note{margin-top:4px;font-size:13px;color:rgba(255,244,220,.68)}
+  .ac-service .bas{margin-top:13px;padding-top:13px;border-top:1px solid rgba(255,244,220,.16);
+    display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .ac-service .lab2{font-size:10px;letter-spacing:.12em;color:rgba(255,244,220,.5);font-weight:700}
+  .ac-service .cpt{font-family:var(--titre);font-weight:700;font-size:22px;color:var(--or)}
+  .ac-service .lien{height:40px;padding:0 15px;border-radius:13px;background:rgba(255,244,220,.13);
+    display:flex;align-items:center;font-weight:500;font-size:13px;color:#FFF4DC}
+
+  /* --- deux raccourcis --- */
+  .ac-duo{display:grid;grid-template-columns:1fr 1fr;gap:11px;padding:16px 20px 0}
+  .ac-duo button{border-radius:19px;background:var(--creme);padding:14px;height:92px;
+    display:flex;flex-direction:column;justify-content:space-between;text-align:left}
+  .ac-duo button.or{background:rgba(245,178,31,.16)}
+  .ac-duo svg{width:20px;height:20px;stroke:var(--or-fonce);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .ac-duo b{display:block;font-family:var(--titre);font-weight:700;font-size:15px}
+  .ac-duo span{display:block;font-size:11.5px;color:var(--doux)}
+
+  /* --- carrousel des rayons --- */
+  .ac-sec{margin-top:24px}
+  .ac-sec .t{display:flex;align-items:baseline;justify-content:space-between;padding:0 20px}
+  .ac-sec .t b{font-family:var(--titre);font-weight:700;font-size:20px;letter-spacing:-.02em}
+  .ac-sec .t button{font-size:13px;font-weight:500;color:var(--doux)}
+  .ac-rayons{display:flex;gap:12px;padding:13px 20px 0;overflow-x:auto;scrollbar-width:none}
+  .ac-rayons::-webkit-scrollbar{display:none}
+  .ac-rayons button{flex:none;width:136px;text-align:left}
+  .ac-rayons .ph{height:96px;border-radius:19px;overflow:hidden;background:var(--creme)}
+  .ac-rayons .ph img{width:100%;height:100%;object-fit:cover}
+  .ac-rayons .n{margin-top:8px;font-weight:500;font-size:13.5px;line-height:1.25}
+  .ac-rayons .q{font-size:11.5px;color:var(--doux)}
+
+  /* --- les plus commandés --- */
+  .ac-top{padding:0 20px;margin-top:22px}
+  .ac-top > b{font-family:var(--titre);font-weight:700;font-size:20px;letter-spacing:-.02em}
+  .ac-ligne{margin-top:13px;display:flex;gap:13px;align-items:center;background:var(--surface);
+    border-radius:19px;padding:11px;width:100%;text-align:left}
+  .ac-ligne .ph{width:76px;height:76px;border-radius:15px;overflow:hidden;flex:none;background:var(--creme)}
+  .ac-ligne .ph img{width:100%;height:100%;object-fit:cover}
+  .ac-ligne .tx{flex:1;min-width:0}
+  .ac-ligne .tx b{font-weight:500;font-size:14.5px;display:block}
+  .ac-ligne .tx .d{font-size:12px;color:var(--doux);margin-top:2px}
+  .ac-ligne .tx .p{margin-top:6px;font-family:var(--titre);font-weight:700;font-size:15.5px}
+  .ac-ligne .plus{width:44px;height:44px;border-radius:14px;background:var(--or);color:var(--or-encre);
+    font-size:24px;display:grid;place-items:center;flex:none}
+  .ac-pied{height:26px}
+
+  /* --- barre d'onglets pleine largeur --- */
+  .nav-flot{left:0;right:0;bottom:0;transform:none;width:100%;border-radius:0;
+    background:var(--surface);border:0;border-top:var(--ep-bord) solid var(--bord);box-shadow:none;
+    display:flex;padding:9px 6px calc(12px + env(safe-area-inset-bottom));gap:0}
+  .nav-flot button{flex:1;flex-direction:column;align-items:center;gap:3px;padding:0;
+    background:transparent;color:var(--doux);font-size:10px;font-weight:500;
+    letter-spacing:.04em;text-transform:uppercase;border-radius:0;position:relative}
+  .nav-flot button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;
+    stroke-linecap:round;stroke-linejoin:round}
+  .nav-flot button.on{background:transparent;color:var(--encre);font-weight:700}
+  .nav-flot button.on svg{stroke-width:2.1}
+  .nav-flot .n{position:absolute;top:-3px;right:calc(50% - 20px);min-width:18px;height:18px;
+    border-radius:9px;background:var(--rouge);color:#fff;font-size:10.5px;font-weight:700;
+    display:grid;place-items:center;padding:0 4px}
+  body{padding-bottom:0}
+  .barre-total{bottom:calc(84px + env(safe-area-inset-bottom))}
+  body.a-total .bandeau-suivi{bottom:calc(146px + env(safe-area-inset-bottom))}
+  .bandeau-suivi{bottom:calc(84px + env(safe-area-inset-bottom))}
+  .enveloppe{padding-bottom:96px}
+}
 </style>
 </head>
 <body>
@@ -625,6 +745,7 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
 </header>
 
 <main class="enveloppe" id="accueil">
+  <section id="ecranAccueil" hidden></section>
   <section class="banniere">
     <img class="ph" id="banniereImg" src="img/jaune-jaune.jpg" alt="">
     <div class="voile-b"></div>
@@ -696,10 +817,11 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
 <div class="feuille" id="feuille" role="dialog" aria-modal="true"></div>
 
 <nav class="nav-flot" id="navFlot" aria-label="Navigation">
-  <button data-ecran="accueil" class="on"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Carte</button>
+  <button data-ecran="accueil" class="on"><svg viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/></svg>Accueil</button>
+  <button data-ecran="carte"><svg viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M9 8h6M9 12h6"/></svg>Carte</button>
+  <button data-ecran="histo"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg>Commandes</button>
   <button data-ecran="panier"><svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7zM9 8V6a3 3 0 0 1 6 0v2"/></svg>Panier<span class="n" id="navN" hidden>0</span></button>
   <button data-ecran="compte"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 20a7.5 7.5 0 0 1 14.4 0"/></svg>Compte</button>
-  <button data-ecran="infos"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>Boutique</button>
 </nav>
 
 <div class="avis" id="avis" role="status"></div>
