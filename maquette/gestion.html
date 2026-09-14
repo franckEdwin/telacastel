@@ -335,12 +335,16 @@ body{background:var(--surface-2)}
   .barre-nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom));
     z-index:80;display:flex;gap:2px;padding:6px;background:var(--surface);border:var(--ep-bord) solid var(--bord);
     border-radius:999px;box-shadow:var(--ombre-flot);max-width:calc(100vw - 20px)}
-  .barre-nav button{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:3px;width:64px;height:50px;border-radius:999px;font-size:9.5px;color:var(--doux);transition:var(--t)}
-  .barre-nav button svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .barre-nav button{position:relative;display:grid;place-items:center;width:52px;height:48px;border-radius:999px;
+    color:var(--doux);transition:var(--t)}
+  .barre-nav button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .barre-nav .lib{display:none}
   .barre-nav button.on{background:var(--encre);color:var(--fond)}
-  .barre-nav .n{position:absolute;top:3px;right:9px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;
-    background:var(--rouge);color:#fff;font-size:9.5px;font-weight:600;display:grid;place-items:center}
+  .barre-nav button.on svg{stroke-width:2.1}
+  .barre-nav .n{position:absolute;top:4px;right:6px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;
+    background:var(--rouge);color:#fff;font-size:9.5px;font-weight:600;display:grid;place-items:center;
+    border:2px solid var(--surface)}
+  .barre-nav button.on .n{border-color:var(--encre)}
   .barre-nav .n[hidden]{display:none}
   /* en tiroir mobile la barre est large : on annule le mode replié */
   .admin.reduit .flanc .lib,.admin.reduit .flanc .grp,.admin.reduit .flanc .profil div{display:block}
@@ -414,11 +418,11 @@ body{background:var(--surface-2)}
 </div>
 
 <nav class="barre-nav" id="barreNav" aria-label="Navigation">
-  <button data-vue="tableau" class="on"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>Bord</button>
-  <button data-vue="commandes"><svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7zM9 8V6a3 3 0 0 1 6 0v2"/></svg>Commandes<span class="n" id="navCmd" hidden>0</span></button>
-  <button data-vue="produits"><svg viewBox="0 0 24 24"><path d="M20 7 12 3 4 7v10l8 4 8-4z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>Produits</button>
-  <button data-vue="stock"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h10"/><circle cx="19" cy="18" r="2.5"/></svg>Stock<span class="n" id="navStock" hidden>0</span></button>
-  <button id="btnPlus"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>Plus</button>
+  <button data-vue="tableau" class="on" title="Tableau de bord" aria-label="Tableau de bord"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg><span class="lib">Bord</span></button>
+  <button data-vue="commandes" title="Commandes" aria-label="Commandes"><svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7zM9 8V6a3 3 0 0 1 6 0v2"/></svg><span class="lib">Commandes</span><span class="n" id="navCmd" hidden>0</span></button>
+  <button data-vue="produits" title="Produits" aria-label="Produits"><svg viewBox="0 0 24 24"><path d="M20 7 12 3 4 7v10l8 4 8-4z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg><span class="lib">Produits</span></button>
+  <button data-vue="stock" title="Stock" aria-label="Stock"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h10"/><circle cx="19" cy="18" r="2.5"/></svg><span class="lib">Stock</span><span class="n" id="navStock" hidden>0</span></button>
+  <button id="btnPlus" title="Autres sections" aria-label="Autres sections"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg><span class="lib">Plus</span></button>
 </nav>
 
 <div class="feuille" id="feuillePlus" aria-label="Autres sections">
