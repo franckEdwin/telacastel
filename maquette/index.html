@@ -561,7 +561,7 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
    et à la recherche. Rien ne flotte, rien ne porte d'ombre.
    ============================================================ */
 @media (max-width:1099px){
-  [data-dessin="epure"] .enveloppe{padding:0 12px}
+  [data-dessin="epure"] .enveloppe{padding:0 12px var(--h-nav)}
   [data-dessin="epure"] .plats{margin:0;padding:0 14px;border-radius:22px}
   [data-dessin="epure"] .plat .vis{width:72px;height:72px;border-radius:18px}
   [data-dessin="epure"] .plat h3{font-size:14.5px}
@@ -694,13 +694,15 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
     font-size:24px;display:grid;place-items:center;flex:none;align-self:center}
   .ac-pied{height:26px}
 
-  /* --- barre d'onglets pleine largeur --- */
-  .nav-flot{left:0;right:0;bottom:0;transform:none;width:100%;border-radius:0;
-    background:var(--surface);border:0;border-top:var(--ep-bord) solid var(--bord);box-shadow:none;
-    display:flex;padding:9px 6px calc(12px + env(safe-area-inset-bottom));gap:0}
-  .nav-flot button{flex:1;flex-direction:column;align-items:center;gap:3px;padding:0;
-    background:transparent;color:var(--doux);font-size:10px;font-weight:500;
-    letter-spacing:.04em;text-transform:uppercase;border-radius:0;position:relative}
+  /* --- barre d'onglets flottante --- */
+  .nav-flot{left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));
+    transform:none;width:auto;border-radius:24px;
+    background:var(--surface);border:var(--ep-bord) solid var(--bord);box-shadow:none;
+    display:flex;padding:9px 4px;gap:0}
+  .nav-flot button{flex:1;flex-direction:column;align-items:center;gap:3px;padding:6px 0 4px;
+    background:transparent;color:var(--doux);font-size:9.5px;font-weight:500;
+    letter-spacing:.02em;text-transform:uppercase;border-radius:18px;position:relative}
+  .nav-flot button.on{background:var(--creme)}
   .nav-flot button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;
     stroke-linecap:round;stroke-linejoin:round}
   .nav-flot button.on{background:transparent;color:var(--encre);font-weight:700}
@@ -708,13 +710,17 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
   .nav-flot .n{position:absolute;top:-3px;right:calc(50% - 20px);min-width:18px;height:18px;
     border-radius:9px;background:var(--rouge);color:#fff;font-size:10.5px;font-weight:700;
     display:grid;place-items:center;padding:0 4px}
+  /* Hauteur réservée sous la barre flottante : aucun contenu ne passe
+     dessous, sur aucun écran. C'est l'oubli de cette marge sur l'accueil
+     qui donnait l'impression que la barre avalait la dernière carte. */
+  :root{--h-nav:calc(86px + env(safe-area-inset-bottom))}
   body{padding-bottom:0}
-  .barre-total{bottom:calc(84px + env(safe-area-inset-bottom))}
-  .enveloppe{padding-bottom:96px}
+  .barre-total{bottom:calc(var(--h-nav) + 8px)}
+  .enveloppe{padding-bottom:var(--h-nav)}
+  [data-dessin="epure"] body.ec-accueil .enveloppe{padding:0 0 var(--h-nav)}
+  .ac-pied{height:8px}
 
-  /* La barre d'onglets ne quitte jamais l'écran : les panneaux s'arrêtent
-     au-dessus d'elle au lieu de la recouvrir. */
-  :root{--h-nav:calc(72px + env(safe-area-inset-bottom))}
+  /* Les panneaux s'arrêtent au-dessus d'elle au lieu de la recouvrir. */
   .nav-flot{z-index:99}
   .panneau{bottom:var(--h-nav)}
   .panneau .pied{padding-bottom:14px}
