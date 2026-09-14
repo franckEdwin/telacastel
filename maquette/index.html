@@ -492,11 +492,60 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
 [data-dessin="epure"] .plat .cpt{right:0;top:50%;bottom:auto;transform:translateY(-50%);box-shadow:none;border:0;background:var(--surface-2)}
 [data-dessin="epure"] .plat.epuise .vis{filter:grayscale(1);opacity:.55}
 
+/* Un sol beige sous des blocs blancs : sans lui, carte blanche sur fond
+   blanc sans bordure ni ombre, plus rien ne sépare les plats. */
+[data-dessin="epure"]{--fond:#F5F1EA;--verre:rgba(245,241,234,.86)}
+[data-theme="sombre"][data-dessin="epure"]{--fond:#100D0B;--verre:rgba(16,13,11,.86)}
+[data-theme="cacao"][data-dessin="epure"]{--fond:#F3E9DB;--verre:rgba(243,233,219,.88)}
+
+/* plus une seule bordure : le fond sépare, partout et de la même façon */
+[data-dessin="epure"] .bloc,
+[data-dessin="epure"] .acces button,
+[data-dessin="epure"] .rappel,
+[data-dessin="epure"] .hcmd,
+[data-dessin="epure"] .compteur,
+[data-dessin="epure"] .form-pl label,
+[data-dessin="epure"] #panneau-panier,
+/* La bannière photo cumulait trois défauts : la plus grande image
+   disponible fait 700 px de large et partait en bouillie sur 1350, un
+   dégradé la surmontait pour rendre le titre lisible, et une parallaxe
+   la déplaçait au défilement. On garde l'identité, on jette les trois. */
+[data-dessin="epure"] .banniere{border:0;background:var(--surface);border-radius:22px;margin-top:12px}
+[data-dessin="epure"] .banniere .ph,
+[data-dessin="epure"] .banniere .voile-b{display:none}
+[data-dessin="epure"] .banniere .dedans{position:static;padding:20px 22px;align-items:center}
+[data-dessin="epure"] .banniere h1{color:var(--encre);font-size:27px}
+[data-dessin="epure"] .banniere p{color:var(--doux);font-size:13.5px;margin-top:3px}
+[data-dessin="epure"] .banniere .ouvert{margin-left:auto;background:var(--vert-doux);color:var(--vert);
+  border:0;padding:7px 14px;border-radius:999px;font-size:12.5px;font-weight:500}
+[data-dessin="epure"] .acces button,
+[data-dessin="epure"] .rappel,
+[data-dessin="epure"] .hcmd,
+[data-dessin="epure"] .compteur,
+[data-dessin="epure"] .form-pl label{border-radius:18px}
+[data-dessin="epure"] .panneau .pied,
+[data-dessin="epure"] .panneau .tete{border-color:transparent}
+
 [data-dessin="epure"] .sec-titre{padding:20px 0 10px}
 [data-dessin="epure"] .t-haut h2{font-size:22px;letter-spacing:-.01em}
 [data-dessin="epure"] .t-haut span{font-size:12px}
 
 @media (min-width:1100px){
+  /* la colonne de gauche liste déjà les rayons, et elle reste visible au
+     défilement : le rail de vignettes faisait la même chose en double */
+  [data-dessin="epure"] .rail{display:none}
+  /* les deux accès rejoignent la colonne de navigation : dans le flux
+     principal ils formaient une bande vide en travers de la page */
+  [data-dessin="epure"] .col-nav .acces{grid-template-columns:1fr;gap:6px;margin:16px 0 0}
+  [data-dessin="epure"] .col-nav .acces button{padding:10px 12px;gap:10px;border-radius:14px;background:var(--surface)}
+  [data-dessin="epure"] .col-nav .acces .ic{width:30px;height:30px;border-radius:9px}
+  [data-dessin="epure"] .col-nav .acces .ic svg{width:15px;height:15px}
+  [data-dessin="epure"] .col-nav .acces .tx b{font-size:12.5px}
+  [data-dessin="epure"] .col-nav .acces .tx span{font-size:11px}
+  /* la photo de bannière ne fait que 576 px de large : sur 1350 px elle
+     part en bouillie. On réduit la hauteur pour limiter l'agrandissement. */
+  [data-dessin="epure"] .banniere .dedans{padding:22px 26px}
+  [data-dessin="epure"] .banniere h1{font-size:31px}
   /* grand écran : le bloc se scinde en cartes, deux colonnes */
   [data-dessin="epure"] .plats{background:transparent;padding:0;grid-template-columns:1fr 1fr;gap:12px}
   [data-dessin="epure"] .plat{background:var(--surface);border-radius:18px;padding:13px;border-bottom:0}
@@ -512,10 +561,6 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
    et à la recherche. Rien ne flotte, rien ne porte d'ombre.
    ============================================================ */
 @media (max-width:1099px){
-  [data-dessin="epure"]{--fond:#F5F1EA}
-  [data-theme="sombre"][data-dessin="epure"]{--fond:#100D0B}
-  [data-theme="cacao"][data-dessin="epure"]{--fond:#F3E9DB}
-
   [data-dessin="epure"] .enveloppe{padding:0 12px}
   [data-dessin="epure"] .plats{margin:0;padding:0 14px;border-radius:22px}
   [data-dessin="epure"] .plat .vis{width:72px;height:72px;border-radius:18px}

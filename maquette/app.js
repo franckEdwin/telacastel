@@ -1643,8 +1643,7 @@ function animations(){
   }
   if (window.gsap && window.ScrollTrigger){
     gsap.registerPlugin(ScrollTrigger);
-    gsap.to('#banniereImg', {yPercent:8, ease:'none',
-      scrollTrigger:{trigger:'.banniere', start:'top top', end:'bottom top', scrub:true}});
+    /* la parallaxe sur la bannière a été retirée avec la photo */
     ScrollTrigger.batch('.sec', {
       start:'top 88%',
       onEnter:function(lot){ gsap.fromTo(lot, {opacity:0, y:18}, {opacity:1, y:0, duration:.6, stagger:.08, ease:'power2.out', overwrite:true}); }
@@ -1659,6 +1658,16 @@ $('#btnCompte').onclick = function(){ ecran('compte'); };
 Array.prototype.forEach.call(document.querySelectorAll('#acces button'), function(b){
   b.onclick = function(){ ecran(b.dataset.va); };
 });
+/* Sur grand écran les accès directs appartiennent à la colonne de gauche ;
+   sur mobile, où cette colonne n'existe pas, ils restent dans le flux. */
+function placerAcces(){
+  var a = $('#acces'); if (!a) return;
+  var colonne = $('.col-nav .in'), flux = $('#accueil'), rail = $('#rail');
+  if (!mobile()){ if (a.parentNode !== colonne) colonne.appendChild(a); }
+  else if (a.parentNode !== flux) flux.insertBefore(a, rail);
+}
+placerAcces();
+window.addEventListener('resize', placerAcces);
 $('#btnAdresse').onclick = function(){ S.etape = 'livraison'; ecran('panier'); };
 $('#voile').onclick = function(){ fermer(); };
 $('#q').oninput = function(){ S.q = this.value.trim(); rendreMenu(); };
