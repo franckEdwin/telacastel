@@ -180,12 +180,27 @@ body{overflow-x:hidden}
 .fiche-tete .d{font-size:13.5px;color:var(--doux);margin-top:5px}
 .fiche-tete .meta{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:12.5px;color:var(--doux)}
 .fiche-tete .meta svg{width:13px;height:13px;fill:var(--or)}
+/* On peut en prendre plusieurs : la case native ne le montrait pas et
+   rien ne distinguait une ligne choisie. Case dessinée, ligne dorée. */
 .sups{display:grid;gap:8px}
-.sups label{display:flex;align-items:center;gap:11px;padding:12px 13px;border:var(--ep-bord) solid var(--bord);
-  border-radius:12px;font-size:13px;cursor:pointer;transition:border-color var(--t)}
+.sups label{display:flex;align-items:center;gap:12px;padding:13px 14px;border:var(--ep-bord) solid var(--bord);
+  border-radius:14px;font-size:13.5px;cursor:pointer;transition:var(--t)}
 .sups label:hover{border-color:var(--bord-fort)}
-.sups input{accent-color:var(--or);width:17px;height:17px}
-.sups .px{margin-left:auto;font-size:12.5px;color:var(--doux)}
+.sups label.on,
+.sups label:has(input:checked){border-color:var(--or);background:var(--or-doux)}
+.sups input{position:absolute;opacity:0;pointer-events:none}
+.sups .case{width:22px;height:22px;border-radius:7px;border:2px solid var(--bord-fort);flex:none;
+  display:grid;place-items:center;transition:var(--t)}
+.sups label.on .case,
+.sups label:has(input:checked) .case{background:var(--or-fonce);border-color:var(--or-fonce)}
+.sups .case{--coche:0}
+.sups .case::after{content:"";width:9px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;
+  transform:rotate(-45deg) scale(var(--coche));transition:transform var(--t);margin-top:-2px}
+.sups label.on .case::after,
+.sups label:has(input:checked) .case::after{transform:rotate(-45deg) scale(1)}
+.sups .px{margin-left:auto;font-size:12.5px;color:var(--doux);white-space:nowrap}
+.sups label.on .px,
+.sups label:has(input:checked) .px{color:var(--or-fonce);font-weight:500}
 
 .art{display:flex;gap:12px;align-items:flex-start;padding-bottom:14px;border-bottom:var(--ep-bord) solid var(--bord)}
 .art:last-child{border-bottom:0;padding-bottom:0}
@@ -325,19 +340,20 @@ body{overflow-x:hidden}
    Proposée une seule fois, en bas, et seulement quand le navigateur dit
    que l'installation est possible. */
 .invite-pwa{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:101;
-  background:var(--surface);border:var(--ep-bord) solid var(--bord);border-radius:22px;padding:16px;
-  display:flex;gap:13px;align-items:flex-start;
+  background:var(--surface);border:var(--ep-bord) solid var(--bord);border-radius:24px;padding:18px 18px 16px;
+  display:grid;gap:14px;
   transform:translateY(calc(100% + 24px));transition:transform .34s cubic-bezier(.22,1,.36,1)}
 .invite-pwa.on{transform:none}
-.invite-pwa .ic{width:46px;height:46px;border-radius:14px;background:var(--or);flex:none;display:grid;place-items:center;
+.invite-pwa .haut{display:flex;gap:14px;align-items:flex-start}
+.invite-pwa .ic{width:48px;height:48px;border-radius:15px;background:var(--or);flex:none;display:grid;place-items:center;
   overflow:hidden}
 .invite-pwa .ic img{width:32px;height:auto;filter:brightness(0) invert(1)}
 .invite-pwa .tx{flex:1;min-width:0}
-.invite-pwa .tx b{display:block;font-family:var(--titre);font-size:15px}
-.invite-pwa .tx span{display:block;font-size:12.5px;color:var(--doux);margin-top:3px;line-height:1.45}
-.invite-pwa .act{display:flex;gap:8px;margin-top:12px}
-.invite-pwa .act button{flex:1;height:40px;border-radius:999px;font-size:13px;font-weight:500}
-.invite-pwa .act .oui{background:var(--or);color:#241A12}
+.invite-pwa .tx b{display:block;font-family:var(--titre);font-size:15.5px}
+.invite-pwa .tx span{display:block;font-size:12.5px;color:var(--doux);margin-top:5px;line-height:1.5}
+.invite-pwa .act{display:flex;gap:10px}
+.invite-pwa .act button{flex:1;height:44px;border-radius:999px;font-size:13.5px;font-weight:500}
+.invite-pwa .act .oui{flex:1.4;background:var(--or);color:#241A12}
 .invite-pwa .act .non{background:transparent;color:var(--doux);border:var(--ep-bord) solid var(--bord-fort)}
 @media (min-width:1100px){ .invite-pwa{display:none} }
 

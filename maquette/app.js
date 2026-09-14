@@ -218,9 +218,20 @@ function rendreMenu(){
 }
 
 /* ---------------------------------------------------------- fiche produit */
+/* Les couleurs du thème, résolues : posées en style direct, les var()
+   ne sont pas toujours interprétées. */
+function couleurs(){
+  var r = getComputedStyle(document.documentElement);
+  return {
+    or:    r.getPropertyValue('--or').trim()       || '#F5B21F',
+    doux:  r.getPropertyValue('--or-doux').trim()  || '#FDF3DC',
+    fonce: r.getPropertyValue('--or-fonce').trim() || '#A9760A'
+  };
+}
 function ouvrirFiche(id){
   var p = T.produits[id];
   var etat = {f:0, qte:1, sups:[]};
+  var rappelsSups = null;
   var pan = $('#panneau-fiche');
   pan.innerHTML = '';
 
@@ -261,22 +272,55 @@ function ouvrirFiche(id){
 
   if (p.sup && p.sup.length){
     var bs = el('div','champ');
-    bs.appendChild(el('span','lab','Suppléments'));
+    var titreSup = el('span','lab','Suppléments — vous pouvez en cumuler');
+    bs.appendChild(titreSup);
+    function majSups(){
+      titreSup.textContent = etat.sups.length
+        ? 'Suppléments — ' + etat.sups.length + ' choisi' + (etat.sups.length > 1 ? 's' : '')
+        : 'Suppléments — vous pouvez en cumuler';
+    }
     var box = el('div','sups');
+    var rappels = [];
     p.sup.forEach(function(s){
       var lab = el('label');
       var cb = el('input'); cb.type = 'checkbox';
       cb.onchange = function(){
-        if (cb.checked) etat.sups.push(s);
+        if (cb.checked){ if (etat.sups.indexOf(s) < 0) etat.sups.push(s); }
         else etat.sups = etat.sups.filter(function(x){ return x !== s; });
+        marquer(cb.checked);
+        majSups();
         maj();
       };
       lab.appendChild(cb);
+      var caseDessinee = el('span','case');
+      lab.appendChild(caseDessinee);
       lab.appendChild(el('span', null, s.nom));
-      lab.appendChild(el('span','px', s.prix ? '+ ' + F(s.prix) : 'offert'));
+      var prixSup = el('span','px', s.prix ? '+ ' + F(s.prix) : 'offert');
+      lab.appendChild(prixSup);
+      /* L'état choisi est posé à la main : la règle CSS équivalente se
+         faisait battre par une déclaration plus spécifique, et :has() ne
+         se recalcule pas de façon fiable après un changement par script. */
+      function marquer(actif){
+        var C = couleurs();
+        lab.classList.toggle('on', actif);
+        function poser(e, prop, val){
+          if (actif) e.style.setProperty(prop, val, 'important');
+          else e.style.removeProperty(prop);
+        }
+        poser(lab, 'border-color', C.or);
+        poser(lab, 'background-color', C.doux);
+        poser(caseDessinee, 'background-color', C.fonce);
+        poser(caseDessinee, 'border-color', C.fonce);
+        caseDessinee.style.setProperty('--coche', actif ? '1' : '0');
+        poser(prixSup, 'color', C.fonce);
+      }
+      /* réappliqué à chaque rafraîchissement : si le panneau se reconstruit,
+         l'état choisi ne se perd pas en route */
+      rappels.push(function(){ marquer(cb.checked); });
       box.appendChild(lab);
     });
     bs.appendChild(box); dd.appendChild(bs);
+    rappelsSups = function(){ rappels.forEach(function(f){ f(); }); };
   }
 
   var bn = el('div','champ');
@@ -302,7 +346,10 @@ function ouvrirFiche(id){
   pan.appendChild(pied);
 
   function prixUnite(){ return p.formats[etat.f][1] + etat.sups.reduce(function(a,s){ return a + s.prix; }, 0); }
-  function maj(){ cta.textContent = 'Ajouter · ' + F(prixUnite() * etat.qte); }
+  function maj(){
+    cta.textContent = 'Ajouter · ' + F(prixUnite() * etat.qte);
+    if (typeof rappelsSups === 'function') rappelsSups();
+  }
   maj();
   ouvrir('#panneau-fiche');
 }
@@ -1922,10 +1969,11 @@ function proposerInstallation(){
   if (T.lire('installee', false) || T.lire('installRefusee', false)) return;
   if (window.matchMedia('(display-mode: standalone)').matches) return;
 
-  z.innerHTML = '<span class="ic"><img src="img/logo.png" alt=""></span>' +
+  z.innerHTML = '<div class="haut"><span class="ic"><img src="img/logo.png" alt=""></span>' +
     '<span class="tx"><b>Installer Tela Castle</b>' +
     '<span>Sur votre écran d\u2019accueil, comme une application. La carte reste consultable même sans connexion.</span>' +
-    '<span class="act"><button class="non">Plus tard</button><button class="oui">Installer</button></span></span>';
+    '</span></div>' +
+    '<div class="act"><button class="non">Plus tard</button><button class="oui">Installer</button></div>';
   z.querySelector('.non').onclick = function(){ T.ecrire('installRefusee', true); cacherInvite(); };
   z.querySelector('.oui').onclick = function(){
     cacherInvite();

@@ -110,6 +110,11 @@ img{display:block;max-width:100%}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 input,select,textarea{font:inherit;color:inherit}
 a{color:inherit;text-decoration:none}
+/* Le carré bleu qui s'affiche au toucher est le surlignage par défaut des
+   navigateurs mobiles. On le retire : chaque élément a déjà son propre
+   retour au contact. Le contour d'accessibilité, lui, reste au clavier. */
+*{-webkit-tap-highlight-color:transparent}
+:focus{outline:none}
 :focus-visible{outline:2px solid var(--or);outline-offset:2px;border-radius:6px}
 ::selection{background:var(--or-doux);color:var(--encre)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
