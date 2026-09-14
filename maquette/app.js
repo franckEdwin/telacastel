@@ -1728,6 +1728,13 @@ function commandeActive(){
 function majBandeau(){
   var b = $('#bandeauSuivi'); if (!b) return;
   var c = commandeActive();
+  /* la pastille de l'onglet Commandes remplace le bandeau sur mobile */
+  var ong = document.querySelector('.nav-flot [data-ecran="histo"]');
+  if (ong){
+    var pt = ong.querySelector('.pt-cmd');
+    if (c && !pt){ pt = el('span','pt-cmd'); ong.appendChild(pt); }
+    else if (!c && pt) pt.remove();
+  }
   /* le bandeau ramène vers la commande depuis la carte ; ailleurs il gêne */
   var panneauOuvert = !!document.querySelector('.panneau.on:not(#panneau-panier)') ||
                       (mobile() && ['accueil','carte'].indexOf(S.ecran) < 0);

@@ -710,9 +710,22 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
     display:grid;place-items:center;padding:0 4px}
   body{padding-bottom:0}
   .barre-total{bottom:calc(84px + env(safe-area-inset-bottom))}
-  body.a-total .bandeau-suivi{bottom:calc(146px + env(safe-area-inset-bottom))}
-  .bandeau-suivi{bottom:calc(84px + env(safe-area-inset-bottom))}
   .enveloppe{padding-bottom:96px}
+
+  /* La barre d'onglets ne quitte jamais l'écran : les panneaux s'arrêtent
+     au-dessus d'elle au lieu de la recouvrir. */
+  :root{--h-nav:calc(72px + env(safe-area-inset-bottom))}
+  .nav-flot{z-index:99}
+  .panneau{bottom:var(--h-nav)}
+  .panneau .pied{padding-bottom:14px}
+  .feuille{bottom:var(--h-nav);z-index:100}
+  .voile{z-index:98}
+
+  /* Le bandeau de suivi flottant ne figure pas dans la planche : une
+     commande en cours s'annonce par la pastille de l'onglet Commandes. */
+  .bandeau-suivi{display:none}
+  .nav-flot .pt-cmd{position:absolute;top:1px;right:calc(50% - 16px);width:8px;height:8px;
+    border-radius:50%;background:var(--rouge);border:1.5px solid var(--surface)}
 }
 </style>
 </head>
