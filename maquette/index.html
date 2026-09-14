@@ -317,6 +317,64 @@ body{overflow-x:hidden}
 .rv{opacity:0;transform:translateY(16px)}
 .rv.vu{opacity:1;transform:none;transition:opacity .6s cubic-bezier(.4,0,.2,1),transform .6s cubic-bezier(.4,0,.2,1)}
 
+/* ---------------------------------------------------------- bandeau de suivi
+   Une commande en cours doit rester visible où qu'on soit dans l'application. */
+.bandeau-suivi{position:fixed;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:94;
+  display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--r-m);
+  background:var(--encre);color:var(--fond);text-align:left;box-shadow:0 6px 22px rgba(0,0,0,.18)}
+.bandeau-suivi .pulse{width:9px;height:9px;border-radius:50%;background:var(--vert);flex:none;
+  box-shadow:0 0 0 0 rgba(90,170,110,.7);animation:onde 2s infinite}
+@keyframes onde{70%{box-shadow:0 0 0 9px rgba(90,170,110,0)}100%{box-shadow:0 0 0 0 rgba(90,170,110,0)}}
+.bandeau-suivi .tx{flex:1;min-width:0}
+.bandeau-suivi .tx b{display:block;font-family:var(--titre);font-size:13.5px}
+.bandeau-suivi .tx span{display:block;font-size:11.5px;opacity:.72;margin-top:1px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bandeau-suivi .fl{font-size:17px;opacity:.6;flex:none}
+/* le bandeau se range au-dessus de la barre de total quand celle-ci est là */
+body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
+@media (min-width:1100px){
+  .bandeau-suivi,body.a-total .bandeau-suivi{left:auto;right:24px;bottom:24px;width:340px}
+}
+
+/* ---------------------------------------------------------- historique */
+.hcmd{display:block;width:100%;text-align:left;background:var(--surface);border:var(--ep-bord) solid var(--bord);
+  border-radius:var(--r-m);padding:13px 15px}
+.hcmd .h{display:flex;align-items:center;gap:9px}
+.hcmd .h b{font-family:var(--titre);font-size:14.5px}
+.hcmd .h .t{margin-left:auto;font-family:var(--titre);font-weight:700;font-size:15px}
+.hcmd .d{font-size:12px;color:var(--doux);margin-top:5px}
+.hcmd .v{display:flex;gap:-6px;margin-top:10px}
+.hcmd .v img{width:30px;height:30px;border-radius:8px;object-fit:cover;border:2px solid var(--surface);margin-right:-8px}
+.hcmd .v span{align-self:center;margin-left:14px;font-size:11.5px;color:var(--doux)}
+.hcmd .a{display:flex;gap:8px;margin-top:11px}
+.hcmd .a button{flex:1;font-size:12.5px;padding:8px;border-radius:var(--r-p);border:var(--ep-bord) solid var(--bord-fort)}
+.hcmd .a button.plein{background:var(--encre);color:var(--fond);border-color:var(--encre)}
+.filtres{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.filtres::-webkit-scrollbar{display:none}
+.filtres button{flex:none;font-size:12.5px;padding:7px 13px;border-radius:999px;border:var(--ep-bord) solid var(--bord);
+  background:var(--surface);color:var(--doux);white-space:nowrap}
+.filtres button[aria-pressed="true"]{background:var(--encre);color:var(--fond);border-color:var(--encre)}
+
+/* plateaux */
+.compteur{display:flex;align-items:center;gap:14px;background:var(--surface);border:var(--ep-bord) solid var(--bord);
+  border-radius:var(--r-m);padding:12px 15px}
+.compteur .n{flex:1;font-family:var(--titre);font-weight:700;font-size:26px;text-align:center}
+.compteur button{width:38px;height:38px;border-radius:50%;border:var(--ep-bord) solid var(--bord-fort);
+  font-size:19px;line-height:1;flex:none}
+.form-pl{display:grid;gap:9px}
+.form-pl label{display:flex;gap:12px;align-items:flex-start;background:var(--surface);
+  border:var(--ep-bord) solid var(--bord);border-radius:var(--r-m);padding:13px 15px;cursor:pointer}
+.form-pl label:has(input:checked){border-color:var(--or);background:var(--or-doux)}
+.form-pl input{margin-top:3px;accent-color:var(--or-fonce);flex:none}
+.form-pl .tx{flex:1;min-width:0}
+.form-pl .tx b{font-size:13.8px;display:block}
+.form-pl .tx span{font-size:12px;color:var(--doux);display:block;margin-top:2px;line-height:1.45}
+.form-pl .pr{font-family:var(--titre);font-weight:700;font-size:13.5px;white-space:nowrap}
+.devis{background:var(--or-doux);border-radius:var(--r-m);padding:15px 16px}
+.devis .l{display:flex;justify-content:space-between;font-size:13px;padding:5px 0}
+.devis .l.gros{border-top:var(--ep-bord) solid rgba(0,0,0,.12);margin-top:6px;padding-top:11px;
+  font-family:var(--titre);font-weight:700;font-size:17px}
+
 /* ---------------------------------------------------------- largeurs */
 @media (min-width:560px){ .plats{grid-template-columns:1fr 1fr} }
 @media (min-width:760px){
@@ -460,6 +518,10 @@ body{overflow-x:hidden}
 <aside class="panneau" id="panneau-fiche" aria-label="Produit"></aside>
 <aside class="panneau" id="panneau-compte" aria-label="Compte"></aside>
 <aside class="panneau" id="panneau-infos" aria-label="Boutique"></aside>
+<aside class="panneau" id="panneau-histo" aria-label="Mes commandes"></aside>
+<aside class="panneau" id="panneau-plateaux" aria-label="Plateaux et événements"></aside>
+
+<button class="bandeau-suivi" id="bandeauSuivi" hidden></button>
 
 <button class="barre-total" id="barreTotal">
   <span class="q"><b id="btQte">0</b> article</span>

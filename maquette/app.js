@@ -1129,10 +1129,10 @@ function vueCompte(dd, pied){
     '<div style="font-size:12px;color:var(--doux);margin-top:9px">Huit commandes, un dêguê offert. Encore ' +
     Math.max(0, 8 - fid) + '.</div></div>'));
 
-  var miennes = T.commandes().filter(function(c){ return T.telCle(c.client.tel) === T.telCle(compte.tel); });
+  var miennes = mesCommandes();
   dd.appendChild(el('div','lab','Mes commandes'));
   if (!miennes.length) dd.appendChild(el('p','vide','Aucune commande pour l\u2019instant.'));
-  miennes.slice(0,6).forEach(function(c){
+  miennes.slice(0,3).forEach(function(c){
     var st = T.statuts[c.statut] || T.statuts.recue;
     var b = el('button','bloc');
     b.style.cssText = 'padding:13px 15px;text-align:left;display:block;width:100%';
@@ -1147,6 +1147,13 @@ function vueCompte(dd, pied){
     };
     dd.appendChild(b);
   });
+
+  if (miennes.length){
+    var tout = el('button','btn creux plein');
+    tout.textContent = miennes.length > 3 ? 'Voir mes ' + miennes.length + ' commandes' : 'Historique et recommander';
+    tout.onclick = function(){ ecran('histo'); };
+    dd.appendChild(tout);
+  }
 
   dd.appendChild(el('div','lab','Adresse de livraison'));
   var adr = el('div','bloc');
@@ -1229,6 +1236,20 @@ function rendreInfos(){
   });
   dd.appendChild(m);
 
+  dd.appendChild(el('div','lab','Recevoir un groupe'));
+  var pl = el('button','bloc');
+  pl.style.cssText = 'padding:14px 16px;text-align:left;display:flex;align-items:center;gap:13px;width:100%';
+  pl.innerHTML = '<span style="width:40px;height:40px;border-radius:12px;background:var(--or-doux);display:grid;' +
+    'place-items:center;flex:none"><svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--or-fonce);' +
+    'fill:none;stroke-width:1.8;stroke-linecap:round"><path d="M4 14h16M6 14a6 6 0 0 1 12 0"/><path d="M3 18h18"/>' +
+    '<path d="M12 5v3"/></svg></span>' +
+    '<span style="flex:1"><b style="font-family:var(--titre);font-size:14.5px">Plateaux &amp; événements</b>' +
+    '<span style="display:block;font-size:12px;color:var(--doux);margin-top:2px">' +
+    'Bureaux, baptêmes, réunions. Devis dès 8 personnes.</span></span>' +
+    '<span style="color:var(--doux);font-size:18px">›</span>';
+  pl.onclick = function(){ ecran('plateaux'); };
+  dd.appendChild(pl);
+
   dd.appendChild(el('div','lab','Apparence'));
   var th = el('div','choix');
   [['clair','Clair'],['sombre','Sombre'],['cacao','Cacao']].forEach(function(o){
@@ -1256,6 +1277,220 @@ function rendreInfos(){
 }
 
 /* ---------------------------------------------------------- panneaux & écrans */
+/* ---------------------------------------------------------- mes commandes
+   L'historique mérite son écran : on y revient pour recommander, pas pour
+   relire un reçu. D'où le bouton « Recommander » en premier.               */
+function mesCommandes(){
+  if (!compte) return [];
+  return T.commandes().filter(function(c){ return T.telCle(c.client.tel) === T.telCle(compte.tel); });
+}
+function recommander(cmd){
+  S.panier = [];
+  var perdus = 0;
+  cmd.lignes.forEach(function(l){
+    var p = T.produits[l.id];
+    if (!p || p.epuise){ perdus++; return; }
+    var i = 0;
+    p.formats.forEach(function(f, j){ if (f[0] === l.fmt) i = j; });
+    var sups = l.sup ? l.sup.split(', ').map(function(n){ return {nom:n, prix:0}; }) : [];
+    ajouter(l.id, i, l.qte, sups, l.note, true);
+  });
+  S.zone = cmd.zone; S.adresse = cmd.adresse; S.creneau = cmd.creneau;
+  S.etape = 'panier'; S.ref = null; T.ecrire('refEnCours', null);
+  sauver();
+  avis(perdus ? 'Panier rempli, ' + perdus + ' produit(s) indisponible(s)' : 'Panier rempli, il n\u2019y a plus qu\u2019à valider');
+  ecran('panier');
+}
+function rendreHisto(){
+  var pan = $('#panneau-histo');
+  pan.innerHTML = '';
+  var tete = el('div','tete');
+  var ret = el('button','retour', FLECHE); ret.setAttribute('aria-label','Retour');
+  ret.onclick = function(){ fermer(); };
+  tete.appendChild(ret);
+  tete.appendChild(el('div', null, '<h3>Mes commandes</h3>'));
+  pan.appendChild(tete);
+  var dd = el('div','dedans'); pan.appendChild(dd);
+
+  var toutes = mesCommandes();
+  if (!compte){
+    dd.appendChild(illustration(
+      '<svg viewBox="0 0 24 24" style="width:26px;height:26px;stroke:var(--or-fonce);fill:none;stroke-width:1.8;stroke-linecap:round"><path d="M6 8h12l-1 12H7z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>',
+      'Vos commandes vous attendent',
+      'Entrez votre numéro une fois, et vous retrouverez ici tout ce que vous avez commandé, prêt à être recommandé.'));
+    var cn = el('button','btn plein'); cn.textContent = 'Entrer mon numéro';
+    cn.onclick = function(){ ecran('compte'); };
+    dd.appendChild(cn);
+    return;
+  }
+
+  var f = el('div','filtres');
+  [['tout','Toutes'],['cours','En cours'],['livree','Livrées']].forEach(function(o){
+    var b = el('button', null, o[1]);
+    b.setAttribute('aria-pressed', (S.filtreHisto || 'tout') === o[0]);
+    b.onclick = function(){ S.filtreHisto = o[0]; rendreHisto(); };
+    f.appendChild(b);
+  });
+  dd.appendChild(f);
+
+  var vues = toutes.filter(function(c){
+    var fl = S.filtreHisto || 'tout';
+    if (fl === 'livree') return c.statut === 'livree';
+    if (fl === 'cours') return ['recue','validee','preparation','route'].indexOf(c.statut) > -1;
+    return true;
+  });
+  if (!vues.length){ dd.appendChild(el('p','vide','Rien dans cette liste pour l\u2019instant.')); return; }
+
+  var depense = toutes.filter(function(c){ return c.statut === 'livree'; })
+                      .reduce(function(a,c){ return a + c.total; }, 0);
+  dd.appendChild(el('div','bloc','<div style="padding:13px 16px;display:flex;gap:18px">' +
+    '<div><div style="font-size:11.5px;color:var(--doux)">Commandes</div>' +
+    '<b style="font-family:var(--titre);font-size:19px">' + toutes.length + '</b></div>' +
+    '<div><div style="font-size:11.5px;color:var(--doux)">Total dépensé</div>' +
+    '<b style="font-family:var(--titre);font-size:19px">' + F(depense) + '</b></div></div>'));
+
+  vues.forEach(function(c){
+    var st = T.statuts[c.statut] || T.statuts.recue;
+    var w = el('div','hcmd');
+    var art = c.lignes.reduce(function(a,l){ return a + l.qte; }, 0);
+    w.innerHTML = '<div class="h"><b>' + c.ref + '</b><span class="etq ' + st.couleur + '">' + st.nom + '</span>' +
+      '<span class="t">' + F(c.total) + '</span></div>' +
+      '<div class="d">' + T.dateCourte(c.creele) + ' · ' + T.zone(c.zone).nom + ' · ' +
+      T.paiement(c.paiement).nom.replace(' à la livraison','') + '</div>' +
+      '<div class="v">' + c.lignes.slice(0,4).map(function(l){
+        return '<img src="' + T.img(l.img) + '" alt="">';
+      }).join('') + '<span>' + art + ' article' + (art > 1 ? 's' : '') + '</span></div>';
+    var a = el('div','a');
+    var det = el('button', null, 'Voir le détail');
+    det.onclick = function(){
+      S.ref = c.ref; T.ecrire('refEnCours', c.ref);
+      S.etape = 'confirme'; rendrePanier(); ecran('panier');
+    };
+    var re = el('button','plein', 'Recommander');
+    re.onclick = function(){ recommander(c); };
+    a.appendChild(det); a.appendChild(re);
+    w.appendChild(a);
+    dd.appendChild(w);
+  });
+}
+
+/* ---------------------------------------------------------- plateaux
+   Un bureau qui commande vingt petits déjeuners n'a pas le même besoin
+   qu'un client seul : il veut un devis avant de s'engager.                */
+var PL = {personnes:10, formule:'f-decouverte', boissons:true, jour:'', quand:'', mot:''};
+var FORMULES_PL = [
+  {id:'f-decouverte', nom:'Plateau découverte',  par:2500, det:'Bouillie, pastels, un fruit de saison'},
+  {id:'f-complet',    nom:'Plateau complet',     par:3500, det:'Jaune-jaune ou garba, dêguê, boisson chaude'},
+  {id:'f-gourmand',   nom:'Plateau gourmand',    par:4500, det:'Assortiment salé-sucré, yaourt maison, jus pressé'}
+];
+function rendrePlateaux(){
+  var pan = $('#panneau-plateaux');
+  pan.innerHTML = '';
+  var tete = el('div','tete');
+  var ret = el('button','retour', FLECHE); ret.setAttribute('aria-label','Retour');
+  ret.onclick = function(){ fermer(); };
+  tete.appendChild(ret);
+  tete.appendChild(el('div', null, '<h3>Plateaux &amp; événements</h3><div class="sous">Bureaux, baptêmes, réunions</div>'));
+  pan.appendChild(tete);
+  var dd = el('div','dedans'); var pied = el('div','pied');
+  pan.appendChild(dd); pan.appendChild(pied);
+
+  dd.appendChild(el('p', null, '<span style="font-size:13px;color:var(--doux);line-height:1.55">' +
+    'À partir de 8 personnes, Tela Castle prépare des plateaux à partager. ' +
+    'Composez votre demande ici : vous recevez un devis, rien n\u2019est débité.</span>'));
+
+  dd.appendChild(el('div','lab','Combien de personnes ?'));
+  var cp = el('div','compteur');
+  var moins = el('button', null, '−');
+  var plus  = el('button', null, '+');
+  var n = el('div','n', PL.personnes);
+  moins.onclick = function(){ PL.personnes = Math.max(8, PL.personnes - 1); rendrePlateaux(); };
+  plus.onclick  = function(){ PL.personnes = Math.min(200, PL.personnes + 1); rendrePlateaux(); };
+  cp.appendChild(moins); cp.appendChild(n); cp.appendChild(plus);
+  dd.appendChild(cp);
+
+  dd.appendChild(el('div','lab','Quel plateau ?'));
+  var fp = el('div','form-pl');
+  FORMULES_PL.forEach(function(o){
+    var l = el('label');
+    l.innerHTML = '<input type="radio" name="fpl"' + (PL.formule === o.id ? ' checked' : '') + '>' +
+      '<span class="tx"><b>' + o.nom + '</b><span>' + o.det + '</span></span>' +
+      '<span class="pr">' + F(o.par) + '<br><span style="font-family:var(--texte);font-weight:400;font-size:11px;color:var(--doux)">par personne</span></span>';
+    l.onclick = function(){ PL.formule = o.id; rendrePlateaux(); };
+    fp.appendChild(l);
+  });
+  dd.appendChild(fp);
+
+  var bo = el('label','form-pl');
+  bo.style.cssText = 'display:flex;gap:12px;align-items:flex-start;background:var(--surface);' +
+    'border:var(--ep-bord) solid var(--bord);border-radius:var(--r-m);padding:13px 15px;cursor:pointer';
+  bo.innerHTML = '<input type="checkbox"' + (PL.boissons ? ' checked' : '') + ' style="margin-top:3px;accent-color:var(--or-fonce)">' +
+    '<span style="flex:1"><b style="font-size:13.8px;display:block">Boissons à volonté</b>' +
+    '<span style="font-size:12px;color:var(--doux)">Bissap, gingembre et jus de baobab en bonbonnes</span></span>' +
+    '<span style="font-family:var(--titre);font-weight:700;font-size:13.5px">+ 800 F</span>';
+  bo.onclick = function(e){ if (e.target.tagName !== 'INPUT') e.preventDefault(); PL.boissons = !PL.boissons; rendrePlateaux(); };
+  dd.appendChild(bo);
+
+  dd.appendChild(el('div','lab','Quand ?'));
+  var gr = el('div'); gr.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:9px';
+  var dj = el('input','champ'); dj.type = 'date'; dj.value = PL.jour;
+  dj.min = new Date(Date.now() + 2*864e5).toISOString().slice(0,10);
+  dj.onchange = function(){ PL.jour = dj.value; majDevis(); };
+  var dh = el('input','champ'); dh.type = 'time'; dh.value = PL.quand || '07:30';
+  dh.onchange = function(){ PL.quand = dh.value; };
+  gr.appendChild(dj); gr.appendChild(dh);
+  dd.appendChild(gr);
+
+  var mot = el('textarea','champ');
+  mot.rows = 3; mot.placeholder = 'Adresse précise, allergies, nombre de couverts…';
+  mot.value = PL.mot;
+  mot.oninput = function(){ PL.mot = mot.value; };
+  dd.appendChild(mot);
+
+  dd.appendChild(el('div','lab','Votre devis'));
+  var dv = el('div','devis'); dv.id = 'devisPl';
+  dd.appendChild(dv);
+  majDevis();
+
+  var env = el('button','btn plein');
+  env.textContent = 'Demander le devis sur WhatsApp';
+  env.onclick = function(){
+    if (!PL.jour){ avis('Choisissez d\u2019abord une date'); dj.focus(); return; }
+    var c = calculPlateaux();
+    var f = FORMULES_PL.filter(function(x){ return x.id === PL.formule; })[0];
+    var txt = 'Bonjour Tela Castle, je souhaite un devis pour un plateau.%0A%0A' +
+      '*' + f.nom + '*%0A' + PL.personnes + ' personnes%0A' +
+      (PL.boissons ? 'Avec boissons à volonté%0A' : '') +
+      'Date : ' + new Date(PL.jour).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}) +
+      ' à ' + (PL.quand || '07:30') + '%0A' +
+      'Estimation : ' + F(c.total) + '%0A' +
+      (PL.mot ? '%0APrécisions : ' + encodeURIComponent(PL.mot) : '');
+    window.open('https://wa.me/' + T.boutique.telBrut + '?text=' + txt, '_blank');
+    avis('Demande envoyée, réponse sous 24 h');
+  };
+  pied.appendChild(env);
+}
+function calculPlateaux(){
+  var f = FORMULES_PL.filter(function(x){ return x.id === PL.formule; })[0];
+  var base = f.par * PL.personnes;
+  var bois = PL.boissons ? 800 * PL.personnes : 0;
+  var remise = PL.personnes >= 30 ? Math.round((base + bois) * 0.1) : 0;
+  return {f:f, base:base, bois:bois, remise:remise, total:base + bois - remise};
+}
+function majDevis(){
+  var dv = $('#devisPl'); if (!dv) return;
+  var c = calculPlateaux();
+  dv.innerHTML =
+    '<div class="l"><span>' + c.f.nom + ' × ' + PL.personnes + '</span><span>' + F(c.base) + '</span></div>' +
+    (c.bois ? '<div class="l"><span>Boissons × ' + PL.personnes + '</span><span>' + F(c.bois) + '</span></div>' : '') +
+    (c.remise ? '<div class="l"><span>Remise groupe (10 %)</span><span>− ' + F(c.remise) + '</span></div>' : '') +
+    '<div class="l"><span>Livraison et installation</span><span>Offerte</span></div>' +
+    '<div class="l gros"><span>Estimation</span><span>' + F(c.total) + '</span></div>' +
+    '<div style="font-size:11.5px;color:var(--or-fonce);margin-top:9px;line-height:1.5">' +
+    'Montant indicatif. Tela Castle confirme le devis définitif sur WhatsApp' +
+    (PL.personnes < 30 ? ', et à partir de 30 personnes la remise groupe s\u2019applique.' : '.') + '</div>';
+}
+
 function ouvrir(sel){
   fermer(true);
   var p = $(sel);
@@ -1264,7 +1499,8 @@ function ouvrir(sel){
   document.body.style.overflow = mobile() ? 'hidden' : '';
 }
 function fermer(silencieux){
-  ['#panneau-fiche','#panneau-compte','#panneau-infos'].forEach(function(s){ $(s).classList.remove('on'); });
+  ['#panneau-fiche','#panneau-compte','#panneau-infos','#panneau-histo','#panneau-plateaux']
+    .forEach(function(s){ $(s).classList.remove('on'); });
   if (mobile()) $('#panneau-panier').classList.remove('on');
   $('#voile').classList.remove('on');
   document.body.style.overflow = '';
@@ -1276,10 +1512,13 @@ function ecran(nom){
   else if (nom === 'panier'){ rendrePanier(); if (mobile()) ouvrir('#panneau-panier'); else $('#panneau-panier').scrollIntoView({behavior:'smooth',block:'nearest'}); }
   else if (nom === 'compte'){ rendreCompte(); ouvrir('#panneau-compte'); }
   else if (nom === 'infos'){ rendreInfos(); ouvrir('#panneau-infos'); }
+  else if (nom === 'histo'){ rendreHisto(); ouvrir('#panneau-histo'); }
+  else if (nom === 'plateaux'){ rendrePlateaux(); ouvrir('#panneau-plateaux'); }
   majNav();
 }
 function majNav(){
   majBarreTotal();
+  majBandeau();
   Array.prototype.forEach.call(document.querySelectorAll('.nav-flot button'), function(b){
     b.classList.toggle('on', b.dataset.ecran === S.ecran);
   });
@@ -1320,11 +1559,37 @@ function chrono(){
   var h = Math.floor(ms/36e5), m = Math.floor(ms%36e5/6e4), s = Math.floor(ms%6e4/1000);
   $('#chrono').textContent = h > 0 ? h + 'h' + String(m).padStart(2,'0') : m + 'min ' + String(s).padStart(2,'0');
 }
+/* le bandeau suit la dernière commande active, quel que soit l'écran */
+function commandeActive(){
+  var actives = ['recue','validee','preparation','route'];
+  var liste = compte ? mesCommandes() : (S.ref ? T.commandes().filter(function(c){ return c.ref === S.ref; }) : []);
+  return liste.filter(function(c){ return actives.indexOf(c.statut) > -1; })[0] || null;
+}
+function majBandeau(){
+  var b = $('#bandeauSuivi'); if (!b) return;
+  var c = commandeActive();
+  /* le bandeau ramène vers la commande depuis la carte ; ailleurs il gêne */
+  var panneauOuvert = !!document.querySelector('.panneau.on:not(#panneau-panier)') ||
+                      (mobile() && S.ecran !== 'accueil');
+  var visible = !!c && S.etape !== 'confirme' && !panneauOuvert;
+  b.hidden = !visible;
+  document.body.classList.toggle('a-suivi', visible);
+  if (!visible) return;
+  var st = T.statuts[c.statut] || T.statuts.recue;
+  b.innerHTML = '<span class="pulse"></span><span class="tx"><b>' + st.nom + ' · ' + c.ref + '</b>' +
+    '<span>' + st.client + '</span></span><span class="fl">›</span>';
+  b.onclick = function(){
+    S.ref = c.ref; T.ecrire('refEnCours', c.ref);
+    S.etape = 'confirme'; rendrePanier(); ecran('panier');
+  };
+}
+
 function majBarreTotal(){
   var n = totalArticles();
   var b = $('#barreTotal');
   var visible = n > 0 && S.ecran === 'accueil' && mobile();
   b.classList.toggle('on', visible);
+  document.body.classList.toggle('a-total', visible);
   $('#btQte').textContent = n;
   b.querySelector('.q').innerHTML = '<b id="btQte">' + n + '</b> article' + (n > 1 ? 's' : '');
   $('#btTotal').textContent = F(total());
@@ -1336,7 +1601,7 @@ function rendreTout(){
   $('#btnPanier').title = n ? n + ' article' + (n > 1 ? 's' : '') + ' · ' + F(total()) : 'Panier vide';
   var nn = $('#navN'); nn.hidden = !n; nn.textContent = n;
   $('#zoneNom').textContent = T.zone(S.zone).nom;
-  rendreMenu(); rendrePanier(); majBarreTotal();
+  rendreMenu(); rendrePanier(); majBarreTotal(); majBandeau();
 }
 
 /* ---------------------------------------------------------- animations */
@@ -1397,7 +1662,11 @@ window.addEventListener('resize', function(){ rendrePanier(); });
 window.addEventListener('storage', function(e){
   if (!e.key || e.key.indexOf('tela.') !== 0) return;
   T.recharger();
-  if (e.key === 'tela.commandes' && S.etape === 'confirme') rendrePanier();
+  if (e.key === 'tela.commandes'){
+    majBandeau();
+    if (S.etape === 'confirme') rendrePanier();
+    if (!$('#panneau-histo').hidden && $('#panneau-histo').classList.contains('on')) rendreHisto();
+  }
   if (e.key === 'tela.produits' || e.key === 'tela.categories'){ rendreRail(); rendreMenu(); }
 });
 window.addEventListener('tela:maj', function(){ /* même onglet : déjà géré par sauver() */ });

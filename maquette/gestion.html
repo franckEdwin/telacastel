@@ -144,6 +144,35 @@ body{background:var(--surface-2)}
 .pagination button.on{background:var(--encre);border-color:var(--encre);color:var(--fond);font-weight:500}
 .pagination button[disabled]{opacity:.4;cursor:default}
 
+/* préparation */
+.prep{display:flex;align-items:center;gap:13px;padding:12px 15px;border-bottom:var(--ep-bord) solid var(--bord)}
+.prep:last-child{border-bottom:0}
+.prep.fait{opacity:.5}
+.prep.fait .n{text-decoration:line-through}
+.prep img{width:42px;height:42px;border-radius:9px;object-fit:cover;flex:none}
+.prep .q{font-family:var(--titre);font-weight:700;font-size:19px;min-width:34px;text-align:center;flex:none}
+.prep .n{flex:1;min-width:0;font-size:14px}
+.prep .n span{display:block;font-size:11.5px;color:var(--doux)}
+.coche{width:28px;height:28px;border-radius:9px;border:1.5px solid var(--bord-fort);display:grid;place-items:center;
+  font-size:14px;flex:none;background:var(--surface)}
+.coche.on{background:var(--vert);border-color:var(--vert);color:#fff}
+
+/* tournée */
+.arret{display:flex;align-items:center;gap:12px;padding:12px 15px;border-bottom:var(--ep-bord) solid var(--bord);cursor:pointer}
+.arret:last-child{border-bottom:0}
+.arret:hover{background:var(--surface-2)}
+.arret .pas-num{width:24px;height:24px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;
+  font-size:12px;flex:none;color:var(--doux)}
+.arret .n{flex:1;min-width:0;font-size:13.5px}
+.arret .n span{display:block;font-size:11.5px;color:var(--doux)}
+.arret .m{text-align:right;font-family:var(--titre);font-weight:700;font-size:14px;flex:none}
+.arret .m span{display:block;font-family:var(--texte);font-weight:400;font-size:11px;color:var(--doux)}
+@media (max-width:760px){
+  .arret{flex-wrap:wrap}
+  .arret .n{flex-basis:calc(100% - 100px)}
+  .arret .actions{flex-basis:100%;justify-content:flex-start}
+}
+
 /* stock */
 .jauge-s{width:64px;height:6px;border-radius:99px;background:var(--surface-3);overflow:hidden}
 .jauge-s i{display:block;height:100%;border-radius:99px;background:var(--vert)}
@@ -385,6 +414,11 @@ body{background:var(--surface-2)}
     <nav id="menuAdmin">
       <button data-vue="tableau" data-lib="Tableau de bord" class="on"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg><span class="lib">Tableau de bord</span></button>
       <button data-vue="commandes" data-lib="Commandes"><svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7zM9 8V6a3 3 0 0 1 6 0v2"/></svg><span class="lib">Commandes</span><span class="n" id="badgeCmd" hidden>0</span></button>
+      <div class="grp">Service du jour</div>
+      <button data-vue="preparation" data-lib="Préparation"><svg viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M6 20V9a6 6 0 0 1 12 0v11"/><path d="M12 3v1.5"/></svg><span class="lib">Préparation</span><span class="n" id="badgePrep" hidden>0</span></button>
+      <button data-vue="tournee" data-lib="Tournée"><svg viewBox="0 0 24 24"><circle cx="6" cy="18" r="2.6"/><circle cx="18" cy="18" r="2.6"/><path d="M8.6 18h6.8M6 15.4V9h4l3 4h2.5a2.5 2.5 0 0 1 2.5 2.5v2"/></svg><span class="lib">Tournée</span></button>
+      <button data-vue="caisse" data-lib="Caisse du jour"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="12" rx="2.5"/><path d="M3 11h18M7 15h3"/></svg><span class="lib">Caisse du jour</span></button>
+
       <div class="grp">Catalogue</div>
       <button data-vue="produits" data-lib="Produits"><svg viewBox="0 0 24 24"><path d="M20 7 12 3 4 7v10l8 4 8-4z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg><span class="lib">Produits</span></button>
       <button data-vue="stock" data-lib="Stock"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h10"/><circle cx="19" cy="18" r="2.5"/></svg><span class="lib">Stock</span><span class="n" id="badgeStock" hidden>0</span></button>
@@ -639,6 +673,11 @@ function idsProduits(){ return Object.keys(T.produits); }
 function alertes(){ return idsProduits().filter(function(id){ var e = T.etatStock(id); return e === 'epuise' || e === 'bas' || e === 'retire'; }); }
 function badges(){
   var n1 = aValider().length, n2 = alertes().length;
+  var np = cmds().filter(function(x){
+    return ['validee','preparation'].indexOf(x.statut) > -1 &&
+           new Date(x.jourLivraison).toDateString() === D.livraison.toDateString();
+  }).length;
+  var bp = $('#badgePrep'); if (bp){ bp.hidden = !np; bp.textContent = np; }
   [['#badgeCmd', n1], ['#navCmd', n1], ['#badgeStock', n2], ['#navStock', n2]].forEach(function(p){
     var e = $(p[0]); if (!e) return;
     e.hidden = !p[1]; e.textContent = p[1];
@@ -733,7 +772,8 @@ function choisirFichier(cb){
 }
 
 /* ---------------------------------------------------------- routeur */
-var titres = {tableau:'Tableau de bord', commandes:'Commandes', produits:'Produits',
+var titres = {tableau:'Tableau de bord', commandes:'Commandes', preparation:'Préparation du jour',
+              tournee:'Tournée de livraison', caisse:'Caisse du jour', produits:'Produits',
               stock:'Stock du jour', categories:'Catégories', semaine:'Menu de la semaine',
               clients:'Clients', reglages:'Réglages'};
 function rendre(){
@@ -741,8 +781,9 @@ function rendre(){
   T.recharger(); badges();
   $('#titreVue').textContent = titres[vue];
   var c = $('#contenu'); c.innerHTML = '';
-  ({tableau:vueTableau, commandes:vueCommandes, produits:vueProduits, stock:vueStock,
-    categories:vueCategories, semaine:vueSemaine, clients:vueClients, reglages:vueReglages})[vue](c);
+  ({tableau:vueTableau, commandes:vueCommandes, preparation:vuePreparation, tournee:vueTournee,
+    caisse:vueCaisseJour, produits:vueProduits, stock:vueStock, categories:vueCategories,
+    semaine:vueSemaine, clients:vueClients, reglages:vueReglages})[vue](c);
 }
 
 /* ---------------------------------------------------------- tableau de bord */
@@ -995,6 +1036,187 @@ $('#voile').onclick = function(){
   $('#flanc').classList.remove('on');
   $('#voile').classList.remove('on');
 };
+
+/* ---------------------------------------------------------- préparation du jour
+   Ce que la cuisine doit sortir demain matin, tous clients confondus.     */
+function commandesAPreparer(){
+  return cmds().filter(function(x){
+    return ['validee','preparation','route'].indexOf(x.statut) > -1 &&
+           new Date(x.jourLivraison).toDateString() === D.livraison.toDateString();
+  });
+}
+function vuePreparation(c){
+  var liste = commandesAPreparer();
+  var agrege = {};
+  liste.forEach(function(x){
+    x.lignes.forEach(function(l){
+      var cle = l.id + '|' + l.fmt;
+      if (!agrege[cle]) agrege[cle] = {id:l.id, nom:l.nom, img:l.img, fmt:l.fmt, qte:0, notes:[]};
+      agrege[cle].qte += l.qte;
+      if (l.note) agrege[cle].notes.push(l.qte + '× ' + l.note);
+      if (l.sup) agrege[cle].notes.push(l.qte + '× ' + l.sup);
+    });
+  });
+  var cles = Object.keys(agrege).sort(function(a,b){ return agrege[b].qte - agrege[a].qte; });
+  var portions = cles.reduce(function(a,k){ return a + agrege[k].qte; }, 0);
+  var faits = T.lire('prepFaites', {});
+
+  var k = el('div','kpis');
+  k.appendChild(kpi('Commandes à préparer', liste.length, 'pour ' + D.court));
+  k.appendChild(kpi('Portions au total', portions, cles.length + ' préparations différentes'));
+  k.appendChild(kpi('Déjà prêtes', Object.keys(faits).filter(function(x){ return faits[x]; }).length, 'cochées par la cuisine'));
+  var premier = liste.filter(function(x){ return T.creneau(x.creneau).type === 'matin'; }).length;
+  k.appendChild(kpi('Pour le matin', premier, liste.length - premier + ' pour le goûter'));
+  c.appendChild(k);
+
+  var p = el('div','panneau-b');
+  var t = el('div','tete');
+  t.appendChild(el('h2', null, 'À préparer pour ' + D.long));
+  var f = el('div','fin');
+  var imp = el('button','btn creux petit'); imp.textContent = 'Imprimer la liste';
+  imp.onclick = function(){ window.print(); };
+  var raz = el('button','btn creux petit'); raz.textContent = 'Tout décocher';
+  raz.onclick = function(){ T.ecrire('prepFaites', {}); rendre(); };
+  f.appendChild(imp); f.appendChild(raz); t.appendChild(f); p.appendChild(t);
+
+  var corps = el('div','corps serre'); corps.id = 'zoneImpression';
+  if (!cles.length) corps.appendChild(el('p','vide','Aucune commande validée pour ' + D.court + '.<br>Validez les commandes reçues pour alimenter cette liste.'));
+  cles.forEach(function(cle){
+    var a = agrege[cle];
+    var fait = !!faits[cle];
+    var r = el('div','prep' + (fait ? ' fait' : ''));
+    var coche = el('button','coche' + (fait ? ' on' : ''));
+    coche.innerHTML = fait ? '✓' : '';
+    coche.onclick = function(){
+      var m = T.lire('prepFaites', {});
+      m[cle] = !m[cle];
+      T.ecrire('prepFaites', m);
+      toast(a.nom, m[cle] ? 'Préparé' : 'À refaire', m[cle] ? 'succes' : 'info');
+      rendre();
+    };
+    r.appendChild(coche);
+    r.appendChild(el('span','q', a.qte));
+    var im = el('img'); im.src = T.img(a.img); im.alt = '';
+    r.appendChild(im);
+    r.appendChild(el('div','n', a.nom + '<span>' + a.fmt + (a.notes.length ? ' · ' + a.notes.join(' · ') : '') + '</span>'));
+    corps.appendChild(r);
+  });
+  p.appendChild(corps);
+  c.appendChild(p);
+}
+
+/* ---------------------------------------------------------- tournée de livraison */
+function vueTournee(c){
+  var liste = commandesAPreparer();
+  c.appendChild(el('div','panneau-b','<div class="corps"><div style="font-size:13px;color:var(--doux)">' +
+    'Les livraisons de <b style="color:var(--encre)">' + D.long + '</b>, regroupées par créneau puis par quartier. ' +
+    'Cochez au fur et à mesure : le client voit son suivi avancer.</div></div>'));
+
+  T.creneaux.forEach(function(cr){
+    var duCreneau = liste.filter(function(x){ return x.creneau === cr.id; });
+    if (!duCreneau.length) return;
+    var p = el('div','panneau-b');
+    var t = el('div','tete');
+    t.appendChild(el('h2', null, cr.nom));
+    var f = el('div','fin');
+    f.appendChild(el('span','etq', duCreneau.length + ' arrêt' + (duCreneau.length > 1 ? 's' : '')));
+    var esp = duCreneau.filter(function(x){ return x.paiement === 'especes'; })
+                       .reduce(function(a,x){ return a + x.total; }, 0);
+    if (esp) f.appendChild(el('span','etq or', T.F(esp) + ' à encaisser'));
+    t.appendChild(f); p.appendChild(t);
+
+    var corps = el('div','corps serre');
+    var parZone = {};
+    duCreneau.forEach(function(x){ (parZone[x.zone] = parZone[x.zone] || []).push(x); });
+    Object.keys(parZone).forEach(function(z){
+      corps.appendChild(el('div','lab', T.zone(z).nom + ' · ' + T.zone(z).delai));
+      parZone[z].forEach(function(x){
+        var r = el('div','arret');
+        r.appendChild(el('span','pas-num', x.statut === 'livree' ? '✓' : '•'));
+        r.appendChild(el('div','n', x.client.nom + '<span>' + x.adresse + '</span>'));
+        r.appendChild(el('div','m', T.F(x.total) + '<span>' + T.paiement(x.paiement).nom.replace(' à la livraison','') +
+          (x.especes && x.especes.montant && !x.especes.appoint
+            ? ' · rendre ' + T.F(x.especes.montant - x.total) : '') + '</span>'));
+        var act = el('div','actions');
+        var tel = el('a','icone'); tel.href = 'tel:' + x.client.tel.replace(/[^0-9+]/g,'');
+        tel.title = 'Appeler'; tel.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z"/></svg>';
+        act.appendChild(tel);
+        if (x.statut !== 'livree'){
+          var ok = el('button','btn petit'); ok.textContent = x.statut === 'route' ? 'Livrée' : 'En route';
+          ok.onclick = function(){ changerStatut(x.ref, x.statut === 'route' ? 'livree' : 'route'); };
+          act.appendChild(ok);
+        } else act.appendChild(el('span','etq vert','Livrée'));
+        r.appendChild(act);
+        r.onclick = function(e){ if (e.target.closest('.actions')) return; ouvrirCommande(x.ref); };
+        corps.appendChild(r);
+      });
+    });
+    p.appendChild(corps);
+    c.appendChild(p);
+  });
+  if (!liste.length) c.appendChild(el('p','vide','Aucune livraison prévue pour ' + D.court + '.'));
+}
+
+/* ---------------------------------------------------------- caisse du jour */
+function vueCaisseJour(c){
+  var liste = duJour();
+  var livrees = liste.filter(function(x){ return x.statut === 'livree'; });
+  var parMoyen = {};
+  T.paiements.forEach(function(p){ parMoyen[p.id] = {nom:p.nom, logo:p.logo, n:0, montant:0}; });
+  livrees.forEach(function(x){
+    var m = parMoyen[x.paiement] || (parMoyen[x.paiement] = {nom:x.paiement, n:0, montant:0});
+    m.n++; m.montant += x.total;
+  });
+  var encaisse = livrees.reduce(function(a,x){ return a + x.total; }, 0);
+  var attendu = liste.filter(function(x){ return x.statut !== 'refusee'; }).reduce(function(a,x){ return a + x.total; }, 0);
+
+  var k = el('div','kpis');
+  k.appendChild(kpi('Encaissé', T.F(encaisse), livrees.length + ' commandes livrées'));
+  k.appendChild(kpi('Attendu sur la journée', T.F(attendu), liste.length + ' commandes'));
+  k.appendChild(kpi('Reste à encaisser', T.F(attendu - encaisse), (liste.length - livrees.length) + ' en cours'));
+  k.appendChild(kpi('Panier moyen', T.F(livrees.length ? Math.round(encaisse/livrees.length) : 0), 'sur les livrées'));
+  c.appendChild(k);
+
+  var p = el('div','panneau-b');
+  p.appendChild(el('div','tete','<h2>Répartition par moyen de paiement</h2>'));
+  var corps = el('div','corps serre');
+  Object.keys(parMoyen).forEach(function(id){
+    var m = parMoyen[id];
+    var r = el('div','rang');
+    if (m.logo){ var im = el('img'); im.src = m.logo; im.alt = ''; im.style.cssText = 'height:24px;width:auto'; r.appendChild(im); }
+    r.appendChild(el('div','tx','<b>' + m.nom + '</b><span>' + m.n + ' commande' + (m.n > 1 ? 's' : '') + '</span>'));
+    var part = encaisse ? Math.round(m.montant / encaisse * 100) : 0;
+    r.appendChild(el('span','etq', part + ' %'));
+    r.appendChild(el('span', null, '<b style="font-family:var(--titre);font-size:15px">' + T.F(m.montant) + '</b>'));
+    corps.appendChild(r);
+  });
+  p.appendChild(corps);
+  c.appendChild(p);
+
+  var p2 = el('div','panneau-b');
+  p2.appendChild(el('div','tete','<h2>Détail des encaissements</h2>'));
+  var c2 = el('div','corps serre');
+  if (!livrees.length) c2.appendChild(el('p','vide','Aucune commande livrée pour l\u2019instant.'));
+  livrees.forEach(function(x){
+    var b = el('button','cmd');
+    b.appendChild(el('span','ref', x.ref));
+    b.appendChild(el('span','cli', x.client.nom + '<span>' + T.zone(x.zone).nom + '</span>'));
+    b.appendChild(el('span','det', T.paiement(x.paiement).nom));
+    b.appendChild(el('span','tot', T.F(x.total)));
+    b.onclick = function(){ ouvrirCommande(x.ref); };
+    c2.appendChild(b);
+  });
+  p2.appendChild(c2);
+  c.appendChild(p2);
+
+  var cl = el('button','btn creux plein');
+  cl.textContent = 'Clôturer la journée';
+  cl.onclick = function(){
+    if (!confirm('Clôturer la journée ? Le récapitulatif sera figé.')) return;
+    toast('Journée clôturée', T.F(encaisse) + ' encaissés', 'succes');
+  };
+  c.appendChild(cl);
+}
 
 /* ---------------------------------------------------------- produits */
 function vueProduits(c){
