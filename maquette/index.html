@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr" data-theme="clair">
+<html lang="fr" data-theme="clair" data-dessin="epure">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -452,6 +452,52 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
   .rappel .chrono{padding:6px 11px}
 }
 @media (min-width:1100px){ .rappel .ct{display:none} }
+/* ============================================================
+   Dessin « épuré » — le parti pris par défaut
+   Les boîtes bordées autour de chaque plat donnaient une grille de
+   cartes : générique, et lourde dès qu'il y a quarante produits.
+   Ici la carte redevient une carte de restaurant : des lignes, un
+   filet entre elles, une photo ronde et un prix qui se lit de loin.
+   ============================================================ */
+[data-dessin="epure"] .plats{gap:0;grid-template-columns:1fr}
+[data-dessin="epure"] .plat{
+  border:0;border-radius:0;background:transparent;padding:15px 0;gap:15px;align-items:flex-start;
+  border-bottom:var(--ep-bord) solid var(--bord)}
+[data-dessin="epure"] .plat:last-child{border-bottom:0}
+[data-dessin="epure"] .plat:hover{transform:none;background:transparent}
+[data-dessin="epure"] .plat:hover h3{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+[data-dessin="epure"] .plat .vis{width:84px;height:84px;flex:none;border-radius:26px;overflow:hidden;position:relative}
+[data-dessin="epure"] .plat .vis img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+[data-dessin="epure"] .plat .tx{gap:3px;padding-right:44px}
+[data-dessin="epure"] .plat h3{font-size:15.5px;line-height:1.25}
+[data-dessin="epure"] .plat .d{font-size:12.5px;-webkit-line-clamp:2}
+[data-dessin="epure"] .plat .meta{padding-top:7px;gap:10px}
+[data-dessin="epure"] .plat .prix{font-family:var(--titre);font-weight:700;font-size:15px;color:var(--encre)}
+/* la note et le nombre d'avis encombrent la ligne : elles restent sur la fiche */
+[data-dessin="epure"] .plat .etoile{display:none}
+[data-dessin="epure"] .plat .restant{color:var(--rouge);font-size:11.5px}
+/* l'étiquette devient un mot, pas une pastille de couleur */
+[data-dessin="epure"] .plat .tx > .etq{background:transparent;padding:0;color:var(--or-fonce);
+  font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;font-weight:600}
+[data-dessin="epure"] .plat .tx > .etq.vert{color:var(--vert)}
+[data-dessin="epure"] .plat .tx > .etq.rouge{color:var(--rouge)}
+/* le bouton d'ajout : plein, aux couleurs de la maison, posé et non flottant */
+[data-dessin="epure"] .plat .plus{right:0;bottom:auto;top:26px;width:34px;height:34px;border-radius:12px;
+  background:var(--or);border:0;box-shadow:none;color:#241A12;font-size:21px;font-weight:600}
+[data-dessin="epure"] .plat .plus:hover{background:var(--or-fonce);color:#fff}
+[data-dessin="epure"] .plat .cpt{right:0;bottom:auto;top:20px;box-shadow:none;border-color:var(--bord-fort)}
+[data-dessin="epure"] .plat.epuise .vis{filter:grayscale(1);opacity:.55}
+
+/* les titres de section portent la structure, puisque les boîtes ne le font plus */
+[data-dessin="epure"] .sec-titre{padding:22px 0 8px;border-top:var(--ep-bord) solid var(--bord);margin-top:4px}
+[data-dessin="epure"] .sec:first-child .sec-titre{border-top:0;margin-top:0;padding-top:14px}
+[data-dessin="epure"] .t-haut h2{font-size:23px;letter-spacing:-.01em}
+[data-dessin="epure"] .t-haut span{font-size:12px}
+
+@media (min-width:760px){
+  /* en large, deux colonnes de lignes, avec un filet entre elles */
+  [data-dessin="epure"] .plats{grid-template-columns:1fr 1fr;column-gap:30px}
+}
 </style>
 </head>
 <body>

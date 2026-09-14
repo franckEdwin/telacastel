@@ -16,7 +16,7 @@ var T = window.TELA = {};
 var clone = function(o){ return JSON.parse(JSON.stringify(o)); };
 
 /* ---------------------------------------------------------- boutique */
-T.version = '14/09 22h05';
+T.version = '14/09 22h40';
 
 T.boutique = {
   nom: 'Tela Castle',
@@ -513,6 +513,15 @@ T.theme = function(nom){
   else poser();
   return nom;
 };
+/* Le dessin de la carte : « epure » est le parti pris retenu, « boites »
+   garde l'ancien rendu pour pouvoir comparer les deux côte à côte. */
+T.dessin = function(nom){
+  if (!nom) nom = T.lire('dessin', 'epure');
+  else T.ecrire('dessin', nom);
+  document.documentElement.setAttribute('data-dessin', nom);
+  return nom;
+};
+
 /* ---------------------------------------------------------- comptes clients
    Identification par numéro de téléphone, comme toutes les applications
    de commande ici. Les clients de démonstration sont pré-enregistrés :

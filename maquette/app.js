@@ -1264,6 +1264,21 @@ function rendreInfos(){
   });
   dd.appendChild(th);
 
+  dd.appendChild(el('div','lab','Dessin de la carte'));
+  var ds = el('div','choix');
+  [['epure','Épuré'],['boites','Boîtes']].forEach(function(o){
+    var b = el('button', null, o[1]);
+    b.setAttribute('aria-pressed', T.lire('dessin','epure') === o[0]);
+    b.onclick = function(){
+      T.dessin(o[0]);
+      Array.prototype.forEach.call(ds.children, function(x,i){ x.setAttribute('aria-pressed', ['epure','boites'][i] === o[0]); });
+      avis(o[0] === 'epure' ? 'Dessin épuré' : 'Ancien dessin, pour comparer');
+    };
+    ds.appendChild(b);
+  });
+  dd.appendChild(ds);
+  dd.appendChild(el('span','aide','« Épuré » est la nouvelle proposition. « Boîtes » remet l\u2019ancien rendu pour comparer.'));
+
   dd.appendChild(el('div','lab','Application'));
   var inst = el('button','btn creux plein');
   inst.id = 'btnInstaller';
@@ -1710,6 +1725,7 @@ function installer(){
 }
 
 /* ---------------------------------------------------------- démarrage */
+T.dessin();
 $('#infoJour').textContent = D.court;
 $('#rappelLong').textContent = 'Commandez aujourd’hui avant 21h, vous êtes livré ' + D.long + ' au créneau de votre choix.';
 $('#rappelCourt').textContent = 'Livraison ' + D.long;
