@@ -1160,8 +1160,9 @@ function vueCode(dd, pied){
   var indice = el('div');
   indice.style.cssText = 'border:1.5px dashed var(--bord-fort);border-radius:var(--r);padding:12px 14px;' +
     'font-size:12.5px;color:var(--doux);text-align:center';
-  indice.innerHTML = 'Maquette — aucun SMS n\u2019est envoyé.<br>Votre code est <b style="color:var(--encre);' +
-    'font-family:var(--titre);font-size:15px;letter-spacing:.08em">' + CPT.attendu + '</b>';
+  indice.innerHTML = 'Le code vous est envoyé par SMS.<br>En attendant la mise en service de l\u2019envoi, ' +
+    'utilisez <b style="color:var(--encre);font-family:var(--titre);font-size:15px;letter-spacing:.08em">' +
+    CPT.attendu + '</b>';
   dd.appendChild(indice);
 
   var renvoi = el('button');
@@ -2080,6 +2081,15 @@ Array.prototype.forEach.call(document.querySelectorAll('#acces button'), functio
 });
 /* Sur grand écran les accès directs appartiennent à la colonne de gauche ;
    sur mobile, où cette colonne n'existe pas, ils restent dans le flux. */
+/* Le pied ancré masquerait la fin de la page : on réserve dessous sa
+   hauteur exacte, mesurée, et on la remesure au redimensionnement. */
+function mesurerPied(){
+  var p = document.querySelector('.pied-site');
+  if (!p) return;
+  if (mobile()){ document.documentElement.style.removeProperty('--h-pied'); return; }
+  document.documentElement.style.setProperty('--h-pied', Math.ceil(p.offsetHeight) + 'px');
+}
+
 function placerAcces(){
   var a = $('#acces'); if (!a) return;
   var colonne = $('.col-nav .in'), flux = $('#accueil'), rail = $('#rail');
@@ -2213,8 +2223,9 @@ rendreRail(); rendreTout(); chrono(); spy();
 surveillerCommandes();
 setInterval(surveillerCommandes, 6000);
 S.ecran = mobile() ? 'accueil' : 'accueil';
-majEcranBase(); majNav();
-window.addEventListener('resize', function(){ majEcranBase(); placerAcces(); });
+majEcranBase(); majNav(); mesurerPied();
+window.addEventListener('load', mesurerPied);
+window.addEventListener('resize', function(){ majEcranBase(); placerAcces(); mesurerPied(); });
 setInterval(chrono, 1000);
 window.addEventListener('load', animations);
 })();
