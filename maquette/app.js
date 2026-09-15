@@ -1546,7 +1546,11 @@ function rendreHisto(){
     var rech = el('div','promo-z');
     var l1 = el('div','promo-l');
     var ir = el('input'); ir.type = 'text'; ir.placeholder = 'Référence, ex. TC-1609-142';
-    var okr = el('button','btn petit'); okr.textContent = 'Chercher';
+    var okr = el('button','btn carre');
+    okr.setAttribute('aria-label', 'Chercher cette commande');
+    okr.title = 'Chercher';
+    okr.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" ' +
+      'stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>';
     var msgr = el('span','aide');
     okr.onclick = function(){
       var ref = String(ir.value || '').trim().toUpperCase();

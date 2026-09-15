@@ -470,10 +470,15 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
 .promo-z{display:grid;gap:7px}
 .remise span:last-child{color:var(--vert);font-weight:600}
 .remise span:first-child{color:var(--vert)}
-.promo-l{display:flex;gap:8px}
-.promo-l input{flex:1;min-width:0;padding:11px 13px;border-radius:999px;border:var(--ep-bord) solid var(--bord);
-  background:var(--surface);font-size:13.5px;text-transform:uppercase;letter-spacing:.05em}
-.promo-l button{flex:none}
+/* Le champ et son bouton partagent la même hauteur : un bouton plus petit
+   que la zone de saisie donne l'impression d'un assemblage bancal. */
+.promo-l{display:flex;gap:8px;align-items:stretch}
+.promo-l input{flex:1;min-width:0;height:46px;padding:0 16px;border-radius:999px;
+  border:var(--ep-bord) solid var(--bord);background:var(--surface);
+  font-size:13.5px;text-transform:uppercase;letter-spacing:.05em}
+.promo-l .btn{flex:none;height:46px}
+.promo-l .btn.carre{width:46px;padding:0;border-radius:50%}
+.promo-l .btn.carre svg{width:19px;height:19px}
 .promo-ok{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:16px;
   background:var(--vert-doux);border:var(--ep-bord) solid rgba(23,161,94,.3)}
 .promo-ok .c{font-family:ui-monospace,Menlo,monospace;font-size:12px;font-weight:600;letter-spacing:.06em;

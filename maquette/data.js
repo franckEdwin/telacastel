@@ -16,7 +16,7 @@ var T = window.TELA = {};
 var clone = function(o){ return JSON.parse(JSON.stringify(o)); };
 
 /* ---------------------------------------------------------- boutique */
-T.version = '15/09 16h30';
+T.version = '15/09 16h55';
 
 T.boutique = {
   nom: 'Tela Castle',
