@@ -10,7 +10,8 @@
 import { put, get } from '@vercel/blob';
 
 const CHEMIN = 'tela/etat.json';
-const VIDE = { commandes: [], produits: null, categories: null, devis: [], equipe: null, maj: 0 };
+const VIDE = { commandes: [], produits: null, categories: null, devis: [], equipe: null,
+               promos: null, fermetures: null, clotures: [], journalActions: [], maj: 0 };
 
 async function lire(){
   try {
@@ -68,6 +69,11 @@ function fusionner(ancien, nouveau){
     produits:   nouveau.produits   ?? ancien.produits,
     categories: nouveau.categories ?? ancien.categories,
     equipe:     nouveau.equipe     ?? ancien.equipe,
+    promos:     nouveau.promos     ?? ancien.promos,
+    fermetures: nouveau.fermetures ?? ancien.fermetures,
+    /* clôtures et journal ne font que s'ajouter : on garde la liste la plus longue */
+    clotures:      (nouveau.clotures      || []).length >= (ancien.clotures      || []).length ? nouveau.clotures      : ancien.clotures,
+    journalActions:(nouveau.journalActions|| []).length >= (ancien.journalActions|| []).length ? nouveau.journalActions: ancien.journalActions,
     maj: Date.now()
   };
 }

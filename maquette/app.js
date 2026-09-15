@@ -25,6 +25,7 @@ var S = {
   adresse:  T.lire('adresse', 'Rue L94, portail vert, en face de la pharmacie'),
   position: T.lire('position', null),
   especes:  T.lire('especes', null),
+  promo:    T.lire('promo', null),
   etape:    'panier',
   ref:      T.lire('refEnCours', null),
   q:        '',
@@ -52,7 +53,22 @@ var S = {
 function totalArticles(){ return S.panier.reduce(function(a,l){ return a + l.qte; }, 0); }
 function sousTotal(){ return S.panier.reduce(function(a,l){ return a + l.prix * l.qte; }, 0); }
 function frais(){ var st = sousTotal(); return !st ? 0 : (st >= T.boutique.seuilLivraisonOfferte ? 0 : T.zone(S.zone).frais); }
-function total(){ return sousTotal() + frais(); }
+function fraisApresPromo(){
+  return (S.promo && S.promo.livraisonOfferte) ? 0 : frais();
+}
+function remise(){ return (S.promo && !S.promo.livraisonOfferte) ? S.promo.remise : 0; }
+function total(){ return Math.max(0, sousTotal() + fraisApresPromo() - remise()); }
+/* Le code reste valable tant que le panier respecte ses conditions. */
+function revaliderPromo(){
+  if (!S.promo) return;
+  var v = T.verifierPromo(S.promo.code, sousTotal(), frais(), dejaClient());
+  if (!v.ok){ S.promo = null; T.ecrire('promo', null); }
+  else { S.promo = v; T.ecrire('promo', v); }
+}
+function dejaClient(){
+  if (!compte) return false;
+  return T.commandes().some(function(c){ return T.telCle(c.client.tel) === T.telCle(compte.tel); });
+}
 function qteProduit(id){ return S.panier.reduce(function(a,l){ return a + (l.id === id ? l.qte : 0); }, 0); }
 
 function ajouter(id, iFmt, qte, sups, note, silencieux){
@@ -78,6 +94,7 @@ function retirer(id){
   sauver();
 }
 function sauver(){
+  revaliderPromo();
   T.ecrire('panier', S.panier);
   T.ecrire('zone', S.zone); T.ecrire('creneau', S.creneau);
   T.ecrire('paiement', S.paiement); T.ecrire('adresse', S.adresse);
@@ -500,9 +517,41 @@ function vuePanier(dd, pied){
 
   var add = el('div','addition');
   add.appendChild(el('div', null, '<span>Sous-total</span><span>' + F(sousTotal()) + '</span>'));
-  add.appendChild(el('div', null, '<span>Livraison · ' + T.zone(S.zone).nom + '</span><span>' + (frais() ? F(frais()) : 'Offerte') + '</span>'));
+  if (remise()) add.appendChild(el('div','remise','<span>Code ' + S.promo.code + '</span><span>− ' + F(remise()) + '</span>'));
+  add.appendChild(el('div', null, '<span>Livraison · ' + T.zone(S.zone).nom + '</span><span>' +
+    (fraisApresPromo() ? F(fraisApresPromo()) : 'Offerte') + '</span>'));
   add.appendChild(el('div','tot','<span>Total</span><span>' + F(total()) + '</span>'));
   pied.appendChild(add);
+  /* Code promo : saisi ici, vérifié aussitôt, visible dans le total. */
+  dd.appendChild(el('div','lab','Code promo'));
+  var zp = el('div','promo-z');
+  if (S.promo){
+    var appli = el('div','promo-ok');
+    appli.innerHTML = '<span class="c">' + S.promo.code + '</span>' +
+      '<span class="t"><b>' + S.promo.libelle + '</b><span>' +
+      (S.promo.livraisonOfferte ? 'Livraison offerte' : '− ' + F(S.promo.remise)) + '</span></span>';
+    var ret = el('button','x'); ret.textContent = '✕'; ret.title = 'Retirer le code';
+    ret.onclick = function(){ S.promo = null; T.ecrire('promo', null); sauver(); rendrePanier(); };
+    appli.appendChild(ret);
+    zp.appendChild(appli);
+  } else {
+    var ligne = el('div','promo-l');
+    var ip = el('input'); ip.type = 'text'; ip.placeholder = 'Votre code'; ip.autocapitalize = 'characters';
+    var okp = el('button','btn petit'); okp.textContent = 'Appliquer';
+    var msg = el('span','aide');
+    okp.onclick = function(){
+      var v = T.verifierPromo(ip.value, sousTotal(), frais(), dejaClient());
+      if (!v.ok){ msg.textContent = v.raison; msg.style.color = 'var(--rouge)'; return; }
+      S.promo = v; T.ecrire('promo', v);
+      avis(v.libelle);
+      sauver(); rendrePanier();
+    };
+    ip.onkeydown = function(e){ if (e.key === 'Enter'){ e.preventDefault(); okp.onclick(); } };
+    ligne.appendChild(ip); ligne.appendChild(okp);
+    zp.appendChild(ligne); zp.appendChild(msg);
+  }
+  dd.appendChild(zp);
+
   var b2 = el('button','btn plein grand');
   b2.textContent = 'Passer à la caisse · ' + F(total());
   b2.onclick = function(){ S.etape = 'caisse'; rendrePanier(); };
@@ -658,7 +707,8 @@ function vueCaisse(dd, pied){
   /* 5. le récapitulatif */
   var rec = el('div','addition');
   rec.appendChild(el('div', null, '<span>Produits</span><span>' + F(sousTotal()) + '</span>'));
-  rec.appendChild(el('div', null, '<span>Livraison</span><span>' + (frais() ? F(frais()) : 'Offerte') + '</span>'));
+  if (remise()) rec.appendChild(el('div','remise','<span>Code ' + S.promo.code + '</span><span>− ' + F(remise()) + '</span>'));
+  rec.appendChild(el('div', null, '<span>Livraison</span><span>' + (fraisApresPromo() ? F(fraisApresPromo()) : 'Offerte') + '</span>'));
   rec.appendChild(el('div','tot','<span>Total à payer</span><span>' + F(total()) + '</span>'));
   dd.appendChild(rec);
   dd.appendChild(el('p','aide','Rien n\u2019est débité maintenant. Tela Castle confirme la commande, puis vous payez ' +
@@ -767,6 +817,11 @@ function feuilleEspeces(){
 
 function envoyer(){
   if (!S.panier.length) return;
+  var ferme = T.ferme(D.livraison);
+  if (ferme){
+    avis('Fermé ' + D.long + (ferme.motif ? ' · ' + ferme.motif : ''));
+    return;
+  }
   var cmd = {
     ref: T.nouvelleRef(),
     creele: new Date().toISOString(),
@@ -774,13 +829,15 @@ function envoyer(){
     zone: S.zone, adresse: S.adresse, position: S.position,
     creneau: S.creneau, jourLivraison: D.livraison.toISOString(),
     lignes: S.panier.map(function(l){ return {id:l.id, nom:l.nom, img:l.img, fmt:l.fmt, sup:l.sup, prix:l.prix, qte:l.qte, note:l.note}; }),
-    sousTotal: sousTotal(), frais: frais(), total: total(),
+    sousTotal: sousTotal(), frais: fraisApresPromo(), total: total(),
+    promo: S.promo ? S.promo.code : null, remise: remise() + (S.promo && S.promo.livraisonOfferte ? frais() : 0),
     paiement: S.paiement,
     especes: S.paiement === 'especes' ? S.especes : null,
     statut: 'recue', canal: 'app',
     journal: [{quand:new Date().toISOString(), quoi:'recue'}]
   };
   T.enregistrerCommande(cmd);
+  if (S.promo){ T.consommerPromo(S.promo.code); S.promo = null; T.ecrire('promo', null); }
   /* le stock diminue comme dans la vraie vie */
   S.panier.forEach(function(l){
     var p = T.produits[l.id];
@@ -788,6 +845,9 @@ function envoyer(){
   });
   if (compte){ T.gagnerFidelite(compte.tel); compte = T.compte(); }
   S.ref = cmd.ref; T.ecrire('refEnCours', cmd.ref);
+  statutsVus[cmd.ref] = cmd.statut; T.ecrire('statutsVus', statutsVus);
+  demanderNotifications();
+  if (T.pousser) T.pousser();
   S.etape = 'confirme';
   S.panier = [];
   sauver();
@@ -809,6 +869,47 @@ function vueConfirme(dd, pied){
     '<span style="margin-left:auto;font-size:12px;color:var(--doux)">' + T.heure(cmd.creele) + '</span></div>' +
     '<div style="margin-top:10px;font-size:13.5px">' + st.client + '</div>' +
     '<div style="font-size:12px;color:var(--doux);margin-top:3px">Livraison ' + D.long + ' · ' + T.creneau(cmd.creneau).nom + '</div></div>'));
+
+  /* Suivi vivant : une barre qui avance, le livreur quand il est connu,
+     et la preuve de remise une fois la commande livrée. */
+  var etapeActuelle = st.etape < 0 ? 0 : st.etape;
+  var avance = Math.round(etapeActuelle / (T.ordreStatuts.length - 1) * 100);
+  var barre = el('div','suivi-barre');
+  barre.innerHTML = '<div class="p" style="width:' + avance + '%"></div>';
+  dd.appendChild(barre);
+
+  if (cmd.livreur){
+    var liv = T.membre(cmd.livreur);
+    if (liv){
+      var bl = el('div','bloc');
+      bl.style.cssText = 'padding:13px 15px;display:flex;align-items:center;gap:12px';
+      bl.innerHTML = '<span style="width:42px;height:42px;border-radius:50%;background:var(--or-doux);' +
+        'display:grid;place-items:center;font-family:var(--titre);font-weight:700;color:var(--or-fonce)">' +
+        liv.nom.charAt(0) + '</span>' +
+        '<span style="flex:1"><b style="font-family:var(--titre);font-size:14.5px">' + liv.nom + '</b>' +
+        '<span style="display:block;font-size:12px;color:var(--doux)">Votre livreur</span></span>';
+      var app = el('a','btn petit creux');
+      app.href = 'tel:' + String(liv.tel).replace(/[^0-9+]/g,'');
+      app.textContent = 'Appeler';
+      bl.appendChild(app);
+      dd.appendChild(bl);
+    }
+  }
+
+  if (cmd.preuve){
+    var pv = el('div','bloc');
+    pv.style.padding = '13px 15px';
+    pv.innerHTML = '<b style="font-family:var(--titre);font-size:14px">Remise en main propre</b>' +
+      '<div style="font-size:12.5px;color:var(--doux);margin-top:5px">Reçue par ' + cmd.preuve.recuPar +
+      ' · ' + T.heure(cmd.preuve.quand) + (cmd.preuve.encaisse ? ' · ' + F(cmd.preuve.encaisse) + ' encaissés' : '') + '</div>' +
+      (cmd.preuve.note ? '<div style="font-size:12.5px;margin-top:4px">« ' + cmd.preuve.note + ' »</div>' : '');
+    if (cmd.preuve.photo){
+      var im = el('img'); im.src = cmd.preuve.photo;
+      im.style.cssText = 'width:100%;border-radius:12px;margin-top:10px;display:block';
+      pv.appendChild(im);
+    }
+    dd.appendChild(pv);
+  }
 
   var suivi = el('div');
   T.ordreStatuts.forEach(function(cle, i){
@@ -1623,6 +1724,43 @@ function majDevis(){
     (PL.personnes < 30 ? ', et à partir de 30 personnes la remise groupe s\u2019applique.' : '.') + '</div>';
 }
 
+/* ---------------------------------------------------------- notifications
+   Le client doit apprendre que sa commande avance sans avoir à regarder
+   l'écran. On suit les statuts et on prévient à chaque changement. */
+var statutsVus = T.lire('statutsVus', {});
+function surveillerCommandes(){
+  var miennes = compte ? mesCommandes() : (S.ref ? T.commandes().filter(function(c){ return c.ref === S.ref; }) : []);
+  var change = false;
+  miennes.forEach(function(c){
+    var avant = statutsVus[c.ref];
+    if (avant && avant !== c.statut){
+      var st = T.statuts[c.statut];
+      if (st) notifier(c.ref + ' · ' + st.nom, st.client, c.ref);
+    }
+    if (avant !== c.statut){ statutsVus[c.ref] = c.statut; change = true; }
+  });
+  if (change) T.ecrire('statutsVus', statutsVus);
+}
+function notifier(titre, texte, ref){
+  avis(titre);
+  if ('Notification' in window && Notification.permission === 'granted'){
+    try {
+      var n = new Notification(titre, {body:texte, icon:'img/logo.png', tag:ref});
+      n.onclick = function(){
+        window.focus();
+        if (ref){ S.ref = ref; T.ecrire('refEnCours', ref); S.etape = 'confirme'; rendrePanier(); ecran('panier'); }
+        n.close();
+      };
+    } catch(e){}
+  }
+}
+function demanderNotifications(){
+  if (!('Notification' in window) || Notification.permission !== 'default') return;
+  Notification.requestPermission().then(function(p){
+    if (p === 'granted') avis('Vous serez prévenu à chaque étape');
+  });
+}
+
 /* ---------------------------------------------------------- écran d'accueil
    Mobile seulement : la carte devient un onglet à part, et l'accueil
    répond aux trois questions du matin — où je livre, quand ça ferme,
@@ -1677,13 +1815,16 @@ function rendreAccueil(){
   z.appendChild(tete);
 
   /* service du jour */
-  var ouvert = D.resteMs() > 0;
+  var ferme = T.ferme(D.livraison);
+  var ouvert = D.resteMs() > 0 && !ferme;
   var sv = el('section','ac-service');
   sv.innerHTML =
     '<div class="etat">' + (ouvert ? '<span class="pt"></span>' : '') +
-    '<b>' + (ouvert ? 'Commandes ouvertes' : 'Commandes closes pour ce matin') + '</b></div>' +
-    '<div class="quand">Livraison ' + D.long + ' dès 06h30</div>' +
-    '<div class="note">On cuisine le matin, pas la nuit.</div>' +
+    '<b>' + (ferme ? 'Fermé ' + D.long : (ouvert ? 'Commandes ouvertes' : 'Commandes closes pour ce matin')) + '</b></div>' +
+    '<div class="quand">' + (ferme ? (ferme.motif || 'La boutique ne livre pas ce jour-là')
+                                   : 'Livraison ' + D.long + ' dès 06h30') + '</div>' +
+    '<div class="note">' + (ferme ? 'Revenez le lendemain, nous cuisinons à nouveau.'
+                                  : 'On cuisine le matin, pas la nuit.') + '</div>' +
     '<div class="bas"><div><div class="lab2">CLÔTURE DANS</div>' +
     '<div class="cpt" id="cptAccueil">—</div></div>' +
     '<button class="lien">Horaires</button></div>';
@@ -1985,6 +2126,7 @@ window.addEventListener('storage', function(e){
 /* le statut change quand la boutique valide, depuis un autre appareil */
 window.addEventListener('tela:distant', function(){
   T.recharger();
+  surveillerCommandes();
   majBandeau();
   if (S.etape === 'confirme') rendrePanier();
   if ($('#panneau-histo').classList.contains('on')) rendreHisto();
@@ -2068,6 +2210,8 @@ $('#piedHoraires').innerHTML = T.boutique.horaires.map(function(h){ return '<li>
 if (S.ref && commandeCourante()) S.etape = 'confirme';
 
 rendreRail(); rendreTout(); chrono(); spy();
+surveillerCommandes();
+setInterval(surveillerCommandes, 6000);
 S.ecran = mobile() ? 'accueil' : 'accueil';
 majEcranBase(); majNav();
 window.addEventListener('resize', function(){ majEcranBase(); placerAcces(); });

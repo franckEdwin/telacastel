@@ -57,6 +57,13 @@
     if (etat.equipe && JSON.stringify(etat.equipe) !== JSON.stringify(T.equipe())){
       T.ecrire('equipe', etat.equipe); change = true;
     }
+    [['promos', T.promos], ['fermetures', T.fermetures], ['clotures', T.clotures],
+     ['journalActions', T.journal]].forEach(function(paire){
+      var distant = etat[paire[0]];
+      if (distant && JSON.stringify(distant) !== JSON.stringify(paire[1]())){
+        T.ecrire(paire[0], distant); change = true;
+      }
+    });
     if (change && T.recharger) T.recharger();
     return change;
   }
@@ -85,7 +92,11 @@
         produits: T.produits,
         categories: T.categories,
         devis: T.devis(),
-        equipe: T.equipe()
+        equipe: T.equipe(),
+        promos: T.promos(),
+        fermetures: T.fermetures(),
+        clotures: T.clotures(),
+        journalActions: T.journal()
       })
     }).then(function(r){ return r.ok ? r.json() : null; })
       .then(function(etat){
@@ -104,7 +115,7 @@
   window.addEventListener('tela:maj', function(e){
     if (enCoursApplication) return;
     var cle = e && e.detail && e.detail.cle;
-    if (['commandes', 'produits', 'categories', 'devis', 'equipe'].indexOf(cle) < 0) return;
+    if (['commandes','produits','categories','devis','equipe','promos','fermetures','clotures','journalActions'].indexOf(cle) < 0) return;
     clearTimeout(minuteur);
     minuteur = setTimeout(pousser, 900);
   });

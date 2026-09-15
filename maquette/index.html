@@ -448,6 +448,24 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
 .jours-pl button[aria-pressed="true"]{background:var(--encre);border-color:var(--encre);color:var(--fond)}
 .jours-pl button[aria-pressed="true"] .j,
 .jours-pl button[aria-pressed="true"] .m{color:rgba(255,255,255,.7)}
+.suivi-barre{height:8px;border-radius:99px;background:var(--surface-3);overflow:hidden}
+.suivi-barre .p{height:100%;border-radius:99px;background:var(--or);
+  transition:width .6s cubic-bezier(.22,1,.36,1)}
+.promo-z{display:grid;gap:7px}
+.remise span:last-child{color:var(--vert);font-weight:600}
+.remise span:first-child{color:var(--vert)}
+.promo-l{display:flex;gap:8px}
+.promo-l input{flex:1;min-width:0;padding:11px 13px;border-radius:999px;border:var(--ep-bord) solid var(--bord);
+  background:var(--surface);font-size:13.5px;text-transform:uppercase;letter-spacing:.05em}
+.promo-l button{flex:none}
+.promo-ok{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:16px;
+  background:var(--vert-doux);border:var(--ep-bord) solid rgba(23,161,94,.3)}
+.promo-ok .c{font-family:ui-monospace,Menlo,monospace;font-size:12px;font-weight:600;letter-spacing:.06em;
+  background:var(--vert);color:#fff;padding:5px 9px;border-radius:7px;flex:none}
+.promo-ok .t{flex:1;min-width:0}
+.promo-ok .t b{display:block;font-size:13px;font-weight:500}
+.promo-ok .t span{display:block;font-size:11.5px;color:var(--vert);font-weight:600}
+.promo-ok .x{width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.06);font-size:12px;flex:none}
 .pl-total{display:flex;align-items:baseline;justify-content:space-between;padding:0 4px 4px}
 .pl-total span{font-size:12.5px;color:var(--doux)}
 .pl-total b{font-family:var(--titre);font-weight:700;font-size:22px}

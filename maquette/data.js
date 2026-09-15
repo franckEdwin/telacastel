@@ -16,7 +16,7 @@ var T = window.TELA = {};
 var clone = function(o){ return JSON.parse(JSON.stringify(o)); };
 
 /* ---------------------------------------------------------- boutique */
-T.version = '15/09 10h30';
+T.version = '15/09 12h10';
 
 T.boutique = {
   nom: 'Tela Castle',
@@ -415,9 +415,9 @@ T.suivants = function(statut, droits){
    étapes. Le propriétaire a tout. */
 T.roles = {
   proprietaire: {nom:'Propriétaire', droits:['tout'],
-                 vues:['tableau','commandes','preparation','tournee','caisse','produits','stock','categories','semaine','devis','equipe','clients','reglages']},
+                 vues:['tableau','commandes','preparation','tournee','caisse','produits','stock','categories','semaine','devis','promos','equipe','journal','clients','reglages']},
   gerant:       {nom:'Gérant',       droits:['commandes','cuisine','livraison','catalogue'],
-                 vues:['tableau','commandes','preparation','tournee','caisse','produits','stock','categories','semaine','devis','clients']},
+                 vues:['tableau','commandes','preparation','tournee','caisse','produits','stock','categories','semaine','devis','promos','clients']},
   cuisine:      {nom:'Cuisine',      droits:['cuisine','stock'],
                  vues:['preparation','stock','produits']},
   livreur:      {nom:'Livreur',      droits:['livraison'],
@@ -545,13 +545,97 @@ T.toutPret = function(cmd){
   return cmd.lignes.every(function(l, i){ return f[i + '|' + l.id]; });
 };
 
+/* ---------------------------------------------------------- codes promo */
+T.promosDefaut = [
+  {code:'BIENVENUE', type:'pourcent', valeur:10, minimum:0,     actif:true, usages:0, limite:0,
+   libelle:'10 % sur la première commande', premiereSeule:true},
+  {code:'MATIN500',  type:'montant',  valeur:500, minimum:5000, actif:true, usages:0, limite:0,
+   libelle:'500 F dès 5 000 F d’achat'},
+  {code:'LIVRAISON', type:'livraison', valeur:0,  minimum:3000, actif:true, usages:0, limite:0,
+   libelle:'Livraison offerte dès 3 000 F'}
+];
+T.promos = function(){ return T.lire('promos', null) || clone(T.promosDefaut); };
+T.sauverPromos = function(l){ T.ecrire('promos', l); };
+/* Renvoie la remise applicable, ou une raison claire du refus. */
+T.verifierPromo = function(code, sousTotal, frais, dejaClient){
+  code = String(code || '').trim().toUpperCase();
+  if (!code) return {ok:false, raison:'Entrez un code'};
+  var p = T.promos().filter(function(x){ return x.code === code; })[0];
+  if (!p) return {ok:false, raison:'Ce code n’existe pas'};
+  if (p.actif === false) return {ok:false, raison:'Ce code n’est plus actif'};
+  if (p.limite && p.usages >= p.limite) return {ok:false, raison:'Ce code a atteint sa limite'};
+  if (p.premiereSeule && dejaClient) return {ok:false, raison:'Réservé à la première commande'};
+  if (sousTotal < (p.minimum || 0)) return {ok:false, raison:'À partir de ' + T.F(p.minimum)};
+  var remise = 0, livraisonOfferte = false;
+  if (p.type === 'pourcent') remise = Math.round(sousTotal * p.valeur / 100);
+  else if (p.type === 'montant') remise = Math.min(p.valeur, sousTotal);
+  else if (p.type === 'livraison'){ remise = frais; livraisonOfferte = true; }
+  return {ok:true, code:p.code, libelle:p.libelle, remise:remise, livraisonOfferte:livraisonOfferte};
+};
+T.consommerPromo = function(code){
+  var l = T.promos();
+  l.forEach(function(p){ if (p.code === code) p.usages = (p.usages || 0) + 1; });
+  T.sauverPromos(l);
+};
+
+/* ---------------------------------------------------------- horaires et fermetures */
+T.fermetures = function(){ return T.lire('fermetures', []); };
+T.ajouterFermeture = function(f){
+  var l = T.fermetures(); l.push(f); T.ecrire('fermetures', l); return f;
+};
+T.retirerFermeture = function(jour){
+  T.ecrire('fermetures', T.fermetures().filter(function(f){ return f.jour !== jour; }));
+};
+T.ferme = function(date){
+  var j = (date || new Date()).toISOString().slice(0,10);
+  return T.fermetures().filter(function(f){ return f.jour === j; })[0] || null;
+};
+
+/* ---------------------------------------------------------- journal des actions
+   Qui a fait quoi, quand. Indispensable dès qu'on est plusieurs. */
+T.journal = function(){ return T.lire('journalActions', []); };
+T.tracer = function(quoi, cible, detail){
+  var l = T.journal();
+  var a = T.lire('admin', false);
+  var m = a && a.id ? T.membre(a.id) : null;
+  l.unshift({
+    quand: new Date().toISOString(),
+    qui: m ? m.nom : 'Client',
+    role: m ? m.role : 'client',
+    quoi: quoi, cible: cible || '', detail: detail || ''
+  });
+  T.ecrire('journalActions', l.slice(0, 400));
+};
+
+/* ---------------------------------------------------------- clôtures de journée */
+T.clotures = function(){ return T.lire('clotures', []); };
+T.cloturer = function(rapport){
+  var l = T.clotures();
+  if (l.filter(function(x){ return x.jour === rapport.jour; }).length) return false;
+  l.unshift(rapport);
+  T.ecrire('clotures', l);
+  T.tracer('Clôture de journée', rapport.jour, T.F(rapport.encaisse));
+  return true;
+};
+
 T.majCommande = function(ref, champs){
   var liste = T.commandes();
   for (var i = 0; i < liste.length; i++){
     if (liste[i].ref === ref){
+      var avant = liste[i].statut;
       Object.assign(liste[i], champs);
       liste[i].majLe = new Date().toISOString();
-      liste[i].journal = (liste[i].journal || []).concat([{quand:new Date().toISOString(), quoi: champs.statut || 'modifiée'}]);
+      var a = T.lire('admin', false);
+      var m = a && a.id ? T.membre(a.id) : null;
+      liste[i].journal = (liste[i].journal || []).concat([{
+        quand: new Date().toISOString(),
+        quoi: champs.statut || 'modifiée',
+        par: m ? m.nom : null
+      }]);
+      if (champs.statut && champs.statut !== avant){
+        T.tracer('Commande ' + (T.statuts[champs.statut] || {nom:champs.statut}).nom.toLowerCase(),
+                 liste[i].ref, liste[i].client.nom);
+      }
       break;
     }
   }
