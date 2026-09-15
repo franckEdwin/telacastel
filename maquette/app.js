@@ -940,78 +940,61 @@ function vueConfirme(dd, pied){
   if (T.apercuRecu) T.apercuRecu(cmd, boite);
   else dd.appendChild(ticket(cmd));
 
-  /* proposition de compte, seulement si le client n'en a pas */
+  /* Une ligne, pas un encart : la proposition de compte n'est pas
+     l'affaire du moment. */
   if (!compte){
-    var prop = el('div','bloc');
-    prop.style.cssText = 'padding:14px 16px;display:flex;align-items:center;gap:12px';
-    prop.innerHTML = '<span style="flex:1;min-width:0;font-size:12.5px;line-height:1.45">' +
-      '<b style="font-weight:500">Commande passée sans compte.</b><br>Créez-en un avec ' +
-      T.telJoli(cmd.client.tel) + ' pour retrouver vos commandes.</span>';
-    var bc2 = el('button','btn creux petit');
-    bc2.textContent = 'Créer';
-    bc2.onclick = function(){ ecran('compte'); };
-    prop.appendChild(bc2);
+    var prop = el('button','lien-doux');
+    prop.innerHTML = 'Garder mes commandes avec ' + T.telJoli(cmd.client.tel) + ' <b>Créer un compte</b>';
+    prop.onclick = function(){ ecran('compte'); };
     dd.appendChild(prop);
   }
 
   /* Écrire n'est plus nécessaire : on le propose pour une question,
      discrètement, au milieu du contenu et non comme action principale. */
-  /* Envoyer le reçu : en pièce jointe quand l'appareil sait le faire,
-     sinon par un lien vers l'image — WhatsApp n'accepte pas de fichier
-     dans une adresse. */
-  var envoiRecu = el('button','btn vert plein');
-  envoiRecu.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm5.6 14.1c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.7-.1-.4-.1-.9-.3-1.6-.6-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.4-1.1-2.7s.7-1.9 1-2.2c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5s.8 1.9.8 2 .1.3 0 .5c-.1.2-.2.3-.3.5l-.4.5c-.2.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1s.7-.8.9-1.1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg> Envoyer le reçu à Tela Castle';
-  envoiRecu.onclick = function(){
-    envoiRecu.disabled = true;
-    var peutPartager = T.capaciteRecu && T.capaciteRecu() === 'partage';
-    if (peutPartager){
-      T.partagerRecu(cmd, function(etat){
-        envoiRecu.disabled = false;
-        if (etat === 'partage') avis('Reçu envoyé');
-        else if (etat === 'annule') avis('Envoi annulé');
-      });
-      return;
-    }
-    var fini = function(url){
-      envoiRecu.disabled = false;
-      window.open(T.lienRecuWhatsApp(cmd, url), '_blank');
-    };
-    if (cmd.recuUrl) fini(cmd.recuUrl);
-    else if (T.publierRecu) T.publierRecu(cmd).then(function(url){
-      if (url) T.majCommande(cmd.ref, {recuUrl: url});
-      fini(url);
-    });
-    else fini(null);
-  };
-  dd.appendChild(envoiRecu);
-
-  var wa = el('a','btn creux plein');
-  wa.href = 'https://wa.me/' + T.boutique.telBrut +
-            '?text=' + encodeURIComponent('Bonjour Tela Castle, au sujet de ma commande ' + cmd.ref + ' : ');
-  wa.target = '_blank'; wa.rel = 'noopener';
-  wa.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm5.6 14.1c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.7-.1-.4-.1-.9-.3-1.6-.6-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.4-1.1-2.7s.7-1.9 1-2.2c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5s.8 1.9.8 2 .1.3 0 .5c-.1.2-.2.3-.3.5l-.4.5c-.2.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1s.7-.8.9-1.1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg> Une question ? Écrire à Tela Castle';
-  dd.appendChild(wa);
-
   var capacite = T.capaciteRecu ? T.capaciteRecu() : 'telecharge';
-  var libelles = {partage:'Partager le reçu', copie:'Copier le reçu', telecharge:'Enregistrer le reçu'};
-  var partage = el('button','btn creux plein');
-  partage.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg> ' + libelles[capacite];
-  partage.onclick = function(){
-    partage.disabled = true;
-    T.partagerRecu(cmd, function(etat){
-      partage.disabled = false;
-      if (etat === 'copie') avis('Reçu copié — ouvrez WhatsApp et collez avec Ctrl+V');
-      else if (etat === 'telecharge') avis('Reçu enregistré — joignez-le à votre message');
-      else if (etat === 'partage') avis('Reçu partagé');
-      else if (etat === 'erreur') avis('Le reçu n\u2019a pas pu être créé');
-    });
-  };
-  dd.appendChild(partage);
-  if (capacite !== 'partage'){
-    dd.appendChild(el('span','aide', capacite === 'copie'
-      ? 'Ce navigateur ne sait pas envoyer une image directement. Le reçu est copié, il ne reste qu\u2019à le coller dans la conversation.'
-      : 'Ce navigateur ne sait pas envoyer une image directement. Le reçu est enregistré dans vos téléchargements.'));
+  var actions = el('div','act-recu');
+
+  function actionRecu(icone, libelle, surClic){
+    var b = el('button');
+    b.innerHTML = icone + '<span>' + libelle + '</span>';
+    b.onclick = surClic;
+    return b;
   }
+
+  actions.appendChild(actionRecu(
+    '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm5.6 14.1c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.7-.1-.4-.1-.9-.3-1.6-.6-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.4-1.1-2.7s.7-1.9 1-2.2c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5s.8 1.9.8 2 .1.3 0 .5c-.1.2-.2.3-.3.5l-.4.5c-.2.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1s.7-.8.9-1.1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg>',
+    'Envoyer', function(){
+      if (T.capaciteRecu && T.capaciteRecu() === 'partage'){
+        T.partagerRecu(cmd, function(etat){ if (etat === 'partage') avis('Reçu envoyé'); });
+        return;
+      }
+      var fini = function(url){ window.open(T.lienRecuWhatsApp(cmd, url), '_blank'); };
+      if (cmd.recuUrl) fini(cmd.recuUrl);
+      else if (T.publierRecu) T.publierRecu(cmd).then(function(url){
+        if (url) T.majCommande(cmd.ref, {recuUrl: url});
+        fini(url);
+      });
+      else fini(null);
+    }));
+
+  actions.appendChild(actionRecu(
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>',
+    capacite === 'copie' ? 'Copier' : 'Garder', function(){
+      T.partagerRecu(cmd, function(etat){
+        if (etat === 'copie') avis('Reçu copié — collez-le dans la conversation');
+        else if (etat === 'telecharge') avis('Reçu enregistré');
+        else if (etat === 'erreur') avis('Le reçu n\u2019a pas pu être créé');
+      });
+    }));
+
+  var ecrire = el('a');
+  ecrire.href = 'https://wa.me/' + T.boutique.telBrut +
+                '?text=' + encodeURIComponent('Bonjour Tela Castle, au sujet de ma commande ' + cmd.ref + ' : ');
+  ecrire.target = '_blank'; ecrire.rel = 'noopener';
+  ecrire.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-3.3-6.5"/><path d="M4 20l1.2-3.6"/><path d="M12 8v4.5M12 16h.01"/></svg><span>Écrire</span>';
+  actions.appendChild(ecrire);
+
+  dd.appendChild(actions);
 
   var nb = el('button','btn plein');
   nb.textContent = 'Passer une nouvelle commande';
@@ -1969,6 +1952,10 @@ function rendreAccueil(){
 function ouvrir(sel){
   fermer(true);
   var p = $(sel);
+  /* Le panneau vient parfois de redevenir affichable — son conteneur était
+     masqué par la bascule d'écran. Sans ce recalcul forcé, le navigateur
+     ne joue pas la transition et le panneau reste hors de l'écran. */
+  void p.offsetWidth;
   p.classList.add('on');
   if (!mobile()) $('#voile').classList.add('on');
   document.body.style.overflow = mobile() ? 'hidden' : '';

@@ -472,6 +472,20 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
 .remise span:first-child{color:var(--vert)}
 /* Le champ et son bouton partagent la même hauteur : un bouton plus petit
    que la zone de saisie donne l'impression d'un assemblage bancal. */
+/* Trois gestes rares, sur un rang, sans peser : ils ne doivent pas
+   concurrencer le suivi de la commande, qui est l'objet de l'écran. */
+.lien-doux{display:block;width:100%;text-align:center;font-size:12.5px;color:var(--doux);
+  padding:4px 0;line-height:1.5}
+.lien-doux b{color:var(--encre);font-weight:500;text-decoration:underline;text-underline-offset:3px}
+
+.act-recu{display:flex;gap:8px;width:100%;align-self:stretch}
+.act-recu > *{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  padding:12px 6px;border-radius:16px;background:var(--surface);
+  border:var(--ep-bord) solid var(--filet);font-size:12px;color:var(--encre)}
+.act-recu > *:active{background:var(--surface-2)}
+.act-recu svg{width:19px;height:19px}
+.act-recu > *:first-child svg{fill:var(--vert);stroke:none}
+
 .promo-l{display:flex;gap:8px;align-items:stretch}
 .promo-l input{flex:1;min-width:0;height:46px;padding:0 16px;border-radius:999px;
   border:var(--ep-bord) solid var(--bord);background:var(--surface);
@@ -723,7 +737,12 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
   /* la page d'accueil n'a plus d'en-tête de site : l'écran commence en haut */
   [data-dessin="epure"] body.ec-accueil .bar{display:none}
   [data-dessin="epure"] body.ec-accueil .enveloppe{padding:0}
-  [data-dessin="epure"] body.ec-accueil #accueil > :not(#ecranAccueil){display:none}
+  /* On masque la page de la carte, mais pas le conteneur du panneau du
+     panier : un élément fixé dans un parent en display:none ne s'affiche
+     pas, et le panier restait invisible depuis l'accueil. */
+  [data-dessin="epure"] body.ec-accueil #accueil > :not(#ecranAccueil):not(.corps){display:none}
+  [data-dessin="epure"] body.ec-accueil .corps{display:block;gap:0}
+  [data-dessin="epure"] body.ec-accueil .corps > :not(#panneau-panier){display:none}
   [data-dessin="epure"] body.ec-carte .banniere,
   [data-dessin="epure"] body.ec-carte .infos-b,
   [data-dessin="epure"] body.ec-carte .rappel,
