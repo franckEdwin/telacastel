@@ -385,9 +385,10 @@ body{overflow-x:hidden}
 .bandeau-suivi .fl{font-size:17px;opacity:.6;flex:none}
 /* le bandeau se range au-dessus de la barre de total quand celle-ci est là */
 body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
-@media (min-width:1100px){
-  .bandeau-suivi,body.a-total .bandeau-suivi{left:auto;right:24px;bottom:24px;width:340px}
-}
+/* Sur grand écran le panier de droite montre déjà la commande en cours :
+   le bandeau flottant n'apportait rien et s'affichait vide, en rectangle
+   marron posé sur le pied de page. */
+.bandeau-suivi{display:none}
 
 /* ---------------------------------------------------------- historique */
 .hcmd{display:block;width:100%;text-align:left;background:var(--surface);border:var(--ep-bord) solid var(--bord);
@@ -451,6 +452,12 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
 .suivi-barre{height:8px;border-radius:99px;background:var(--surface-3);overflow:hidden}
 .suivi-barre .p{height:100%;border-radius:99px;background:var(--or);
   transition:width .6s cubic-bezier(.22,1,.36,1)}
+/* Le libellé du bouton WhatsApp passait à la ligne et débordait de sa
+   forme : on le tient sur une ligne et on laisse la taille s'adapter. */
+.btn.vert{white-space:nowrap;font-size:14px;padding:0 16px}
+.btn.vert svg{width:17px;height:17px;flex:none}
+@media (max-width:420px){ .btn.vert{font-size:13px;padding:0 12px} }
+
 .promo-z{display:grid;gap:7px}
 .remise span:last-child{color:var(--vert);font-weight:600}
 .remise span:first-child{color:var(--vert)}
@@ -494,10 +501,16 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
 
   .corps{grid-template-columns:200px minmax(0,1fr) 350px;gap:26px}
   .col-nav{display:block;position:sticky;align-self:start;top:calc(var(--h-bar) + 16px);
-    max-height:calc(100vh - var(--h-bar) - 32px);overflow-y:auto;scrollbar-width:thin}
+    max-height:calc(100vh - var(--h-bar) - 32px);overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+  .col-nav::-webkit-scrollbar{width:0;height:0}
+  /* Hauteur fixe et ancrage : sans cela le panneau grandissait avec son
+     contenu et son pied descendait au fil du défilement. */
   #panneau-panier{position:sticky;top:calc(var(--h-bar) + 16px);right:auto;bottom:auto;transform:none;width:auto;
-    border:var(--ep-bord) solid var(--bord);border-radius:var(--r-g);max-height:calc(100vh - var(--h-bar) - 32px);
-    overflow:hidden;z-index:1;background:var(--surface)}
+    border:var(--ep-bord) solid var(--bord);border-radius:var(--r-g);
+    height:calc(100vh - var(--h-bar) - 32px);max-height:none;
+    display:flex;flex-direction:column;overflow:hidden;z-index:1;background:var(--surface)}
+  #panneau-panier .dedans{flex:1;min-height:0;overflow-y:auto}
+  #panneau-panier .pied{flex:none;padding-bottom:14px}
   #panneau-panier .tete{border-radius:var(--r-g) var(--r-g) 0 0}
   #panneau-panier .tete .retour{display:none}
 }

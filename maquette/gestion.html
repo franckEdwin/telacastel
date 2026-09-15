@@ -2167,7 +2167,7 @@ function editerProduit(id){
   deux.appendChild(champ('Seuil d’alerte', 'number', b.seuil || 5, function(v){ b.seuil = Number(v); }));
   bd.appendChild(deux);
   var rg = el('div','rang'); rg.style.padding = '12px 0 0'; rg.style.borderBottom = '0';
-  rg.appendChild(el('div','tx','<b>En vente</b><span>décoché, le produit disparaît de la boutique</span>'));
+  rg.appendChild(el('div','tx','<b>En vente</b><span>décoché, le produit disparaît de la carte</span>'));
   var bas = el('button','bascule' + (b.actif !== false ? ' on' : ''));
   bas.innerHTML = '<i></i>';
   bas.onclick = function(){ b.actif = !(b.actif !== false); bas.classList.toggle('on', b.actif); };
@@ -2288,7 +2288,7 @@ function vueStock(c){
       act.appendChild(r10);
     } else {
       var fin = el('button','btn creux petit'); fin.textContent = 'C’est fini';
-      fin.onclick = function(){ T.marquerEpuise(id); toast(pr.nom, 'Marqué épuisé — retiré de la boutique', 'alerte'); rendre(); };
+      fin.onclick = function(){ T.marquerEpuise(id); toast(pr.nom, 'Marqué épuisé — retiré de la carte', 'alerte'); rendre(); };
       act.appendChild(fin);
     }
     var ed = el('button','icone'); ed.title = 'Fiche produit'; ed.innerHTML = IC.crayon;
@@ -2339,7 +2339,7 @@ function vueCategories(c){
     bas.onclick = function(){
       cat.actif = !(cat.actif !== false);
       T.sauverCategories(); bas.classList.toggle('on', cat.actif);
-      toast(cat.nom, cat.actif ? 'Visible dans la boutique' : 'Masquée', 'info');
+      toast(cat.nom, cat.actif ? 'Visible sur la carte' : 'Masquée', 'info');
     };
     r.appendChild(bas);
     var act = el('div','actions');
@@ -2579,7 +2579,7 @@ function vueReglages(c){
   fh.appendChild(plusF); th.appendChild(fh); bh.appendChild(th);
   var ch3 = el('div','corps serre');
   var ferms = T.fermetures().slice().sort(function(a,b){ return a.jour < b.jour ? -1 : 1; });
-  if (!ferms.length) ch3.appendChild(el('p','vide','Aucune fermeture prévue. La boutique suit ses horaires habituels.'));
+  if (!ferms.length) ch3.appendChild(el('p','vide','Aucune fermeture prévue. Tela Castle suit ses horaires habituels.'));
   ferms.forEach(function(f){
     var r = el('div','rang');
     r.appendChild(el('div','tx','<b>' + new Date(f.jour).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}) +

@@ -960,7 +960,7 @@ function vueConfirme(dd, pied){
 
   var wa = el('a','btn vert plein');
   wa.href = T.lienWhatsApp(cmd); wa.target = '_blank'; wa.rel = 'noopener';
-  wa.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm5.6 14.1c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.7-.1-.4-.1-.9-.3-1.6-.6-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.4-1.1-2.7s.7-1.9 1-2.2c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5s.8 1.9.8 2 .1.3 0 .5c-.1.2-.2.3-.3.5l-.4.5c-.2.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1s.7-.8.9-1.1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg> Prévenir la boutique sur WhatsApp';
+  wa.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm5.6 14.1c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.7-.1-.4-.1-.9-.3-1.6-.6-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.4-1.1-2.7s.7-1.9 1-2.2c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5s.8 1.9.8 2 .1.3 0 .5c-.1.2-.2.3-.3.5l-.4.5c-.2.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1s.7-.8.9-1.1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg> Prévenir Tela Castle';
   pied.appendChild(wa);
 
   var capacite = T.capaciteRecu ? T.capaciteRecu() : 'telecharge';
@@ -1368,7 +1368,7 @@ function rendreInfos(){
   var tete = el('div','tete');
   var ret = el('button','retour', FLECHE); ret.setAttribute('aria-label','Retour'); ret.onclick = fermer;
   tete.appendChild(ret);
-  tete.appendChild(el('div', null, '<h3>La boutique</h3>'));
+  tete.appendChild(el('div', null, '<h3>Tela Castle</h3>'));
   pan.appendChild(tete);
   var dd = el('div','dedans');
 
@@ -1642,7 +1642,7 @@ function rendrePlateaux(){
   });
   dd.appendChild(hh);
 
-  dd.appendChild(el('div','lab','Un mot pour la boutique'));
+  dd.appendChild(el('div','lab','Un mot pour Tela Castle'));
   var boite = el('div','champ');
   var mot = el('textarea');
   mot.rows = 3; mot.placeholder = 'Adresse précise, allergies, nombre de couverts…';
@@ -1821,7 +1821,7 @@ function rendreAccueil(){
   sv.innerHTML =
     '<div class="etat">' + (ouvert ? '<span class="pt"></span>' : '') +
     '<b>' + (ferme ? 'Fermé ' + D.long : (ouvert ? 'Commandes ouvertes' : 'Commandes closes pour ce matin')) + '</b></div>' +
-    '<div class="quand">' + (ferme ? (ferme.motif || 'La boutique ne livre pas ce jour-là')
+    '<div class="quand">' + (ferme ? (ferme.motif || 'Tela Castle ne livre pas ce jour-là')
                                    : 'Livraison ' + D.long + ' dès 06h30') + '</div>' +
     '<div class="note">' + (ferme ? 'Revenez le lendemain, nous cuisinons à nouveau.'
                                   : 'On cuisine le matin, pas la nuit.') + '</div>' +
