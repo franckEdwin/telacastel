@@ -165,7 +165,10 @@ body{overflow-x:hidden}
 .panneau{position:fixed;z-index:95;top:0;bottom:0;right:0;width:min(460px,100%);background:var(--fond);
   border-left:var(--ep-bord) solid var(--bord);display:flex;flex-direction:column;transform:translateX(100%);
   transition:transform .34s cubic-bezier(.4,0,.2,1);will-change:transform}
-.panneau.on{transform:none}
+/* Fermé, un panneau doit être vraiment absent : sans cela il laisse une
+   lisière à droite et son texte continue d'apparaître en bas de page. */
+.panneau{visibility:hidden;transition:transform .32s cubic-bezier(.4,0,.2,1),visibility 0s linear .32s}
+.panneau.on{transform:none;visibility:visible;transition:transform .32s cubic-bezier(.4,0,.2,1),visibility 0s}
 .panneau .tete{flex:none;min-height:var(--h-bar);display:flex;align-items:center;gap:12px;padding:10px 16px;
   border-bottom:var(--ep-bord) solid var(--bord);background:var(--fond)}
 .panneau .tete h3{font-size:17px}
@@ -745,32 +748,37 @@ body.a-total .bandeau-suivi{bottom:calc(150px + env(safe-area-inset-bottom))}
   .ac-tete h1{margin-top:20px;font-size:31px;line-height:1.04;letter-spacing:-.035em}
   .ac-tete .sous{margin-top:8px;font-size:14px;color:rgba(42,29,10,.72)}
   .ac-livrer .l,.ac-livrer .z{display:block}
-  .ac-cta{margin-top:16px;width:100%;height:52px;border-radius:17px;background:var(--or-encre);
+  .ac-cta{margin-top:10px;width:100%;height:52px;border-radius:17px;background:var(--or-encre);
     color:#FFF4DC;font-weight:600;font-size:15.5px;display:flex;align-items:center;justify-content:center;gap:9px}
 
   /* --- recherche, à l'intérieur de l'en-tête ---
      À cheval sur le bord, elle laissait dépasser les deux coins arrondis
      du jaune de part et d'autre : la découpe paraissait cassée. */
-  .ac-rech{padding:14px 20px 0;position:relative;z-index:2}
-  .ac-rech button{width:100%;height:50px;border-radius:16px;background:var(--surface);
-    border:var(--ep-bord) solid var(--filet);display:flex;align-items:center;gap:10px;
-    padding:0 16px;color:var(--doux);font-size:14.5px}
+  .ac-rech{padding:18px 0 0;position:relative;z-index:2}
+  .ac-rech button{width:100%;height:52px;border-radius:17px;background:var(--surface);
+    border:0;display:flex;align-items:center;gap:11px;
+    padding:0 18px;color:var(--doux);font-size:14.5px}
   .ac-rech svg{width:17px;height:17px;stroke:var(--doux);fill:none;stroke-width:2;flex:none}
 
   /* --- service du jour, bloc sombre --- */
-  .ac-service{margin:18px 20px 0;border-radius:22px;background:var(--profond);color:#FFF4DC;padding:18px}
+  .ac-service{display:block;width:calc(100% - 40px);margin:18px 20px 0;border-radius:22px;
+    background:var(--profond);color:#FFF4DC;padding:17px 18px;text-align:left}
+  .ac-service:active{filter:brightness(1.15)}
   .ac-service .etat{display:flex;align-items:center;gap:8px}
-  .ac-service .pt{width:9px;height:9px;border-radius:50%;background:#4ADE80;animation:pulseTC 1.8s infinite}
+  .ac-service .pt{width:9px;height:9px;border-radius:50%;background:#4ADE80;flex:none;animation:pulseTC 1.8s infinite}
+  .ac-service .pt.off{background:#9A8C7E;animation:none}
   @keyframes pulseTC{0%,100%{opacity:1}50%{opacity:.35}}
-  .ac-service .etat b{font-size:15px}
-  .ac-service .quand{margin-top:7px;font-family:var(--titre);font-weight:700;font-size:20px;letter-spacing:-.02em}
-  .ac-service .note{margin-top:4px;font-size:13px;color:rgba(255,244,220,.68)}
-  .ac-service .bas{margin-top:13px;padding-top:13px;border-top:1px solid rgba(255,244,220,.16);
-    display:flex;align-items:center;justify-content:space-between;gap:12px}
-  .ac-service .lab2{font-size:10px;letter-spacing:.12em;color:rgba(255,244,220,.5);font-weight:700}
-  .ac-service .cpt{font-family:var(--titre);font-weight:700;font-size:22px;color:var(--or)}
-  .ac-service .lien{height:40px;padding:0 15px;border-radius:13px;background:rgba(255,244,220,.13);
-    display:flex;align-items:center;font-weight:500;font-size:13px;color:#FFF4DC}
+  .ac-service .etat b{font-size:14.5px}
+  .ac-service .etat .fl{margin-left:auto;font-size:19px;opacity:.5}
+  .ac-service .quand{margin-top:6px;font-family:var(--titre);font-weight:700;font-size:19px;letter-spacing:-.02em}
+  .ac-service .grille{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  .ac-service .grille b{display:block;font-size:12.5px;font-weight:500;margin-top:3px;line-height:1.3}
+  .ac-service .bas{margin-top:14px;padding-top:13px;border-top:1px solid rgba(255,244,220,.16);
+    display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+  .ac-service .lab2{display:block;font-size:9.5px;letter-spacing:.12em;color:rgba(255,244,220,.5);font-weight:700}
+  .ac-service .cpt{font-family:var(--titre);font-weight:700;font-size:23px;color:var(--or);margin-top:2px}
+  .ac-service .lien{padding:8px 14px;border-radius:12px;background:rgba(255,244,220,.13);
+    font-weight:500;font-size:12.5px;color:#FFF4DC;white-space:nowrap}
 
   /* --- deux raccourcis --- */
   .ac-duo{display:grid;grid-template-columns:1fr 1fr;gap:11px;padding:16px 20px 0}

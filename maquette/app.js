@@ -1853,46 +1853,58 @@ function rendreAccueil(){
   var act = el('div','ac-actions');
   var cl = el('button'); cl.setAttribute('aria-label','Notifications');
   cl.innerHTML = IC_ACC.cloche + (commandeActive() ? '<span class="pastille"></span>' : '');
-  cl.onclick = function(){ var c = commandeActive(); if (!c){ avis('Aucune commande en cours'); return; }
-    S.ref = c.ref; T.ecrire('refEnCours', c.ref); S.etape = 'confirme'; rendrePanier(); ecran('panier'); };
+  cl.onclick = function(){
+    var c = commandeActive();
+    if (!c){ ecran('histo'); return; }
+    S.ref = c.ref; T.ecrire('refEnCours', c.ref); S.etape = 'confirme'; rendrePanier(); ecran('panier');
+  };
+  cl.title = commandeActive() ? 'Suivre ma commande' : 'Mes commandes';
   act.appendChild(cl);
   var moi = el('button','moi');
   moi.textContent = compte ? compte.nom.split(' ').map(function(m){ return m.charAt(0); }).join('').slice(0,2).toUpperCase() : '·';
   moi.setAttribute('aria-label','Compte');
+  moi.title = compte ? compte.nom : 'Se connecter';
   moi.onclick = function(){ ecran('compte'); };
   act.appendChild(moi);
   haut.appendChild(act);
   tete.appendChild(haut);
   tete.appendChild(el('h1', null, 'Bien manger,<br>un plaisir à partager'));
   tete.appendChild(el('div','sous','Votre petit déjeuner préféré, livré chez vous.'));
-  var cta = el('button','ac-cta', 'Commander maintenant →');
-  cta.onclick = function(){ ecran('carte'); };
-  tete.appendChild(cta);
-
-  /* la recherche fait partie de l'en-tête */
+  /* La recherche vient avant l'appel à l'action : on cherche plus souvent
+     qu'on ne parcourt, et les deux ont la même hauteur. */
   var rech = el('div','ac-rech');
   var br = el('button');
   br.innerHTML = IC_ACC.loupe + '<span>Rechercher un plat, une boisson…</span>';
   br.onclick = function(){ ecran('carte'); setTimeout(function(){ var c = $('#recherche'); if (c) c.focus(); }, 260); };
   rech.appendChild(br);
   tete.appendChild(rech);
+
+  var cta = el('button','ac-cta', 'Voir toute la carte →');
+  cta.onclick = function(){ ecran('carte'); };
+  tete.appendChild(cta);
   z.appendChild(tete);
 
   /* service du jour */
   var ferme = T.ferme(D.livraison);
   var ouvert = D.resteMs() > 0 && !ferme;
-  var sv = el('section','ac-service');
+  /* Carte du service : entièrement cliquable, elle ouvre le détail des
+     créneaux, des zones et des horaires. Rien n'y est décoratif. */
+  var sv = el('button','ac-service');
+  var zoneChoisie = T.zone(S.zone);
   sv.innerHTML =
-    '<div class="etat">' + (ouvert ? '<span class="pt"></span>' : '') +
-    '<b>' + (ferme ? 'Fermé ' + D.long : (ouvert ? 'Commandes ouvertes' : 'Commandes closes pour ce matin')) + '</b></div>' +
-    '<div class="quand">' + (ferme ? (ferme.motif || 'Tela Castle ne livre pas ce jour-là')
-                                   : 'Livraison ' + D.long + ' dès 06h30') + '</div>' +
-    '<div class="note">' + (ferme ? 'Revenez le lendemain, nous cuisinons à nouveau.'
-                                  : 'On cuisine le matin, pas la nuit.') + '</div>' +
-    '<div class="bas"><div><div class="lab2">CLÔTURE DANS</div>' +
+    '<div class="etat">' + (ouvert ? '<span class="pt"></span>' : '<span class="pt off"></span>') +
+    '<b>' + (ferme ? 'Fermé ' + D.long : (ouvert ? 'Ouvert aux commandes' : 'Commandes closes')) + '</b>' +
+    '<span class="fl">›</span></div>' +
+    '<div class="quand">' + (ferme ? (ferme.motif || 'Pas de livraison ce jour-là')
+                                   : 'Livré ' + D.long) + '</div>' +
+    '<div class="grille">' +
+      '<div><span class="lab2">CRÉNEAUX</span><b>06h30 · 08h00 · 15h30</b></div>' +
+      '<div><span class="lab2">CHEZ VOUS</span><b>' + zoneChoisie.nom + ' · ' + zoneChoisie.delai + '</b></div>' +
+    '</div>' +
+    '<div class="bas"><div><span class="lab2">' + (ouvert ? 'CLÔTURE DANS' : 'PROCHAIN SERVICE') + '</span>' +
     '<div class="cpt" id="cptAccueil">—</div></div>' +
-    '<button class="lien">Horaires</button></div>';
-  sv.querySelector('.lien').onclick = function(){ ecran('infos'); };
+    '<span class="lien">Voir le détail</span></div>';
+  sv.onclick = function(){ ecran('infos'); };
   z.appendChild(sv);
 
   /* deux raccourcis */
@@ -2160,19 +2172,9 @@ Array.prototype.forEach.call(document.querySelectorAll('.nav-flot button'), func
   b.onclick = function(){ ecran(b.dataset.ecran); };
 });
 
-/* la barre flottante s'efface quand on descend, revient quand on remonte */
-var dernierY = 0;
-window.addEventListener('scroll', function(){
-  var y = window.scrollY;
-  var nav = $('#navFlot');
-  if (mobile() && S.ecran === 'accueil'){
-    var descend = y > dernierY + 6 && y > 200;
-    nav.classList.toggle('cache', descend);
-    $('#barreTotal').style.transform = descend ? 'translateY(140%)' : '';
-  } else { nav.classList.remove('cache'); $('#barreTotal').style.transform = ''; }
-  dernierY = y;
-  spy();
-}, {passive:true});
+/* La barre reste en place au défilement : quand elle s'effaçait, plus
+   rien n'indiquait comment la faire revenir. */
+window.addEventListener('scroll', function(){ spy(); }, {passive:true});
 
 window.addEventListener('resize', function(){ rendrePanier(); });
 
