@@ -926,19 +926,15 @@ function vueConfirme(dd, pied){
 
   /* qui reçoit quoi : la question mérite une réponse à l'écran */
   var suite = el('div','bloc');
-  suite.style.padding = '15px 16px';
+  suite.style.cssText = 'padding:15px 16px;background:var(--vert-doux);border-color:rgba(23,161,94,.28)';
   suite.innerHTML =
-    '<b style="font-family:var(--titre);font-size:15px">Et maintenant ?</b>' +
-    '<div style="font-size:12.8px;color:var(--doux);line-height:1.6;margin-top:8px">' +
-    '<b style="color:var(--encre);font-weight:500">1.</b> Votre commande est arrivée chez Tela Castle, ' +
-    'qui la voit dans son espace de gestion et vous confirme sous 15 minutes.<br>' +
-    '<b style="color:var(--encre);font-weight:500">2.</b> Vous pouvez aussi la lui envoyer sur WhatsApp au ' +
-    '<b style="color:var(--encre);font-weight:500">' + T.boutique.tel + '</b>, pour préciser un détail.<br>' +
-    '<b style="color:var(--encre);font-weight:500">3.</b> Le reçu ci-dessous est <b style="color:var(--encre);' +
-    'font-weight:500">pour vous</b> : gardez-le, ou envoyez-le à la personne qui paie.</div>';
+    '<b style="font-family:var(--titre);font-size:15px;color:var(--vert)">Tela Castle a reçu votre commande</b>' +
+    '<div style="font-size:12.8px;color:var(--doux);line-height:1.6;margin-top:6px">' +
+    'Elle est arrivée directement dans leur espace de gestion. Vous n\u2019avez rien à envoyer : ' +
+    'la cuisine la voit, la valide, et vous suivez chaque étape ici même.</div>';
   dd.appendChild(suite);
 
-  dd.appendChild(el('div','lab','Votre reçu'));
+  dd.appendChild(el('div','lab','Votre reçu, à garder'));
   var boite = el('div');
   dd.appendChild(boite);
   if (T.apercuRecu) T.apercuRecu(cmd, boite);
@@ -958,10 +954,14 @@ function vueConfirme(dd, pied){
     dd.appendChild(prop);
   }
 
-  var wa = el('a','btn vert plein');
-  wa.href = T.lienWhatsApp(cmd); wa.target = '_blank'; wa.rel = 'noopener';
-  wa.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm5.6 14.1c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.7-.1-.4-.1-.9-.3-1.6-.6-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.4-1.1-2.7s.7-1.9 1-2.2c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5s.8 1.9.8 2 .1.3 0 .5c-.1.2-.2.3-.3.5l-.4.5c-.2.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1s.7-.8.9-1.1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg> Prévenir Tela Castle';
-  pied.appendChild(wa);
+  /* Écrire n'est plus nécessaire : on le propose pour une question,
+     discrètement, au milieu du contenu et non comme action principale. */
+  var wa = el('a','btn creux plein');
+  wa.href = 'https://wa.me/' + T.boutique.telBrut +
+            '?text=' + encodeURIComponent('Bonjour Tela Castle, au sujet de ma commande ' + cmd.ref + ' : ');
+  wa.target = '_blank'; wa.rel = 'noopener';
+  wa.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm5.6 14.1c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.7-.1-.4-.1-.9-.3-1.6-.6-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.4-1.1-2.7s.7-1.9 1-2.2c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5s.8 1.9.8 2 .1.3 0 .5c-.1.2-.2.3-.3.5l-.4.5c-.2.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1s.7-.8.9-1.1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg> Une question ? Écrire à Tela Castle';
+  dd.appendChild(wa);
 
   var capacite = T.capaciteRecu ? T.capaciteRecu() : 'telecharge';
   var libelles = {partage:'Partager le reçu', copie:'Copier le reçu', telecharge:'Enregistrer le reçu'};
@@ -984,9 +984,10 @@ function vueConfirme(dd, pied){
       : 'Ce navigateur ne sait pas envoyer une image directement. Le reçu est enregistré dans vos téléchargements.'));
   }
 
-  var nb = el('button','btn creux plein'); nb.textContent = 'Nouvelle commande';
+  var nb = el('button','btn plein');
+  nb.textContent = 'Passer une nouvelle commande';
   nb.onclick = function(){ S.ref = null; T.ecrire('refEnCours', null); S.etape = 'panier'; rendrePanier(); ecran('accueil'); };
-  dd.appendChild(nb);
+  pied.appendChild(nb);
 }
 
 function ticket(cmd){
@@ -1495,11 +1496,44 @@ function rendreHisto(){
   var dd = el('div','dedans'); pan.appendChild(dd);
 
   var toutes = mesCommandes();
+
+  /* Suivre une commande sans compte : la référence suffit, et le numéro
+     de téléphone évite qu'on lise celle du voisin. */
   if (!compte){
-    dd.appendChild(illustration(
-      '<svg viewBox="0 0 24 24" style="width:26px;height:26px;stroke:var(--or-fonce);fill:none;stroke-width:1.8;stroke-linecap:round"><path d="M6 8h12l-1 12H7z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>',
-      'Vos commandes vous attendent',
-      'Entrez votre numéro une fois, et vous retrouverez ici tout ce que vous avez commandé, prêt à être recommandé.'));
+    var enCours = S.ref ? T.commandes().filter(function(c){ return c.ref === S.ref; })[0] : null;
+    if (enCours){
+      var st0 = T.statuts[enCours.statut] || T.statuts.recue;
+      var b0 = el('button','hcmd');
+      b0.style.textAlign = 'left';
+      b0.innerHTML = '<div class="h"><b>' + enCours.ref + '</b><span class="etq ' + st0.couleur + '">' +
+        st0.nom + '</span><span class="t">' + F(enCours.total) + '</span></div>' +
+        '<div class="d">' + st0.client + '</div>';
+      b0.onclick = function(){ S.etape = 'confirme'; rendrePanier(); ecran('panier'); };
+      dd.appendChild(el('div','lab','Votre commande en cours'));
+      dd.appendChild(b0);
+    }
+
+    dd.appendChild(el('div','lab','Retrouver une commande'));
+    var rech = el('div','promo-z');
+    var l1 = el('div','promo-l');
+    var ir = el('input'); ir.type = 'text'; ir.placeholder = 'Référence, ex. TC-1609-142';
+    var okr = el('button','btn petit'); okr.textContent = 'Chercher';
+    var msgr = el('span','aide');
+    okr.onclick = function(){
+      var ref = String(ir.value || '').trim().toUpperCase();
+      var c = T.commandes().filter(function(x){ return String(x.ref).toUpperCase() === ref; })[0];
+      if (!c){ msgr.textContent = 'Aucune commande avec cette référence'; msgr.style.color = 'var(--rouge)'; return; }
+      S.ref = c.ref; T.ecrire('refEnCours', c.ref);
+      S.etape = 'confirme'; rendrePanier(); ecran('panier');
+    };
+    ir.onkeydown = function(e){ if (e.key === 'Enter'){ e.preventDefault(); okr.onclick(); } };
+    l1.appendChild(ir); l1.appendChild(okr);
+    rech.appendChild(l1); rech.appendChild(msgr);
+    dd.appendChild(rech);
+
+    dd.appendChild(el('div','lab','Tout retrouver d’un coup'));
+    dd.appendChild(el('p','aide','Avec votre numéro, vous gardez l’historique complet, ' +
+      'la carte de fidélité et le bouton « Recommander ».'));
     var cn = el('button','btn plein'); cn.textContent = 'Entrer mon numéro';
     cn.onclick = function(){ ecran('compte'); };
     dd.appendChild(cn);
@@ -2081,15 +2115,6 @@ Array.prototype.forEach.call(document.querySelectorAll('#acces button'), functio
 });
 /* Sur grand écran les accès directs appartiennent à la colonne de gauche ;
    sur mobile, où cette colonne n'existe pas, ils restent dans le flux. */
-/* Le pied ancré masquerait la fin de la page : on réserve dessous sa
-   hauteur exacte, mesurée, et on la remesure au redimensionnement. */
-function mesurerPied(){
-  var p = document.querySelector('.pied-site');
-  if (!p) return;
-  if (mobile()){ document.documentElement.style.removeProperty('--h-pied'); return; }
-  document.documentElement.style.setProperty('--h-pied', Math.ceil(p.offsetHeight) + 'px');
-}
-
 function placerAcces(){
   var a = $('#acces'); if (!a) return;
   var colonne = $('.col-nav .in'), flux = $('#accueil'), rail = $('#rail');
@@ -2223,9 +2248,8 @@ rendreRail(); rendreTout(); chrono(); spy();
 surveillerCommandes();
 setInterval(surveillerCommandes, 6000);
 S.ecran = mobile() ? 'accueil' : 'accueil';
-majEcranBase(); majNav(); mesurerPied();
-window.addEventListener('load', mesurerPied);
-window.addEventListener('resize', function(){ majEcranBase(); placerAcces(); mesurerPied(); });
+majEcranBase(); majNav();
+window.addEventListener('resize', function(){ majEcranBase(); placerAcces(); });
 setInterval(chrono, 1000);
 window.addEventListener('load', animations);
 })();
