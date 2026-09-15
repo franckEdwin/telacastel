@@ -1,7 +1,8 @@
-<svg viewBox="0 0 170 72" xmlns="http://www.w3.org/2000/svg">
-  <rect x="1" y="1" width="168" height="70" rx="35" fill="#FFCB05" stroke="#E0AE00" stroke-width="1.5"/>
-  <text x="85" y="34" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-weight="700"
-        font-size="27" fill="#231F20" letter-spacing="1">MTN</text>
-  <text x="85" y="54" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-weight="600"
-        font-size="14" fill="#231F20">MoMo</text>
+<svg viewBox="0 0 240 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="MTN MoMo">
+  <ellipse cx="120" cy="50" rx="118" ry="48" fill="#FFCB05"/>
+  <ellipse cx="120" cy="50" rx="118" ry="48" fill="none" stroke="#1A1A1A" stroke-width="3"/>
+  <text x="120" y="45" text-anchor="middle" font-family="Arial,Helvetica,sans-serif"
+        font-weight="700" font-size="40" fill="#1A1A1A" letter-spacing="2">MTN</text>
+  <text x="120" y="74" text-anchor="middle" font-family="Arial,Helvetica,sans-serif"
+        font-weight="700" font-size="22" fill="#1A1A1A">MoMo</text>
 </svg>

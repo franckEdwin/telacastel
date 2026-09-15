@@ -16,7 +16,7 @@ var T = window.TELA = {};
 var clone = function(o){ return JSON.parse(JSON.stringify(o)); };
 
 /* ---------------------------------------------------------- boutique */
-T.version = '15/09 17h45';
+T.version = '15/09 18h40';
 
 T.boutique = {
   nom: 'Tela Castle',
@@ -44,11 +44,12 @@ T.creneaux = [
   { id:'c2', nom:'08h00 – 09h30', type:'matin'  },
   { id:'c3', nom:'15h30 – 17h00', type:'gouter' }
 ];
+/* Aides courtes : trois lignes de texte sous chaque logo noyaient le choix. */
 T.paiements = [
-  { id:'especes', nom:'Espèces à la livraison', logo:'img/pay/especes.svg',      aide:'Vous payez au livreur' },
-  { id:'wave',    nom:'Wave',                   logo:'img/pay/wave.svg',         aide:'Lien de paiement envoyé sur WhatsApp' },
-  { id:'om',      nom:'Orange Money',           logo:'img/pay/orange-money.svg', aide:'Code marchand communiqué à la validation' },
-  { id:'mtn',     nom:'MTN MoMo',               logo:'img/pay/mtn.svg',          aide:'Code marchand communiqué à la validation' }
+  { id:'especes', nom:'Espèces',      logo:'img/pay/especes.svg',      aide:'Au livreur' },
+  { id:'wave',    nom:'Wave',         logo:'img/pay/wave.svg',         aide:'Lien sur WhatsApp' },
+  { id:'om',      nom:'Orange Money', logo:'img/pay/orange-money.svg', aide:'Code marchand' },
+  { id:'mtn',     nom:'MTN MoMo',     logo:'img/pay/mtn.svg',          aide:'Code marchand' }
 ];
 
 /* ---------------------------------------------------------- visuels disponibles */

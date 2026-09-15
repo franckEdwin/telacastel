@@ -71,15 +71,28 @@ function dejaClient(){
 }
 function qteProduit(id){ return S.panier.reduce(function(a,l){ return a + (l.id === id ? l.qte : 0); }, 0); }
 
-function ajouter(id, iFmt, qte, sups, note, silencieux){
+/* Un supplément peut être pris plusieurs fois : deux laits concentrés,
+   trois glaçons. La quantité voyage avec lui jusqu'en cuisine. */
+function texteSups(sups){
+  return (sups || []).map(function(s){
+    return (s.qte > 1 ? s.qte + '× ' : '') + s.nom;
+  }).join(', ');
+}
+function prixSups(sups){
+  return (sups || []).reduce(function(a, s){ return a + s.prix * (s.qte || 1); }, 0);
+}
+function ajouter(id, iFmt, qte, sups, note, silencieux, remplacerCle){
   var p = T.produits[id];
   sups = sups || [];
-  var supTxt = sups.map(function(s){ return s.nom; }).join(', ');
-  var prix = p.formats[iFmt][1] + sups.reduce(function(a,s){ return a + s.prix; }, 0);
+  var supTxt = texteSups(sups);
+  var prix = p.formats[iFmt][1] + prixSups(sups);
   var cle = id + '|' + iFmt + '|' + supTxt + '|' + (note || '');
+  if (remplacerCle) S.panier = S.panier.filter(function(x){ return x.cle !== remplacerCle; });
   var l = S.panier.filter(function(x){ return x.cle === cle; })[0];
   if (l) l.qte += qte;
-  else S.panier.push({cle:cle, id:id, nom:p.nom, img:p.img, fmt:p.formats[iFmt][0], sup:supTxt, prix:prix, qte:qte, note:note||''});
+  else S.panier.push({cle:cle, id:id, nom:p.nom, img:p.img, fmt:p.formats[iFmt][0], sup:supTxt,
+                      sups:sups.map(function(s){ return {nom:s.nom, prix:s.prix, qte:s.qte || 1}; }),
+                      prix:prix, qte:qte, note:note||''});
   if (S.etape === 'confirme'){ S.etape = 'panier'; S.ref = null; T.ecrire('refEnCours', null); }
   sauver();
   if (!silencieux){
@@ -262,9 +275,14 @@ function couleurs(){
     fonce: r.getPropertyValue('--or-fonce').trim() || '#A9760A'
   };
 }
-function ouvrirFiche(id){
+function ouvrirFiche(id, ligne){
   var p = T.produits[id];
+  /* Ouverte depuis le panier, la fiche reprend le choix déjà fait. */
   var etat = {f:0, qte:1, sups:[]};
+  if (ligne){
+    etat.qte = ligne.qte;
+    etat.sups = (ligne.sups || []).map(function(x){ return {nom:x.nom, prix:x.prix, qte:x.qte || 1}; });
+  }
   var rappelsSups = null;
   var pan = $('#panneau-fiche');
   pan.innerHTML = '';
@@ -292,9 +310,10 @@ function ouvrirFiche(id){
   var bf = el('div','champ');
   bf.appendChild(el('span','lab','Format'));
   var ch = el('div','choix');
+  if (ligne) p.formats.forEach(function(f, i){ if (f[0] === ligne.fmt) etat.f = i; });
   p.formats.forEach(function(f, i){
     var b = el('button', null, f[0] + '<span class="px">' + F(f[1]) + '</span>');
-    b.setAttribute('aria-pressed', i === 0);
+    b.setAttribute('aria-pressed', i === etat.f);
     b.onclick = function(){
       etat.f = i;
       Array.prototype.forEach.call(ch.children, function(x,j){ x.setAttribute('aria-pressed', j === i); });
@@ -314,23 +333,54 @@ function ouvrirFiche(id){
         : 'Suppléments — vous pouvez en cumuler';
     }
     var box = el('div','sups');
-    var rappels = [];
+    var rappels = [], rappelsQte = [];
     p.sup.forEach(function(s){
       var lab = el('label');
       var cb = el('input'); cb.type = 'checkbox';
+      function choisi(){ return etat.sups.filter(function(x){ return x.nom === s.nom; })[0] || null; }
       cb.onchange = function(){
-        if (cb.checked){ if (etat.sups.indexOf(s) < 0) etat.sups.push(s); }
-        else etat.sups = etat.sups.filter(function(x){ return x !== s; });
+        if (cb.checked){ if (!choisi()) etat.sups.push({nom:s.nom, prix:s.prix, qte:1}); }
+        else etat.sups = etat.sups.filter(function(x){ return x.nom !== s.nom; });
         marquer(cb.checked);
-        majSups();
-        maj();
+        majSups(); maj(); majQte();
       };
       lab.appendChild(cb);
       var caseDessinee = el('span','case');
       lab.appendChild(caseDessinee);
-      lab.appendChild(el('span', null, s.nom));
+      lab.appendChild(el('span','nm', s.nom));
+
+      /* compteur par supplément : on peut en prendre deux, ou trois */
+      var cptS = el('span','cpt-s');
+      var moinsS = el('button', null, '−'); moinsS.type = 'button';
+      var nS = el('b');
+      var plusS = el('button', null, '+'); plusS.type = 'button';
+      moinsS.onclick = function(e){
+        e.preventDefault(); e.stopPropagation();
+        var c = choisi(); if (!c) return;
+        c.qte--;
+        if (c.qte < 1){ etat.sups = etat.sups.filter(function(x){ return x.nom !== s.nom; }); cb.checked = false; marquer(false); }
+        majSups(); maj(); majQte();
+      };
+      plusS.onclick = function(e){
+        e.preventDefault(); e.stopPropagation();
+        var c = choisi();
+        if (!c){ etat.sups.push({nom:s.nom, prix:s.prix, qte:1}); cb.checked = true; marquer(true); }
+        else if (c.qte < 9) c.qte++;
+        majSups(); maj(); majQte();
+      };
+      cptS.appendChild(moinsS); cptS.appendChild(nS); cptS.appendChild(plusS);
+      function majQte(){
+        var c = choisi();
+        nS.textContent = c ? c.qte : 0;
+        cptS.classList.toggle('actif', !!c);
+        prixSup.textContent = s.prix
+          ? '+ ' + F(s.prix * (c ? c.qte : 1))
+          : 'offert';
+      }
       var prixSup = el('span','px', s.prix ? '+ ' + F(s.prix) : 'offert');
       lab.appendChild(prixSup);
+      lab.appendChild(cptS);
+      rappelsQte.push(majQte);
       /* L'état choisi est posé à la main : la règle CSS équivalente se
          faisait battre par une déclaration plus spécifique, et :has() ne
          se recalcule pas de façon fiable après un changement par script. */
@@ -351,10 +401,13 @@ function ouvrirFiche(id){
       /* réappliqué à chaque rafraîchissement : si le panneau se reconstruit,
          l'état choisi ne se perd pas en route */
       rappels.push(function(){ marquer(cb.checked); });
+      if (etat.sups.filter(function(x){ return x.nom === s.nom; })[0]){ cb.checked = true; marquer(true); }
       box.appendChild(lab);
     });
     bs.appendChild(box); dd.appendChild(bs);
-    rappelsSups = function(){ rappels.forEach(function(f){ f(); }); };
+    rappelsSups = function(){ rappels.forEach(function(f){ f(); }); rappelsQte.forEach(function(f){ f(); }); };
+    rappelsQte.forEach(function(f){ f(); });
+    majSups();
   }
 
   var bn = el('div','champ');
@@ -374,14 +427,17 @@ function ouvrirFiche(id){
   cpt.appendChild(moins); cpt.appendChild(nb); cpt.appendChild(plus);
   rang.appendChild(cpt);
   var cta = el('button','btn plein');
-  cta.onclick = function(){ ajouter(id, etat.f, etat.qte, etat.sups, note.value); fermer(); };
+  cta.onclick = function(){
+    ajouter(id, etat.f, etat.qte, etat.sups, note.value, false, ligne && ligne.cle);
+    fermer();
+  };
   rang.appendChild(cta);
   pied.appendChild(rang);
   pan.appendChild(pied);
 
-  function prixUnite(){ return p.formats[etat.f][1] + etat.sups.reduce(function(a,s){ return a + s.prix; }, 0); }
+  function prixUnite(){ return p.formats[etat.f][1] + prixSups(etat.sups); }
   function maj(){
-    cta.textContent = 'Ajouter · ' + F(prixUnite() * etat.qte);
+    cta.textContent = (ligne ? 'Enregistrer · ' : 'Ajouter · ') + F(prixUnite() * etat.qte);
     if (typeof rappelsSups === 'function') rappelsSups();
   }
   maj();
@@ -474,7 +530,14 @@ function vuePanier(dd, pied){
     var im = el('img','v'); im.src = T.img(l.img); im.alt = ''; a.appendChild(im);
     var t = el('div');
     t.appendChild(el('div','n', l.nom));
-    t.appendChild(el('div','o', [l.fmt, l.sup, l.note].filter(Boolean).join(' · ')));
+    var det = [l.fmt];
+    if (l.sup) det.push(l.sup);
+    if (l.note) det.push('« ' + l.note + ' »');
+    t.appendChild(el('div','o', det.join(' · ')));
+    var modif = el('button','modif-l');
+    modif.textContent = 'Modifier';
+    modif.onclick = function(e){ e.stopPropagation(); ouvrirFiche(l.id, l); };
+    t.appendChild(modif);
     var cpt = el('div','compteur'); cpt.style.marginTop = '7px';
     var m = el('button', null, '−'); var n = el('b', null, String(l.qte)); var p2 = el('button', null, '+');
     m.setAttribute('aria-label','Retirer un ' + l.nom); p2.setAttribute('aria-label','Ajouter un ' + l.nom);
@@ -484,6 +547,7 @@ function vuePanier(dd, pied){
     t.appendChild(cpt);
     a.appendChild(t);
     a.appendChild(el('div','p','<div class="px">' + F(l.prix * l.qte) + '</div>'));
+    a.onclick = function(e){ if (e.target.closest('.compteur')) return; ouvrirFiche(l.id, l); };
     liste.appendChild(a);
   });
   dd.appendChild(liste);
@@ -491,7 +555,7 @@ function vuePanier(dd, pied){
   var ajout = el('button','btn creux petit');
   ajout.style.justifySelf = 'start';
   ajout.textContent = 'Ajouter des articles';
-  ajout.onclick = function(){ ecran('accueil'); };
+  ajout.onclick = function(){ ecran('carte'); };
   dd.appendChild(ajout);
 
   /* suggestions : ce qui va bien avec le panier */
