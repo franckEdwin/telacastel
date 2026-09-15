@@ -932,14 +932,7 @@ function vueConfirme(dd, pied){
   dd.appendChild(suivi);
 
   /* qui reçoit quoi : la question mérite une réponse à l'écran */
-  var suite = el('div','bloc');
-  suite.style.cssText = 'padding:15px 16px;background:var(--vert-doux);border-color:rgba(23,161,94,.28)';
-  suite.innerHTML =
-    '<b style="font-family:var(--titre);font-size:15px;color:var(--vert)">Tela Castle a reçu votre commande</b>' +
-    '<div style="font-size:12.8px;color:var(--doux);line-height:1.6;margin-top:6px">' +
-    'Elle est arrivée directement dans leur espace de gestion. Vous n\u2019avez rien à envoyer : ' +
-    'la cuisine la voit, la valide, et vous suivez chaque étape ici même.</div>';
-  dd.appendChild(suite);
+
 
   dd.appendChild(el('div','lab','Votre reçu, à garder'));
   var boite = el('div');
