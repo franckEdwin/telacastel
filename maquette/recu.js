@@ -315,6 +315,21 @@ T.telechargerRecu = function(cmd, retour){
                     .catch(function(){ retour('erreur'); });
 };
 
+/* Dépose le reçu sur le serveur et renvoie son adresse publique.
+   WhatsApp ne transporte pas de pièce jointe par lien : c'est cette
+   adresse qui voyage dans le message, et l'image s'ouvre au clic. */
+T.publierRecu = function(cmd){
+  return T.dessinerRecu(cmd).then(function(cv){
+    return fetch('/api/recu', {
+      method: 'POST',
+      headers: {'content-type': 'application/json'},
+      body: JSON.stringify({ref: cmd.ref, image: cv.toDataURL('image/png')})
+    });
+  }).then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(j){ return j && j.url ? j.url : null; })
+    .catch(function(){ return null; });
+};
+
 /* Aperçu du reçu dans un panneau, avec les actions */
 T.apercuRecu = function(cmd, conteneur, toast){
   conteneur.innerHTML = '';

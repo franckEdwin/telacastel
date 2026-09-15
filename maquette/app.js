@@ -848,6 +848,13 @@ function envoyer(){
   statutsVus[cmd.ref] = cmd.statut; T.ecrire('statutsVus', statutsVus);
   demanderNotifications();
   if (T.pousser) T.pousser();
+  /* Le reçu part sur le serveur tout de suite : il sera prêt quand le
+     client voudra l'envoyer, et l'espace de gestion y accède aussi. */
+  if (T.publierRecu){
+    T.publierRecu(cmd).then(function(url){
+      if (url) T.majCommande(cmd.ref, {recuUrl: url});
+    });
+  }
   S.etape = 'confirme';
   S.panier = [];
   sauver();
@@ -956,6 +963,35 @@ function vueConfirme(dd, pied){
 
   /* Écrire n'est plus nécessaire : on le propose pour une question,
      discrètement, au milieu du contenu et non comme action principale. */
+  /* Envoyer le reçu : en pièce jointe quand l'appareil sait le faire,
+     sinon par un lien vers l'image — WhatsApp n'accepte pas de fichier
+     dans une adresse. */
+  var envoiRecu = el('button','btn vert plein');
+  envoiRecu.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm5.6 14.1c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.7-.1-.4-.1-.9-.3-1.6-.6-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.4-1.1-2.7s.7-1.9 1-2.2c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5s.8 1.9.8 2 .1.3 0 .5c-.1.2-.2.3-.3.5l-.4.5c-.2.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1s.7-.8.9-1.1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg> Envoyer le reçu à Tela Castle';
+  envoiRecu.onclick = function(){
+    envoiRecu.disabled = true;
+    var peutPartager = T.capaciteRecu && T.capaciteRecu() === 'partage';
+    if (peutPartager){
+      T.partagerRecu(cmd, function(etat){
+        envoiRecu.disabled = false;
+        if (etat === 'partage') avis('Reçu envoyé');
+        else if (etat === 'annule') avis('Envoi annulé');
+      });
+      return;
+    }
+    var fini = function(url){
+      envoiRecu.disabled = false;
+      window.open(T.lienRecuWhatsApp(cmd, url), '_blank');
+    };
+    if (cmd.recuUrl) fini(cmd.recuUrl);
+    else if (T.publierRecu) T.publierRecu(cmd).then(function(url){
+      if (url) T.majCommande(cmd.ref, {recuUrl: url});
+      fini(url);
+    });
+    else fini(null);
+  };
+  dd.appendChild(envoiRecu);
+
   var wa = el('a','btn creux plein');
   wa.href = 'https://wa.me/' + T.boutique.telBrut +
             '?text=' + encodeURIComponent('Bonjour Tela Castle, au sujet de ma commande ' + cmd.ref + ' : ');

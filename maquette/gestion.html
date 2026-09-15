@@ -1058,6 +1058,12 @@ function ouvrirCommande(ref){
 
   var dd2 = el('div','dedans');
   dd2.appendChild(el('div', null, etq(x.statut)));
+  if (x.recuUrl){
+    var lr = el('a','btn creux plein');
+    lr.href = x.recuUrl; lr.target = '_blank'; lr.rel = 'noopener';
+    lr.textContent = 'Voir le reçu du client';
+    dd2.appendChild(lr);
+  }
   dd2.appendChild(el('div','bloc-ed','<b style="font-family:var(--titre);font-size:15px">' + x.client.nom + '</b>' +
     '<div style="font-size:12.5px;color:var(--doux);margin-top:3px">' + x.client.tel + '</div>' +
     '<div style="font-size:13px;margin-top:9px">' + T.zone(x.zone).nom + ' — ' + x.adresse + '</div>' +

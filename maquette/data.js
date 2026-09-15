@@ -16,7 +16,7 @@ var T = window.TELA = {};
 var clone = function(o){ return JSON.parse(JSON.stringify(o)); };
 
 /* ---------------------------------------------------------- boutique */
-T.version = '15/09 14h20';
+T.version = '15/09 15h00';
 
 T.boutique = {
   nom: 'Tela Castle',
@@ -790,5 +790,20 @@ T.messageWhatsApp = function(cmd){
 };
 T.lienWhatsApp = function(cmd){
   return 'https://wa.me/' + T.boutique.telBrut + '?text=' + encodeURIComponent(T.messageWhatsApp(cmd));
+};
+/* Message court : l'essentiel, puis le lien vers le reçu en image. */
+T.messageRecu = function(cmd, url){
+  var c = T.creneau(cmd.creneau);
+  var l = [];
+  l.push('*Commande ' + cmd.ref + '* — ' + T.F(cmd.total));
+  l.push(cmd.client.nom + ' · ' + cmd.client.tel);
+  l.push(T.zone(cmd.zone).nom + ' — ' + cmd.adresse);
+  l.push('Livraison ' + new Date(cmd.jourLivraison).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}) + ' · ' + c.nom);
+  l.push('Paiement : ' + T.paiement(cmd.paiement).nom);
+  if (url){ l.push(''); l.push('Reçu : ' + url); }
+  return l.join('\n');
+};
+T.lienRecuWhatsApp = function(cmd, url){
+  return 'https://wa.me/' + T.boutique.telBrut + '?text=' + encodeURIComponent(T.messageRecu(cmd, url));
 };
 })();
